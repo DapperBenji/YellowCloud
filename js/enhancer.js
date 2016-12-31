@@ -1,15 +1,15 @@
+// Global variables
+var body = document.getElementsByTagName("BODY")[0];
+var getGlobalSettings = [];
+
 // Detect URL changes
 var oldLocation = location.href;
 setInterval(function() {
-   if(location.href != oldLocation) {
+   if(location.href != oldLocation && document.readyState === "complete") {
       oldLocation = location.href;
       injectedJavascript();
    }
 }, 1000);
-
-// Global variables
-var body = document.getElementsByTagName("BODY")[0];
-var getGlobalSettings = [];
 
 //Get settings from chrome storage
 getGlobalSettings.push('darkMode');
@@ -17,6 +17,7 @@ getGlobalSettings.push('hideSidebar');
 getGlobalSettings.push('displayType');
 getGlobalSettings.push('removePreviews');
 getGlobalSettings.push('tagsArray');
+getGlobalSettings.push('relatedContext');
 
 chrome.storage.sync.get(getGlobalSettings, function(get){
    if(get.darkMode == "on"){
@@ -94,7 +95,15 @@ function settingsMenu() {
                   '<input id="skipTags" placeholder="Add tags..." value="">',
                '</div>',
             '</div>',
-            '<span class="donation"><a href="https://www.paypal.me/benjaminbach">Buy me a cup coffee</a></span>'
+            '<h2>Features:</h2>',
+            '<div class="settings-option">',
+               '<label class="checkbox sc-checkbox">',
+                  '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                  '<div class="sc-checkbox-check"></div>',
+                  '<span class="sc-checkbox-label">Add related tracks option (More context menu)</span>',
+               '</label>',
+            '</div>',
+            '<span class="donation"><a href="https://www.paypal.me/benjaminbach">Buy me a cup of coffee</a></span>'
          ].join(''),
          buttons: [
             $.extend({}, vex.dialog.buttons.YES, { text: 'Save settings', className: 'sc-button' }),
@@ -115,6 +124,7 @@ function settingsMenu() {
       var displayTypeInput = document.getElementsByName("displayType");
       var removePreviewsInput = document.getElementById("removePreviews");
       var skipTagsInput = document.getElementById("skipTags");
+      var relatedContextInput = document.getElementById("relatedContext");
 
       chrome.storage.sync.get(getGlobalSettings, function(get){
          if(get.darkMode == "on"){
@@ -135,6 +145,9 @@ function settingsMenu() {
          }
          if (get.tagsArray != null) {
             skipTagsInput.setAttribute("value", get.tagsArray);
+         }
+         if(get.relatedContext == "on"){
+            relatedContextInput.checked = true;
          }
       });
 
@@ -163,6 +176,9 @@ function settingsMenu() {
       if (data.removePreviews != "on") {
          data.removePreviews = "off";
       }
+      if (data.relatedContext != "on") {
+         data.relatedContext = "off";
+      }
       var tagsArray = [];
       var tagElement = document.getElementsByClassName("nsg-tag");
       for (var i = 0; i < tagElement.length; i++) {
@@ -174,6 +190,7 @@ function settingsMenu() {
       setGlobalSettings.displayType = data.displayType;
       setGlobalSettings.removePreviews = data.removePreviews;
       setGlobalSettings.tagsArray = tagsArray;
+      setGlobalSettings.relatedContext = data.relatedContext;
 
       // Store all options in chrome
       chrome.storage.sync.set(setGlobalSettings, function(){
@@ -202,11 +219,14 @@ function injectedJavascript() {
    // Create options button
    var checkButton = document.querySelector("#enhancer-btn");
    if(checkButton == null){
+      var div = document.createElement("div");
+      div.setAttribute('id',"enhancer-container");
       var button = document.createElement("button");
       button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
       button.setAttribute('id',"enhancer-btn");
       button.innerText = "Enhancer settings";
-      soundPanelInner.appendChild(button);
+      div.appendChild(button);
+      soundPanelInner.appendChild(div);
    }
 
    // Observer configs
@@ -240,6 +260,73 @@ function injectedJavascript() {
             mutationRecords.forEach(function (mutation) {checkTags();});
          });
          tagsObserver.observe(stream, config);
+      }
+   });
+
+   // Add related tracks option to the more context menu
+   chrome.storage.sync.get(getGlobalSettings, function(get){
+      if(get.relatedContext == "on"){
+         function relatedContext() {
+            window.relatedContextMode = 0;
+            window.registerMoreClick = document.querySelectorAll('.soundActions button.sc-button-more');
+            if (window.registerMoreClick.length == 0) {
+               window.registerMoreClick = document.querySelectorAll('.audibleTile__actions button.sc-button-more');
+               window.relatedContextMode = 1;
+            }
+            for (var i = 0; i < window.registerMoreClick.length; i++) {
+               registerMoreClick[i].addEventListener('click', function() {
+                  var getMoreContextMenu = document.querySelector('.moreActions div');
+                  if (window.relatedContextMode == 1) {
+                     if (location.href == "https://soundcloud.com/you/likes") {
+                        var getSongContainer = this.closest('.badgeList__item');
+                     }else{
+                        var getSongContainer = this.closest('.soundGallery__sliderPanelSlide');
+                     }
+                     var getSongLinks = getSongContainer.querySelector('.audibleTile .audibleTile__artwork .audibleTile__artworkLink');
+                     var getSongHref = getSongLinks.getAttribute("href");
+                     var checkContextMenu = document.querySelector('.moreActions div #related-button');
+                     if (checkContextMenu == null) {
+                        var createAchor = document.createElement("a");
+                        createAchor.setAttribute('href', getSongHref + "/recommended");
+
+                        var createButton = document.createElement("button");
+                        createButton.setAttribute('id',"related-button");
+                        createButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                        createButton.setAttribute('title',"Go to related tracks");
+                        createButton.innerText = "Related tracks";
+
+                        createAchor.appendChild(createButton);
+                        getMoreContextMenu.appendChild(createAchor);
+                     }
+                  } else {
+                     var getSongContainer = this.closest('.sound__content');
+                     var getSongLinks = getSongContainer.querySelector('.sound__header .soundTitle .soundTitle__titleContainer .soundTitle__usernameTitleContainer .soundTitle__title');
+                     var getSongHref = getSongLinks.getAttribute("href");
+                     var checkContextMenu = document.querySelector('.moreActions div #related-button');
+                     if (checkContextMenu == null) {
+                        var createAchor = document.createElement("a");
+                        createAchor.setAttribute('href', getSongHref + "/recommended");
+
+                        var createButton = document.createElement("button");
+                        createButton.setAttribute('id',"related-button");
+                        createButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                        createButton.setAttribute('title',"Go to related tracks");
+                        createButton.innerText = "Related tracks";
+
+                        createAchor.appendChild(createButton);
+                        getMoreContextMenu.appendChild(createAchor);
+                     }
+                  }
+               });
+            }
+         }
+         relatedContext();
+
+         // Run the function after a lazyload
+         var moreClickObserver = new MutationObserver(function (mutationRecords, observer) {
+            mutationRecords.forEach(function (mutation) {relatedContext();});
+         });
+         moreClickObserver.observe(stream, config);
       }
    });
 
