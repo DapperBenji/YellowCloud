@@ -18,4 +18,3 @@ SoundCloud Enhancer alters the look and functionality of the platform. You can c
 - Fixed a typo.
 - Various fixes to the dark mode (Special thanks to https://soundcloud.com/lasseppedersen).
 - Made the settings button responsive.
-Happy new year to all!
