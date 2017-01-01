@@ -16,6 +16,6 @@ SoundCloud Enhancer alters the look and functionality of the platform. You can c
 ### Version 1.1 ###
 - Added a option to add related tracks to the "more" context menu.
 - Fixed a typo.
-- Various fixes to the dark mode (https://soundcloud.com/lasseppedersen).
+- Various fixes to the dark mode (Special thanks to https://soundcloud.com/lasseppedersen).
 - Made the settings button responsive.
 Happy new year to all!
