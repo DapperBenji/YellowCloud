@@ -11,7 +11,7 @@ setInterval(function() {
          injectedJavascript();
       });
    }
-}, 1000);
+}, 3000);
 
 //Get settings from chrome storage
 getGlobalSettings.push('darkMode');
@@ -47,7 +47,10 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
 });
 
 // Load the injected javascript on load
-window.addEventListener("load", function() {injectedJavascript(); settingsMenu();}, false);
+window.onload = function() {
+  injectedJavascript();
+  settingsMenu();
+};
 
 function settingsMenu() {
    // Create settings dialogbox
@@ -57,7 +60,7 @@ function settingsMenu() {
       vex.dialog.open({
          className: 'vex-theme-top',
          input: [
-            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.5</h1>',
+            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.6</h1>',
             '<span class="credits">Made with <span class="heart">❤</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
             '<h2>Design:</h2>',
             '<div class="settings-option">',
@@ -91,7 +94,7 @@ function settingsMenu() {
                   '</label>',
                '</ul>',
             '</div>',
-            '<h2>Filter:</h2>',
+            '<h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>',
             '<div class="settings-option">',
                '<label class="checkbox sc-checkbox">',
                   '<input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
@@ -269,6 +272,10 @@ function injectedJavascript() {
    var soundPanelInner = document.getElementsByClassName('playControls__inner')[0];
    var tags = document.getElementsByClassName('soundTitle__tagContent');
 
+   // Observer configs
+   var config = {childList: true, attributes: true, characterData: true};
+   var soundBadge_config = {childList: true};
+
    // Force-open sound control panel
    soundPanel.setAttribute("class", "playControls g-z-index-header m-visible");
 
@@ -367,9 +374,96 @@ function injectedJavascript() {
       });
    }
 
-   // Observer configs
-   var config = {childList: true, attributes: true, characterData: true};
-   var soundBadge_config = {childList: true};
+   if(location.href == "https://soundcloud.com/you/following"){
+      var collectionHeader = document.getElementsByClassName('collectionSection__top')[0];
+      var massUnfollowButton = document.querySelector("#mass-unfollow");
+
+      if (massUnfollowButton == null) {
+         var massUnfollowContainer = document.createElement("div");
+         massUnfollowContainer.setAttribute('class', "stream__controls");
+         massUnfollowContainer.setAttribute('id', "mass-unfollow");
+
+         var textContainer = document.createElement("div");
+         textContainer.setAttribute('class', "g-flex-row-centered");
+
+         var textHeader = document.createElement("h3");
+         textHeader.setAttribute('class', "sc-text-light sc-type-medium margin-spacing");
+         textHeader.innerText = "Options:";
+
+         var confirmUnfollowButton = document.createElement("button");
+         confirmUnfollowButton.setAttribute('class', "sc-button margin-spacing");
+         confirmUnfollowButton.setAttribute('id', "confirm-unfollow-button");
+         confirmUnfollowButton.innerText = "Mass unfollow";
+
+         var undoUnfollowButton = document.createElement("button");
+         undoUnfollowButton.setAttribute('class', "sc-button");
+         undoUnfollowButton.setAttribute('id', "undo-unfollow-button");
+         undoUnfollowButton.innerText = "Reset selection";
+
+         textContainer.appendChild(textHeader);
+         textContainer.appendChild(confirmUnfollowButton);
+         textContainer.appendChild(undoUnfollowButton);
+         massUnfollowContainer.appendChild(textContainer);
+         collectionHeader.appendChild(massUnfollowContainer);
+      }
+
+      function multiFollow() {
+         var followingUsers = document.querySelectorAll('.userBadgeListItem');
+         for (var i = 0; i < followingUsers.length; i++) {
+            if(followingUsers[i].querySelector(".userBadgeListItem__checkbox") == undefined){
+               var checkboxDiv = document.createElement("label");
+               checkboxDiv.setAttribute('class', "userBadgeListItem__checkbox");
+               var checkboxElement = document.createElement("input");
+               checkboxElement.setAttribute('type', "checkbox");
+               checkboxElement.setAttribute('class', "sc-checkbox-input sc-visuallyhidden");
+               var checkboxWrap = document.createElement("div");
+               checkboxWrap.setAttribute('class', "sc-checkbox-check");
+               checkboxDiv.appendChild(checkboxElement);
+               checkboxDiv.appendChild(checkboxWrap);
+               followingUsers[i].appendChild(checkboxDiv);
+            }
+         }
+      }
+      multiFollow();
+
+      // Run the function after a lazyload
+      var unfollowObserver = new MutationObserver(function (mutationRecords, observer) {
+         mutationRecords.forEach(function (mutation) {multiFollow();});
+      });
+      unfollowObserver.observe(stream, config);
+
+      var confirm = document.getElementById('confirm-unfollow-button');
+      var undo = document.getElementById('undo-unfollow-button');
+
+      confirm.addEventListener('click', function() {
+         var unfollowLoop = document.getElementsByClassName('badgeList__item');
+         var oldFollowCount = unfollowLoop.length;
+         for (var i = 0; i < unfollowLoop.length; i++) {
+            var checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
+            if(checkFollowStatus.checked == true){
+               var closestUnfollowButton = unfollowLoop[i].querySelector('.userBadgeListItem .userBadgeListItem__action button.sc-button-follow');
+               closestUnfollowButton.click();
+            }
+         }
+         var newFollowCount = oldFollowCount-unfollowLoop.length;
+         if (newFollowCount == 1) {
+            confirm.innerText = newFollowCount + " account got unfollowed!";
+         } else {
+            confirm.innerText = newFollowCount + " accounts got unfollowed!";
+         }
+         setTimeout(function(){
+            confirm.innerText = "Mass unfollow";
+         }, 5000);
+      });
+
+      undo.addEventListener('click', function() {
+         var unfollowLoop = document.getElementsByClassName('badgeList__item');
+         for (var i = 0; i < unfollowLoop.length; i++) {
+            var checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
+            checkFollowStatus.checked = false;
+         }
+      });
+   }
 
    chrome.storage.sync.get(getGlobalSettings, function(get){
 
@@ -485,7 +579,7 @@ function injectedJavascript() {
 
          // Run the function after a lazyload
          var previewObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {setTimeout(function(){hidePreviews();}, 3000);});
+            mutationRecords.forEach(function (mutation) {hidePreviews();});
          });
          previewObserver.observe(stream, config);
       }
