@@ -1,4 +1,4 @@
-# SoundCloud Enhancer #
+# SoundCloud Enhancer v1.7#
 
 ## Description: ##
 ----------------------------------------
@@ -18,3 +18,26 @@ SoundCloud Enhancer alters the look and functionality of the platform. You can c
 - Fixed a typo.
 - Various fixes to the dark mode (Special thanks to https://soundcloud.com/lasseppedersen).
 - Made the settings button responsive.
+
+### Version 1.5 (Big update) ###
+- Fixed a huge bug where the tracks skipping changes wasn't loaded. It will now automaticly scroll the page to load changes into DOM.
+- Added a quick display type switch for the stream page.
+- Added the option to show hidden tracks.
+- Added a link to the project's new trello board.
+- Added an option to hide longer tracks (May still me bugs).
+- Cleaned the code a bit.
+- Added short name to the manifest.
+- Removed the popup code.
+
+#### Known bugs: ####
+- There may occur bugs when using the previous track button.
+- Changes not loaded when chrome reopens soundcloud window.
+
+### Version 1.6 ###
+- Added a mass unfollow option inside https://soundcloud.com/you/following.
+- Minor improvements to the dark mode.
+- Added a notice in the settings menu under the "filter" options.
+
+#### Focusing on: ####
+In the next couple of updates I will be focusing on the extension's stability.
+Follow the development here: https://trello.com/b/n7jrTzxO/soundcloud-enhancer

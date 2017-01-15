@@ -41,8 +41,10 @@
 .sc-button-medium.sc-button-related:before{content: "";display: block;position: absolute;background-repeat: no-repeat;background-position: center center;width: 20px;height: 20px;top: 0;bottom: 0;margin: auto 0;left: 4px;background-size: 16px 12px;background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAFVBMVEUbGxsbGxsbGxsbGxsbGxsbGxsbGxvOHhroAAAABnRSTlMAWZOyzejiDw1WAAAAKUlEQVR4AWMgEjDDAEyABQpYYQKMEMAEEWCDAQb6CDAyowkAAWEBTAAAMxMCmdruWZwAAAAASUVORK5CYII=);}
 
 /* Dark mode CSS */
-body[data-theme="dark"] .userBadgeListItem__checkbox{margin: 5px;}
-body[data-theme="dark"] .userBadgeListItem__artwork{background: rgba(117, 117, 117, 0.25); border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; border-top-left-radius: 50%; border-top-right-radius: 5px;}
+body[data-theme="dark"] .sc-button.sc-button-small:before{-webkit-filter: brightness(3.5);}
+body[data-theme="dark"] .sc-button.sc-button-small.sc-button-selected:before, body[data-theme="dark"] .sc-button.sc-button-small.sc-button-active:before{-webkit-filter: brightness(1);}
+body[data-theme="dark"] .collection__followingsSection .userBadgeListItem__checkbox{margin: 5px;}
+body[data-theme="dark"] .collection__followingsSection .userBadgeListItem__artwork{background: rgba(117, 117, 117, 0.25); border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; border-top-left-radius: 50%; border-top-right-radius: 5px;}
 body[data-theme="dark"] #playTime::-webkit-input-placeholder{color: #585858;}
 body[data-theme="dark"] #playTime{background-color: rgb(23, 23, 23);border: 1px solid rgb(44, 44, 44);}
 body[data-theme="dark"] .editTracksDropdown {background-color: #2e2e2e;}
@@ -92,10 +94,10 @@ body[data-theme="dark"] .commentForm__input{background: #4e4e4e; border: 1px sol
 body[data-theme="dark"] .sc-button{background-color: #3b3b3b; border-color: #4a4a4a;color: #919191;}
 body[data-theme="dark"] .sc-button-play{background-color: #f50;}
 body[data-theme="dark"] #enhancer-btn{background: #181818; border-color: #2a2a2a;}
-body[data-theme="dark"] .playbackSoundBadge__like{background: #999; border-color: #2a2a2a;}
+body[data-theme="dark"] .playbackSoundBadge__like{border-color: #2a2a2a; background: transparent;}
 body[data-theme="dark"] .soundBadge__additional{background: linear-gradient(to right,rgba(0, 0, 0, 0),#222 17px) !important;}
 body[data-theme="dark"] .dropbar__content {background-color: #121212;}
-body[data-theme="dark"] .userDropbar__title{color: #f0f0f0;}
+body[data-theme="dark"] .userDropbar__title, body[data-theme="dark"] .userNav__username{color: #f0f0f0 !important;}
 body[data-theme="dark"] .moreActions__button, body[data-theme="dark"] .moreActions__link, body[data-theme="dark"] .chartTrack.m-playing, body[data-theme="dark"] .chartTrack:hover {background-color: #181818;}
 body[data-theme="dark"] .chartTrack__position{color: #8d8d8d;}
 body[data-theme="dark"] .linkMenu{background-color: #363636;}
@@ -147,7 +149,6 @@ body[data-theme="dark"] .g-tabs-link:hover, body[data-theme="dark"] .g-tabs-link
 body[data-theme="dark"] .tagInput__wrapper{background-color: #171717; border-color: #373737;}
 body[data-theme="dark"] .trackItem.hover, body[data-theme="dark"] .trackItem.active, body[data-theme="dark"] .taggle_input{background-color: #171717 !important;}
 body[data-theme="dark"] .g-tabs-link.active {border-color: #f50; color: #f50;}
-body[data-theme="dark"] .sc-button-selected.playbackSoundBadge__like{background: transparent;}
 body[data-theme="dark"] .emptyNetworkPage.emptyLikes .emptyNetworkPage__image {background-image: url(http://i.imgur.com/rujlaYP.png);border-radius: 12px;}
 body[data-theme="dark"] .emptyNetworkPage.emptyUsers .emptyNetworkPage__image {background-image: url(http://i.imgur.com/rhamTzz.png);}
 body[data-theme="dark"] .emptyNetworkPage.emptyTracks .emptyNetworkPage__image {background-image: url(http://i.imgur.com/fLChwWg.png);border-radius: 12px;}
@@ -188,6 +189,12 @@ body[data-display="list"] .stream ul .soundList__item{width: 48%; display: inlin
 body[data-display="list"] .soundTitle.streamContext .soundTitle__title{height: 20px;overflow: hidden;text-overflow: ellipsis;max-width: 400px;white-space: nowrap;display: block;}
 
 /* Grid display CSS */
+body[data-display="grid"] .stream ul .sc-button-play.playButton[disabled="disabled"], body[data-display="grid"] .commentPopover{display: none;}
+body[data-display="grid"] .stream ul span.g-geoblocked-icon {position: absolute; top: 50%; width: 100%; transform: translateX(-50%); font-size: 15px;}
+body[data-display="grid"] .stream ul .waveform__layer.waveform__scene{height: 60px;}
+body[data-display="grid"] .stream ul .waveformWrapper, body[data-display="grid"] .stream ul .sound__waveform{position: inherit; width: 100%; height: inherit;}
+body[data-display="grid"] .stream ul .waveform__emptyMessage{height: 100%; bottom: inherit;}
+body[data-display="grid"] .stream ul .waveform__emptyWaveform{height: 100% !important;}
 body[data-display="grid"] .stream ul .soundList__item .soundTitle.streamContext .soundTitle__title{color: #fff;}
 body[data-display="grid"] .stream ul .soundList__item .sound__soundActions{background: transparent;}
 body[data-display="grid"] .waveformWrapper__empty{display: none !important;}
@@ -195,7 +202,7 @@ body[data-display="grid"] .stream ul .soundList__item{margin: 1%; display: inlin
 body[data-display="grid"] .stream ul .soundList__item .sound__body{display: block;}
 body[data-display="grid"] .stream ul .soundList__item .sound__header{position: absolute; margin: 0; padding: 0; height: 100%; width: 100%;left: 0; right: 0; bottom: 0; top: 0;}
 body[data-display="grid"] .stream ul .soundList__item .playButton{position: absolute;top: 50%;left: 50%;-webkit-transform: translateX(-50%) translateY(-50%);transform: translateX(-50%) translateY(-50%);}
-body[data-display="grid"] .stream ul .soundList__item .waveform, body[data-display="grid"] .stream ul .soundList__item .commentForm{opacity: 0;}
+body[data-display="grid"] .stream ul .soundList__item .waveform__layer.waveform__scene, body[data-display="grid"] .stream ul .soundList__item .commentForm{opacity: 0;}
 body[data-display="grid"] .stream ul .soundList__item .sound__content{position: absolute; top: 0; height: 100%; width: 100%; background: rgba(0, 0, 0, 0.7); transition: .35s all ease; -webkit-transition: .35s all ease;}
 body[data-display="grid"] .stream ul .soundList__item .sound__artwork{margin: 0;}
 body[data-display="grid"] .stream ul .soundList__item .sound__coverArt{width: 100%; height: 100%;}

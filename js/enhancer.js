@@ -3,13 +3,16 @@ var body = document.getElementsByTagName("BODY")[0];
 var getGlobalSettings = [];
 
 // Detect URL changes
-var oldLocation = location.href;
+window.oldLocation = location.href;
 setInterval(function() {
-   if(location.href != oldLocation) {
-      $(document).ready(function () {
-         oldLocation = location.href;
-         injectedJavascript();
-      });
+   if(location.href != window.oldLocation) {
+      var readyStateCheckInterval = setInterval(function() {
+         if (document.readyState === "complete") {
+            clearInterval(readyStateCheckInterval);
+            window.oldLocation = location.href;
+            injectedJavascript();
+         }
+      }, 10);
    }
 }, 3000);
 
@@ -20,6 +23,7 @@ getGlobalSettings.push('displayType');
 getGlobalSettings.push('removePreviews');
 getGlobalSettings.push('removePlaylists');
 getGlobalSettings.push('removeLongTracks');
+getGlobalSettings.push('removeUserActivity');
 getGlobalSettings.push('tagsArray');
 getGlobalSettings.push('relatedContext');
 getGlobalSettings.push('hiddenOutline');
@@ -60,7 +64,7 @@ function settingsMenu() {
       vex.dialog.open({
          className: 'vex-theme-top',
          input: [
-            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.6</h1>',
+            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.7</h1>',
             '<span class="credits">Made with <span class="heart">❤</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
             '<h2>Design:</h2>',
             '<div class="settings-option">',
@@ -102,7 +106,7 @@ function settingsMenu() {
                   '<span class="sc-checkbox-label">Filter all previews</span>',
                '</label>',
             '</div>',
-            '<div class="settings-option hidden">',
+            '<div class="settings-option">',
                '<label class="checkbox sc-checkbox">',
                   '<input type="checkbox" name="removePlaylists" id="removePlaylists" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
                   '<div class="sc-checkbox-check"></div>',
@@ -117,7 +121,14 @@ function settingsMenu() {
                '</label>',
             '</div>',
             '<div class="settings-option">',
-               '<span style="margin-bottom: 5px; display: block;">Hide tracks with specific tags:</span>',
+               '<label class="checkbox sc-checkbox">',
+                  '<input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                  '<div class="sc-checkbox-check"></div>',
+                  '<span class="sc-checkbox-label">Filter own user activity</span>',
+               '</label>',
+            '</div>',
+            '<div class="settings-option">',
+               '<span style="margin-bottom: 5px; display: block;">Filter tracks with specific tags:</span>',
                '<div class="input">',
                   '<input id="skipTags" placeholder="Add tags..." value="">',
                '</div>',
@@ -159,6 +170,7 @@ function settingsMenu() {
       var removePreviewsInput = document.getElementById("removePreviews");
       var removePlaylistsInput = document.getElementById("removePlaylists");
       var removeLongTracksInput = document.getElementById("removeLongTracks");
+      var removeUserActivityInput = document.getElementById("removeUserActivity");
       var skipTagsInput = document.getElementById("skipTags");
       var relatedContextInput = document.getElementById("relatedContext");
       var hiddenOutlineInput = document.getElementById("hiddenOutline");
@@ -185,6 +197,9 @@ function settingsMenu() {
          }
          if (get.removeLongTracks == "on") {
             removeLongTracksInput.checked = true;
+         }
+         if (get.removeUserActivity == "on") {
+            removeUserActivityInput.checked = true;
          }
          if (get.tagsArray != null) {
             skipTagsInput.setAttribute("value", get.tagsArray);
@@ -228,6 +243,9 @@ function settingsMenu() {
       if (data.removeLongTracks != "on") {
          data.removeLongTracks = "off";
       }
+      if (data.removeUserActivity != "on") {
+         data.removeUserActivity = "off";
+      }
       if (data.relatedContext != "on") {
          data.relatedContext = "off";
       }
@@ -247,6 +265,7 @@ function settingsMenu() {
       setGlobalSettings.removePreviews = data.removePreviews;
       setGlobalSettings.removePlaylists = data.removePlaylists;
       setGlobalSettings.removeLongTracks = data.removeLongTracks;
+      setGlobalSettings.removeUserActivity = data.removeUserActivity;
       setGlobalSettings.tagsArray = tagsArray;
       setGlobalSettings.relatedContext = data.relatedContext;
       setGlobalSettings.hiddenOutline = data.hiddenOutline;
@@ -587,13 +606,13 @@ function injectedJavascript() {
       // Remove playlist
       if (get.removePlaylists == "on") {
          function hidePlaylists() {
-            var playlist = stream.getElementsByClassName('playlistTrackCount');
+            var playlist = stream.getElementsByClassName('soundList__item');
             for (i = 0; i < playlist.length; i++){
-               var getTrackCount = playlist[i].querySelector('.genericTrackCount .genericTrackCount__title');
-               var playlistsClosest = playlist[i].closest('.soundList__item');
-               playlistsClosest.setAttribute("data-skip", "playlist");
-               playlistsClosest.setAttribute("data-count", getTrackCount.innerText);
-               playlistsClosest.setAttribute("class", "soundList__item");
+               var getPlaylistAttribute = playlist[i].getAttribute("data-playlist");
+               if(getPlaylistAttribute == "true"){
+                  playlist[i].setAttribute("data-skip", "true");
+                  playlist[i].setAttribute("class", "soundList__item hidden");
+               }
             }
          }
          hidePlaylists();
@@ -634,18 +653,52 @@ function injectedJavascript() {
          });
          canvasObserver.observe(stream, config);
       }
+
+      if (get.removeUserActivity == "on") {
+         var getUsername = document.getElementsByClassName('userNav__button userNav__usernameButton')[0];
+         var getUsernameHref = getUsername.getAttribute("href");
+         function checkUserActivity() {
+            var getTrackUsername = document.getElementsByClassName('soundContext__usernameLink');
+            for (var i = 0; i < getTrackUsername.length; i++) {
+               var getTrackUsernameHref = getTrackUsername[i].getAttribute("href");
+               if (getUsernameHref == getTrackUsernameHref) {
+                  var usernameClosest = getTrackUsername[i].closest('.soundList__item');
+                  usernameClosest.setAttribute("class", "soundList__item hidden");
+                  usernameClosest.setAttribute("data-skip", "true");
+               }
+            }
+         }
+         checkUserActivity();
+
+         // Run the function after a lazyload
+         var userActivityObserver = new MutationObserver(function (mutationRecords, observer) {
+            mutationRecords.forEach(function (mutation) {checkUserActivity();});
+         });
+         userActivityObserver.observe(stream, config);
+      }
    });
 
-   // Skip the current song playing
-   function skipSong() {
-      document.getElementsByClassName("skipControl__next")[0].click();
-      window.skipPrevious = "false";
+   function markPlaylists() {
+      var getPlaylists = stream.querySelectorAll('.soundList__item .activity div.sound.streamContext');
+      for (var i = 0; i < getPlaylists.length; i++){
+         var getPlaylist = getPlaylists[i].className;
+         if(getPlaylist.includes("playlist") == true){
+            var getTrackCount = getPlaylists[i].getElementsByClassName('genericTrackCount__title')[0].innerText;
+            var playlistClosest = getPlaylists[i].closest('.soundList__item');
+            playlistClosest.setAttribute("data-playlist", "true");
+            playlistClosest.setAttribute("data-count", getTrackCount);
+         }
+      }
    }
-   function skipSongReverse() {
-      document.getElementsByClassName("skipControl__previous")[0].click();
-      window.skipPrevious = "false";
-   }
+   markPlaylists();
 
+   // Run the function after a lazyload
+   var markPlaylistsObserver = new MutationObserver(function (mutationRecords, observer) {
+      mutationRecords.forEach(function (mutation) {markPlaylists();});
+   });
+   markPlaylistsObserver.observe(stream, config);
+
+   window.skipPrevious = "false";
    var nextSongObserver = new MutationObserver(function (mutationRecords, observer) {
       mutationRecords.forEach(function (mutation) {
          chrome.storage.sync.get(getGlobalSettings, function(get){
@@ -653,10 +706,15 @@ function injectedJavascript() {
             var getTitleAttribute = getPath.getAttribute("title");
             var getStreamItems = document.getElementsByClassName('soundList__item');
 
-            // Switch song after tag
-            for(i = 0; i < getStreamItems.length; i++){
+            for(var i = 0; i < getStreamItems.length; i++){
+               var getSkipStatus = getStreamItems[i].getAttribute("data-skip");
+               var getPlaylistType = getStreamItems[i].getAttribute("data-playlist");
                var getTitle = getStreamItems[i].querySelector('.soundTitle__title span');
-               if(getTitleAttribute == getTitle.innerText){
+               var getPlaying = getStreamItems[i].querySelector('.activity div.sound.streamContext').className;
+               var skipReverseButton = document.getElementsByClassName("skipControl__previous")[0];
+
+               if (getPlaying.includes("playing") == true) {
+                  // Load unloaded tracks with changes
                   if(location.href == "https://soundcloud.com/stream"){
                      if (get.displayType == "grid") {
                         if (i >= getStreamItems.length-12) {
@@ -668,23 +726,31 @@ function injectedJavascript() {
                         }
                      }
                   }
-                  var getSkipStatus = getStreamItems[i].getAttribute("data-skip");
-                  for(j = 0; j < getStreamItems.length; j++){
-                     getStreamItems[j].removeAttribute("now-playing");
-                  }
-                  getStreamItems[i].setAttribute("now-playing", "true");
 
                   if (getSkipStatus == "true") {
-                     var skipReverseButton = document.getElementsByClassName("skipControl__previous")[0];
-                     // Detect a reverse song request
                      skipReverseButton.addEventListener("click", function() {
                         window.skipPrevious = "true";
                      }, false);
-                     if (window.skipPrevious == "true") {
-                        skipSongReverse();
-                     }else{
-                        skipSong();
+                     if (getPlaylistType == "true") {
+                        var skipAmount = getStreamItems[i].getAttribute("data-count");
+                        if (window.skipPrevious == "true") {
+                           for (var tracks = 0; tracks < skipAmount.length; tracks++) {
+                              document.getElementsByClassName("skipControl__previous")[0].click();
+                           }
+                        } else if (window.skipPrevious == "false"){
+                           for (var tracks = 0; tracks < skipAmount.length; tracks++) {
+                              document.getElementsByClassName("skipControl__next")[0].click();
+                           }
+                        }
+                     } else {
+                        if (window.skipPrevious == "true") {
+                           document.getElementsByClassName("skipControl__previous")[0].click();
+                        } else if (window.skipPrevious == "false"){
+                           document.getElementsByClassName("skipControl__next")[0].click();
+                        }
                      }
+                  } else {
+                     window.skipPrevious = "false";
                   }
                }
             }
