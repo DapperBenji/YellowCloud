@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v1.7#
+# SoundCloud Enhancer v1.8#
 
 ## Description: ##
 ----------------------------------------
@@ -40,4 +40,23 @@ SoundCloud Enhancer alters the look and functionality of the platform. You can c
 
 #### Focusing on: ####
 In the next couple of updates I will be focusing on the extension's stability.
-Follow the development here: https://trello.com/b/n7jrTzxO/soundcloud-enhancer
+Follow the development here: https://trello.com/b/n7jrTzxO/soundcloud-enhancer.
+
+### Version 1.7 ###
+- More reliable change load.
+- Added the option to skip playlists/albums.
+- Added the option to hide own user activity.
+- Rework to the song skipping code (Better reverse song detection).
+- Dark mode tweaks.
+- Now showing "Not available in your country" in grid mode.
+
+### Version 1.8 ###
+- Added tooltips to some options.
+- Added the option to skip all reposts (Requested by @Paraspitfire).
+- Fixed SC announcement being displayed incorrectly.
+- Replace the SC logo with the SCE logo.
+- Various dark mode improvements.
+- Fixed a bug where the SCE button wouldn't work on some SC subpages.
+
+Thanks to @Paraspitfire for donating 10$, really appreciate it :D
+Remember to leave suggestions and drop a rating

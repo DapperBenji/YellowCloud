@@ -1,5 +1,8 @@
 // Global variables
 var body = document.getElementsByTagName("BODY")[0];
+var soundPanel = document.getElementsByClassName('playControls')[0];
+var announcements = document.getElementsByClassName('announcements g-z-index-fixed-top')[0];
+var soundPanelInner = document.getElementsByClassName('playControls__inner')[0];
 var getGlobalSettings = [];
 
 // Detect URL changes
@@ -10,6 +13,7 @@ setInterval(function() {
          if (document.readyState === "complete") {
             clearInterval(readyStateCheckInterval);
             window.oldLocation = location.href;
+            settingsSetup();
             injectedJavascript();
          }
       }, 10);
@@ -24,6 +28,7 @@ getGlobalSettings.push('removePreviews');
 getGlobalSettings.push('removePlaylists');
 getGlobalSettings.push('removeLongTracks');
 getGlobalSettings.push('removeUserActivity');
+getGlobalSettings.push('removeReposts');
 getGlobalSettings.push('tagsArray');
 getGlobalSettings.push('relatedContext');
 getGlobalSettings.push('hiddenOutline');
@@ -52,9 +57,32 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
 
 // Load the injected javascript on load
 window.onload = function() {
-  injectedJavascript();
+  settingsSetup();
   settingsMenu();
+  injectedJavascript();
 };
+
+function settingsSetup(){
+  // Force-open sound control panel
+  soundPanel.setAttribute("class", "playControls g-z-index-header m-visible");
+  announcements.setAttribute("class", "announcements g-z-index-fixed-top m-offset");
+
+  // Create options button
+  var checkButton = document.querySelector("#enhancer-btn");
+  if(checkButton == null){
+     var div = document.createElement("div");
+     div.setAttribute('id',"enhancer-container");
+
+     var button = document.createElement("button");
+     button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
+     button.setAttribute('id',"enhancer-btn");
+
+     button.innerText = "Enhancer settings";
+
+     div.appendChild(button);
+     soundPanelInner.appendChild(div);
+  }
+}
 
 function settingsMenu() {
    // Create settings dialogbox
@@ -64,7 +92,7 @@ function settingsMenu() {
       vex.dialog.open({
          className: 'vex-theme-top',
          input: [
-            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.7</h1>',
+            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.8</h1>',
             '<span class="credits">Made with <span class="heart">❤</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
             '<h2>Design:</h2>',
             '<div class="settings-option">',
@@ -117,18 +145,25 @@ function settingsMenu() {
                '<label class="checkbox sc-checkbox">',
                   '<input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
                   '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter all tracks above 10min (Beta)</span>',
+                  '<span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>',
                '</label>',
             '</div>',
             '<div class="settings-option">',
                '<label class="checkbox sc-checkbox">',
                   '<input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
                   '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter own user activity</span>',
+                  '<span class="sc-checkbox-label">Filter own user activity <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Hides all your own posts, reposts and playlists from the stream">?</button></span>',
                '</label>',
             '</div>',
             '<div class="settings-option">',
-               '<span style="margin-bottom: 5px; display: block;">Filter tracks with specific tags:</span>',
+               '<label class="checkbox sc-checkbox">',
+                  '<input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                  '<div class="sc-checkbox-check"></div>',
+                  '<span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>',
+               '</label>',
+            '</div>',
+            '<div class="settings-option">',
+               '<span class="skiptags-span">Filter tracks with specific tags:</span>',
                '<div class="input">',
                   '<input id="skipTags" placeholder="Add tags..." value="">',
                '</div>',
@@ -138,7 +173,7 @@ function settingsMenu() {
                '<label class="checkbox sc-checkbox">',
                   '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
                   '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Add related tracks option (More context menu)</span>',
+                  '<span class="sc-checkbox-label">Add "related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
                '</label>',
             '</div>',
             '<div class="settings-option">',
@@ -171,6 +206,7 @@ function settingsMenu() {
       var removePlaylistsInput = document.getElementById("removePlaylists");
       var removeLongTracksInput = document.getElementById("removeLongTracks");
       var removeUserActivityInput = document.getElementById("removeUserActivity");
+      var removeRepostsInput = document.getElementById('removeReposts');
       var skipTagsInput = document.getElementById("skipTags");
       var relatedContextInput = document.getElementById("relatedContext");
       var hiddenOutlineInput = document.getElementById("hiddenOutline");
@@ -200,6 +236,9 @@ function settingsMenu() {
          }
          if (get.removeUserActivity == "on") {
             removeUserActivityInput.checked = true;
+         }
+         if (get.removeReposts == "on") {
+           removeRepostsInput.checked = true;
          }
          if (get.tagsArray != null) {
             skipTagsInput.setAttribute("value", get.tagsArray);
@@ -246,6 +285,9 @@ function settingsMenu() {
       if (data.removeUserActivity != "on") {
          data.removeUserActivity = "off";
       }
+      if (data.removeReposts != "on") {
+        data.removeReposts = "off";
+      }
       if (data.relatedContext != "on") {
          data.relatedContext = "off";
       }
@@ -266,6 +308,7 @@ function settingsMenu() {
       setGlobalSettings.removePlaylists = data.removePlaylists;
       setGlobalSettings.removeLongTracks = data.removeLongTracks;
       setGlobalSettings.removeUserActivity = data.removeUserActivity;
+      setGlobalSettings.removeReposts = data.removeReposts;
       setGlobalSettings.tagsArray = tagsArray;
       setGlobalSettings.relatedContext = data.relatedContext;
       setGlobalSettings.hiddenOutline = data.hiddenOutline;
@@ -285,34 +328,14 @@ function settingsMenu() {
 function injectedJavascript() {
    // Variables
    window.skipPrevious = "false";
-   var stream = document.getElementsByClassName('lazyLoadingList__list')[0];
+   var stream = document.getElementsByClassName('lazyLoadingList')[0];
+   var content = document.getElementById('content');
    var soundBadge = document.getElementsByClassName('playbackSoundBadge')[0];
-   var soundPanel = document.getElementsByClassName('playControls')[0];
-   var soundPanelInner = document.getElementsByClassName('playControls__inner')[0];
    var tags = document.getElementsByClassName('soundTitle__tagContent');
 
    // Observer configs
    var config = {childList: true, attributes: true, characterData: true};
    var soundBadge_config = {childList: true};
-
-   // Force-open sound control panel
-   soundPanel.setAttribute("class", "playControls g-z-index-header m-visible");
-
-   // Create options button
-   var checkButton = document.querySelector("#enhancer-btn");
-   if(checkButton == null){
-      var div = document.createElement("div");
-      div.setAttribute('id',"enhancer-container");
-
-      var button = document.createElement("button");
-      button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
-      button.setAttribute('id',"enhancer-btn");
-
-      button.innerText = "Enhancer settings";
-
-      div.appendChild(button);
-      soundPanelInner.appendChild(div);
-   }
 
    // Create quick display switcher on stream
    if(location.href == "https://soundcloud.com/stream"){
@@ -486,6 +509,27 @@ function injectedJavascript() {
 
    chrome.storage.sync.get(getGlobalSettings, function(get){
 
+      // Remove reposts
+      if(get.removeReposts == "on"){
+         // Function to skip all reposts
+         function hideReposts() {
+            var repost = document.getElementsByClassName('soundContext__repost');
+            for (i = 0; i < repost.length; i++){
+               var repostClosest = repost[i].closest('.soundList__item');
+               repostClosest.setAttribute("data-skip", "true");
+               repostClosest.setAttribute("data-type", "repost");
+               repostClosest.setAttribute("class", "soundList__item hidden");
+            }
+         }
+         hideReposts();
+
+         // Run the function after a lazyload
+         var repostObserver = new MutationObserver(function (mutationRecords, observer) {
+            mutationRecords.forEach(function (mutation) {hideReposts();});
+         });
+         repostObserver.observe(stream, config);
+      }
+
       // Remove songs with a specific tag
       if(get.tagsArray != null){
          function checkTags(){
@@ -584,7 +628,7 @@ function injectedJavascript() {
       if(get.removePreviews == "on"){
          // Function to skip all previews
          function hidePreviews() {
-            var preview = stream.getElementsByClassName('sc-snippet-badge sc-snippet-badge-medium sc-snippet-badge-grey');
+            var preview = document.getElementsByClassName('sc-snippet-badge sc-snippet-badge-medium sc-snippet-badge-grey');
             for (i = 0; i < preview.length; i++){
                if(preview[i].innerHTML != ""){
                   var previewsClosest = preview[i].closest('.soundList__item');
@@ -606,7 +650,7 @@ function injectedJavascript() {
       // Remove playlist
       if (get.removePlaylists == "on") {
          function hidePlaylists() {
-            var playlist = stream.getElementsByClassName('soundList__item');
+            var playlist = document.getElementsByClassName('soundList__item');
             for (i = 0; i < playlist.length; i++){
                var getPlaylistAttribute = playlist[i].getAttribute("data-playlist");
                if(getPlaylistAttribute == "true"){
@@ -679,7 +723,7 @@ function injectedJavascript() {
    });
 
    function markPlaylists() {
-      var getPlaylists = stream.querySelectorAll('.soundList__item .activity div.sound.streamContext');
+      var getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext');
       for (var i = 0; i < getPlaylists.length; i++){
          var getPlaylist = getPlaylists[i].className;
          if(getPlaylist.includes("playlist") == true){

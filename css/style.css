@@ -1,5 +1,14 @@
 .hidden{display: none !important;}
+.header__logoLink{background: url(http://i.imgur.com/0vZPrqr.png) no-repeat !important; background-position: center center !important;}
+.header__logo{background: none !important;}
 .notice{font-size: 11px;}
+.skiptags-span{margin-bottom: 5px; display: block;}
+[data-tooltip] {z-index: 2;}
+[data-tooltip]:before, [data-tooltip]:after {visibility: hidden;opacity: 0;pointer-events: none;  filter: none !important;}
+[data-tooltip]:before{position: absolute;bottom: 150%;left: 50%; margin-bottom: 5px;margin-left: -80px;padding: 7px;width: initial !important;height: initial !important;border-radius: 3px;background-color: #171717;color: #fff;content: attr(data-tooltip);text-align: center;font-size: 12px !important;line-height: 1.2;font-weight: 400 !important;}
+[data-tooltip]:after{position: absolute;bottom: 150%;left: 50%;margin-left: -5px;width: 0;border-top: 5px solid #171717;border-right: 5px solid transparent;border-left: 5px solid transparent;content: " ";font-size: 0;line-height: 0;}
+[data-tooltip]:hover:before,[data-tooltip]:hover:after {visibility: visible;opacity: 1;}
+.tooltip-button{border-radius: 100% !important;padding: 2px !important;height: 15px !important;width: 15px !important;font-size: 10px !important;line-height: 10px !important; cursor: help !important;}
 #enhancer-btn{position: absolute; right: 0; top: 0; margin: 10px;}
 .vex-content{margin-bottom: 47px; index: 1;}
 .vex-dialog-form{display: inline-block; width: 100%;}
@@ -39,9 +48,15 @@
 .nsg-tag.nsg-valid:before {content: "#";}
 #playTime:focus{box-shadow: none;}
 .sc-button-medium.sc-button-related:before{content: "";display: block;position: absolute;background-repeat: no-repeat;background-position: center center;width: 20px;height: 20px;top: 0;bottom: 0;margin: auto 0;left: 4px;background-size: 16px 12px;background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAFVBMVEUbGxsbGxsbGxsbGxsbGxsbGxsbGxvOHhroAAAABnRSTlMAWZOyzejiDw1WAAAAKUlEQVR4AWMgEjDDAEyABQpYYQKMEMAEEWCDAQb6CDAyowkAAWEBTAAAMxMCmdruWZwAAAAASUVORK5CYII=);}
+.announcement{background-color: rgba(255, 255, 255, 0.9) !important; color: #000000 !important;}
+.announcement>.announcement__message>a{color: #000000 !important;}
+.announcement__dismiss{-webkit-filter: brightness(0.5);}
 
 /* Dark mode CSS */
+body[data-theme="dark"] .announcement{background-color: rgba(0,0,0,.9) !important; color: rgb(145, 145, 145) !important;}
 body[data-theme="dark"] .sc-button.sc-button-small:before{-webkit-filter: brightness(3.5);}
+body[data-theme="dark"].announcement>.announcement__message>a{color: rgb(145, 145, 145) !important;}
+body[data-theme="dark"].announcement__dismiss{-webkit-filter: none !important;}
 body[data-theme="dark"] .sc-button.sc-button-small.sc-button-selected:before, body[data-theme="dark"] .sc-button.sc-button-small.sc-button-active:before{-webkit-filter: brightness(1);}
 body[data-theme="dark"] .collection__followingsSection .userBadgeListItem__checkbox{margin: 5px;}
 body[data-theme="dark"] .collection__followingsSection .userBadgeListItem__artwork{background: rgba(117, 117, 117, 0.25); border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; border-top-left-radius: 50%; border-top-right-radius: 5px;}
@@ -56,7 +71,7 @@ body[data-theme="dark"] .activeUpload__form{background-color: #181818; border-ra
 body[data-theme="dark"] .playbackTimeline__duration{color: #6c6c6c;}
 body[data-theme="dark"] .vex-dialog-input{border-color: rgb(55, 55, 55);}
 body[data-theme="dark"] .nsg-tag-remove:after{background-color: rgb(23, 23, 23);}
-body[data-theme="dark"] .nsg-tag{background: #222222;}
+body[data-theme="dark"] .nsg-tag, body[data-theme="dark"] .headerImageEditDropdown{background: #222222;}
 body[data-theme="dark"] ul.tabs li.current a, body[data-theme="dark"] ul.tabs li.current span{background: #373737; border-color: #373737;}
 body[data-theme="dark"] #oauth #main-wrapper .authorize-text, body[data-theme="dark"] #oauth2_authorization #main-wrapper .authorize-text{color: #a0a0a0;}
 body[data-theme="dark"] .vex-dialog-input h2{border-color: #3d3d3d;}
@@ -251,7 +266,8 @@ body[data-hidden-outline="show"][data-display="grid"] .soundList__item.hidden{di
 
 /* Responsive media screens */
 @media screen and (max-width: 1600px)  {
-   #enhancer-container{width: 100%; position: fixed; left: 0; right: 0; bottom: 47px; background: rgba(243, 243, 243, 0.65); padding: 8px;}
-   body[data-theme="dark"] #enhancer-container{background: rgba(0, 0, 0, 0.65);}
+   #enhancer-container{width: 100%; position: fixed; left: 0; right: 0; bottom: 47px; background: rgba(255, 255, 255, 0.9); padding: 8px;}
+   body[data-theme="dark"] #enhancer-container{background: rgba(0, 0, 0, 0.9);}
    #enhancer-btn{margin: auto; position: relative; right: initial; display: block; top: inherit; border: none; background: none !important;}
+   .announcements.m-offset{margin-bottom: 42px;}
 }
