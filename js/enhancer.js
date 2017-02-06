@@ -92,7 +92,7 @@ function settingsMenu() {
       vex.dialog.open({
          className: 'vex-theme-top',
          input: [
-            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.8</h1>',
+            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.9</h1>',
             '<span class="credits">Made with <span class="heart">❤</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
             '<h2>Design:</h2>',
             '<div class="settings-option">',
@@ -328,7 +328,7 @@ function settingsMenu() {
 function injectedJavascript() {
    // Variables
    window.skipPrevious = "false";
-   var stream = document.getElementsByClassName('lazyLoadingList')[0];
+   var stream = document.querySelector('#content .lazyLoadingList ul');
    var content = document.getElementById('content');
    var soundBadge = document.getElementsByClassName('playbackSoundBadge')[0];
    var tags = document.getElementsByClassName('soundTitle__tagContent');

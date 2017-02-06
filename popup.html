@@ -1,0 +1,105 @@
+<head>
+   <title>SoundCloud Enhancer Settings Menu</title>
+   <link rel="stylesheet" href="css/style.css">
+   <link rel="stylesheet" href="css/insignia.min.css">
+   <link rel="stylesheet" href="css/popup.css">
+</head>
+<body id="body">
+   <h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.9</h1>
+   <span class="credits">Made with <span class="heart">❤</span> in Denmark by <a href="https://twitter.com/DapperBenji" target="_blank">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer" target="_blank">Trello</a>.</span>
+   <h2>Design:</h2>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="darkMode" id="darkMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Enable dark mode</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="hideSidebar" id="hideSidebar" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Hide sidebar</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <span>View mode on stream</span>
+      <ul class="settings-display-list">
+         <label>
+            <input type="radio" name="displayType" value="default" class="hidden">
+            <li class="setting-display-tile default-icon" title="Default"></li>
+         </label>
+         <label>
+            <input type="radio" name="displayType" value="list" class="hidden">
+            <li class="setting-display-tile list-icon" title="Compact"></li>
+         </label>
+         <label>
+            <input type="radio" name="displayType" value="grid" class="hidden">
+            <li class="setting-display-tile grid-icon" title="Grid"></li>
+         </label>
+      </ul>
+   </div>
+   <h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Filter all previews</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="removePlaylists" id="removePlaylists" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Filter all playlists</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Filter own user activity</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Filter all reposts</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <span class="skiptags-span">Filter tracks with specific tags:</span>
+      <div class="input">
+         <input id="skipTags" placeholder="Add tags..." value="">
+      </div>
+   </div>
+   <h2>Features:</h2>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Add "related tracks" option on tracks</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Show outline of hidden tracks</span>
+      </label>
+   </div>
+   <button id="submit" class="sc-button">Save changes</button>
+   <span class="donation"><a href="https://www.paypal.me/benjaminbach" target="_blank">Buy me a cup of coffee</a></span>
+   <!-- Load scripts -->
+   <script src="js/jquery.min.js"></script>
+   <script src="js/insignia.min.js"></script>
+   <script src="js/popup.js"></script>
+</body>

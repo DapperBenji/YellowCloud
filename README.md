@@ -60,3 +60,6 @@ Follow the development here: https://trello.com/b/n7jrTzxO/soundcloud-enhancer.
 
 Thanks to @Paraspitfire for donating 10$, really appreciate it :D
 Remember to leave suggestions and drop a rating
+
+### Version 1.9 ###
+- Added the SCE settings menu to the popup menu
