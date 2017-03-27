@@ -1,7 +1,7 @@
 {
    "manifest_version": 2,
 
-   "version": "1.9",
+   "version": "2.0",
    "name": "SoundCloud Enhancer",
    "short_name": "SCE",
    "description": "This extension gives you tools, that will make your SoundCloud more customizable.",

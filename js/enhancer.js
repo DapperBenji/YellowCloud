@@ -3,26 +3,32 @@ var body = document.getElementsByTagName("BODY")[0];
 var soundPanel = document.getElementsByClassName('playControls')[0];
 var announcements = document.getElementsByClassName('announcements g-z-index-fixed-top')[0];
 var soundPanelInner = document.getElementsByClassName('playControls__inner')[0];
+var manifestData = chrome.runtime.getManifest();
 var getGlobalSettings = [];
 
 // Detect URL changes
 window.oldLocation = location.href;
 setInterval(function() {
    if(location.href != window.oldLocation) {
+      var counter = 0;
       var readyStateCheckInterval = setInterval(function() {
-         if (document.readyState === "complete") {
-            clearInterval(readyStateCheckInterval);
-            window.oldLocation = location.href;
-            settingsSetup();
-            injectedJavascript();
+         if (document.readyState !== "loading") {
+            counter++;
+            if(counter == 10){
+               clearInterval(readyStateCheckInterval);
+               window.oldLocation = location.href;
+               settingsSetup();
+               injectedJavascript();
+            }
          }
-      }, 10);
+      }, 100);
    }
-}, 3000);
+}, 100);
 
 //Get settings from chrome storage
 getGlobalSettings.push('darkMode');
 getGlobalSettings.push('hideSidebar');
+getGlobalSettings.push('oldUserProfile');
 getGlobalSettings.push('displayType');
 getGlobalSettings.push('removePreviews');
 getGlobalSettings.push('removePlaylists');
@@ -34,6 +40,9 @@ getGlobalSettings.push('relatedContext');
 getGlobalSettings.push('hiddenOutline');
 
 chrome.storage.sync.get(getGlobalSettings, function(get){
+   if(get.oldUserProfile != "on"){
+      body.setAttribute("data-profile", "new");
+   }
    if(get.darkMode == "on"){
       body.setAttribute("data-theme", "dark");
    }
@@ -56,132 +65,264 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
 });
 
 // Load the injected javascript on load
-window.onload = function() {
-  settingsSetup();
-  settingsMenu();
-  injectedJavascript();
-};
+var counterOnLoad = 0;
+var readyStateCheckIntervalOnLoad = setInterval(function() {
+   if (document.readyState !== "loading") {
+      counterOnLoad++;
+      if(counterOnLoad == 10){
+         clearInterval(readyStateCheckIntervalOnLoad);
+         settingsSetup();
+         settingsMenu();
+         injectedJavascript();
+      }
+   }
+}, 100);
 
 function settingsSetup(){
-  // Force-open sound control panel
-  soundPanel.setAttribute("class", "playControls g-z-index-header m-visible");
-  announcements.setAttribute("class", "announcements g-z-index-fixed-top m-offset");
+   /*--------------------------------------------------------------------------
+   | Setup the version number in the header logo
+   --------------------------------------------------------------------------*/
+   var logo = document.getElementsByClassName('header__logo left')[0];
 
-  // Create options button
-  var checkButton = document.querySelector("#enhancer-btn");
-  if(checkButton == null){
-     var div = document.createElement("div");
-     div.setAttribute('id',"enhancer-container");
+   var checkVersion = document.querySelector('#version-display');
+   if (checkVersion == null) {
+      var span = document.createElement("span");
+      span.setAttribute('id', "version-display");
+      span.innerText = manifestData.version;
 
-     var button = document.createElement("button");
-     button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
-     button.setAttribute('id',"enhancer-btn");
+      logo.appendChild(span);
+   }
 
-     button.innerText = "Enhancer settings";
+   // Force-open sound control panel
+   soundPanel.setAttribute("class", "playControls g-z-index-header m-visible");
+   announcements.setAttribute("class", "announcements g-z-index-fixed-top m-offset");
 
-     div.appendChild(button);
-     soundPanelInner.appendChild(div);
-  }
+   /*--------------------------------------------------------------------------
+   | Setup SoundCloud Enhancer button
+   --------------------------------------------------------------------------*/
+   var checkButton = document.querySelector("#enhancer-btn");
+   if(checkButton == null){
+      var div = document.createElement("div");
+      div.setAttribute('id',"enhancer-container");
+
+      var button = document.createElement("button");
+      button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
+      button.setAttribute('id',"enhancer-btn");
+
+      button.innerText = "Enhancer settings";
+
+      div.appendChild(button);
+      soundPanelInner.appendChild(div);
+   }
+
+   /*--------------------------------------------------------------------------
+   | Add a "like" menu point to the profiles
+   --------------------------------------------------------------------------*/
+   var profileMenu = document.querySelectorAll('ul.profileTabs.g-tabs')[0];
+   var getLikeButton = document.querySelector("#profile-tab-like");
+
+   if (profileMenu != null) {
+      if(getLikeButton == null){
+         var createLikeMenu = document.createElement("li");
+         createLikeMenu.setAttribute("class", "g-tabs-item");
+         createLikeMenu.setAttribute("id", "profile-tab-like");
+
+         var createLikeLink = document.createElement("a");
+         createLikeLink.setAttribute("class", "g-tabs-link");
+         createLikeLink.setAttribute("href", location.href+"/likes");
+         createLikeLink.innerText = "Likes";
+         createLikeMenu.appendChild(createLikeLink);
+         profileMenu.appendChild(createLikeMenu);
+      }
+   }
 }
 
 function settingsMenu() {
    // Create settings dialogbox
    var setGlobalSettings = {};
    var settingsbtn = document.getElementById('enhancer-btn');
+
    settingsbtn.addEventListener("click", function(){
       vex.dialog.open({
          className: 'vex-theme-top',
          input: [
-            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 1.9</h1>',
-            '<span class="credits">Made with <span class="heart">❤</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
-            '<h2>Design:</h2>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="darkMode" id="darkMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Enable dark mode</span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="hideSidebar" id="hideSidebar" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Hide sidebar</span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<span>View mode on stream</span>',
-               '<ul class="settings-display-list">',
-                  '<label>',
-                     '<input type="radio" name="displayType" value="default" class="hidden">',
-                     '<li class="setting-display-tile default-icon" title="Default"></li>',
+            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.0</h1>',
+            '<span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
+            '<ul id="tab-container">',
+               '<li><a href="javascript:void(0)" data-page="settings" class="tab active">Settings</a></li>',
+               '<li><a href="javascript:void(0)" data-page="changelog" class="tab">Changelog</a></li>',
+            '</ul>',
+            '<div id="settings" class="tabPage">',
+               '<h2>Design:</h2>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="darkMode" id="darkMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Enable dark mode</span>',
                   '</label>',
-                  '<label>',
-                     '<input type="radio" name="displayType" value="list" class="hidden">',
-                     '<li class="setting-display-tile list-icon" title="Compact"></li>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="hideSidebar" id="hideSidebar" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Hide sidebar</span>',
                   '</label>',
-                  '<label>',
-                     '<input type="radio" name="displayType" value="grid" class="hidden">',
-                     '<li class="setting-display-tile grid-icon" title="Grid"></li>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="oldUserProfile" id="oldUserProfile" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Use old profile page</span>',
                   '</label>',
-               '</ul>',
-            '</div>',
-            '<h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter all previews</span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="removePlaylists" id="removePlaylists" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter all playlists</span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter own user activity <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Hides all your own posts, reposts and playlists from the stream">?</button></span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<span class="skiptags-span">Filter tracks with specific tags:</span>',
-               '<div class="input">',
-                  '<input id="skipTags" placeholder="Add tags..." value="">',
+               '</div>',
+               '<div class="settings-option">',
+                  '<span>View mode on stream</span>',
+                  '<ul class="settings-display-list">',
+                     '<label>',
+                        '<input type="radio" name="displayType" value="default" class="hidden">',
+                        '<li class="setting-display-tile default-icon" title="Default"></li>',
+                     '</label>',
+                     '<label>',
+                        '<input type="radio" name="displayType" value="list" class="hidden">',
+                        '<li class="setting-display-tile list-icon" title="Compact"></li>',
+                     '</label>',
+                     '<label>',
+                        '<input type="radio" name="displayType" value="grid" class="hidden">',
+                        '<li class="setting-display-tile grid-icon" title="Grid"></li>',
+                     '</label>',
+                  '</ul>',
+               '</div>',
+               '<h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Filter all previews</span>',
+                  '</label>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="removePlaylists" id="removePlaylists" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Filter all playlists</span>',
+                  '</label>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>',
+                  '</label>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Filter own user activity <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Hides all your own posts, reposts and playlists from the stream">?</button></span>',
+                  '</label>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>',
+                  '</label>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<span class="skiptags-span">Filter tracks with specific tags:</span>',
+                  '<div class="input">',
+                     '<input id="skipTags" placeholder="Add tags..." value="">',
+                  '</div>',
+               '</div>',
+               '<h2>Features:</h2>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Add "related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
+                  '</label>',
+               '</div>',
+               '<div class="settings-option">',
+                  '<label class="checkbox sc-checkbox">',
+                     '<input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                     '<div class="sc-checkbox-check"></div>',
+                     '<span class="sc-checkbox-label">Show outline of hidden tracks</span>',
+                  '</label>',
                '</div>',
             '</div>',
-            '<h2>Features:</h2>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Add "related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
-               '</label>',
-            '</div>',
-            '<div class="settings-option">',
-               '<label class="checkbox sc-checkbox">',
-                  '<input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                  '<div class="sc-checkbox-check"></div>',
-                  '<span class="sc-checkbox-label">Show outline of hidden tracks</span>',
-               '</label>',
+            '<div id="changelog" class="tabPage">',
+               '<ul id="changelog-container">',
+                  '<article class="changelog-item">',
+                     '<h2>Version 2.0 (27. mar 2017)</h2>',
+                     '<li>Huge stability changes</li>',
+                     '<li>Made the "related tracks" more menu addition, more consistent. Before it wouldnt load on specific pages and tracks with coverart</li>',
+                     '<li>Fixed a bug where "related tracks" would show for a playlist</li>',
+                     '<li>Added a new userpage design</li>',
+                     '<li>Added a version number to the SCE logo in the header</li>',
+                     '<li>Added a "Like" tab to profiles</li>',
+                     '<li>Added a quick tag blacklist (Hit the "more" button on tracks with a tag</li>',
+                     '<hr>',
+                     '<span>Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) <br>Remember to follow me on Twitter, and @ me if there is any problems or suggestions!</span>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.9 (6. feb 2017)</h2>',
+                     '<li>Added the SCE settings menu to the popup menu.</li>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.8 (19. jan 2017)</h2>',
+                     '<li>Added tooltips to some options.</li>',
+                     '<li>Added the option to skip all reposts (Requested by <a href="https://twitter.com/Paraspitfire">@Paraspitfire</a>).</li>',
+                     '<li>Fixed SC announcement being displayed incorrectly.</li>',
+                     '<li>Replace the SC logo with the SCE logo.</li>',
+                     '<li>Various dark mode improvements.</li>',
+                     '<li>Fixed a bug where the SCE button wouldn’t work on some SC subpages.</li>',
+                     '<hr>',
+                     '<span>Thanks to <a href="https://twitter.com/Paraspitfire">@Paraspitfire</a> for donating 10$, really appreciate it :D <br>Remember to leave suggestions and drop a rating</span>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.7 (15. jan 2017)</h2>',
+                     '<li>More reliable change load.</li>',
+                     '<li>Added the option to skip playlists/albums.</li>',
+                     '<li>Added the option to hide own user activity.</li>',
+                     '<li>Rework to the song skipping code (Better reverse song detection).</li>',
+                     '<li>Dark mode tweaks.</li>',
+                     '<li>Now showing “Not available in your country” in grid mode.</li>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.6 (10. jan 2017)</h2>',
+                     '<li>Added a mass unfollow option inside <a href="https://soundcloud.com/you/following">https://soundcloud.com/you/following</a>.</li>',
+                     '<li>Minor improvements to the dark mode.</li>',
+                     '<li>Added a notice in the settings menu under the “filter” options.</li>',
+                     '<hr>',
+                     '<span>In the next couple of updates I will be focusing on the extension’s stability. Follow the development here: <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">https://trello.com/b/n7jrTzxO/soundcloud-enhancer</a>.</span>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.5 (7. jan 2017)</h2>',
+                     '<li>Fixed a huge bug where the tracks skipping changes wasn’t loaded. It will now automaticly scroll the page to load changes into DOM.</li>',
+                     '<li>Added a quick display type switch for the stream page.</li>',
+                     '<li>Added the option to show hidden tracks.</li>',
+                     '<li>Added a link to the project’s new trello board.</li>',
+                     '<li>Added an option to hide longer tracks (May still me bugs).</li>',
+                     '<li>Cleaned the code a bit.</li>',
+                     '<li>Added short name to the manifest.</li>',
+                     '<li>Removed the popup code.</li>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.1 (31. dec 2016)</h2>',
+                     '<li>Added a option to add related tracks to the “more” context menu.</li>',
+                     '<li>Fixed a typo.</li>',
+                     '<li>Various fixes to the dark mode (Special thanks to <a href="https://soundcloud.com/lasseppedersen">https://soundcloud.com/lasseppedersen</a>).</li>',
+                     '<li>Made the settings button responsive.</li>',
+                  '</article>',
+                  '<article class="changelog-item">',
+                     '<h2>Version 1.0 (8. dec 2016)</h2>',
+                     '<li>Added Dark mode.</li>',
+                     '<li>Added an option to remove the sidebar.</li>',
+                     '<li>Made a view mode toogle (default, list and grid view).</li>',
+                     '<li>Added a specific tag filter.</li>',
+                     '<li>Added a preview song filter.</li>',
+                  '</article>',
+               '</ul>',
             '</div>',
             '<span class="donation"><a href="https://www.paypal.me/benjaminbach">Buy me a cup of coffee</a></span>'
          ].join(''),
@@ -201,6 +342,7 @@ function settingsMenu() {
       // Populate settings dialogbox
       var darkModeInput = document.getElementById('darkMode');
       var hideSidebarInput = document.getElementById('hideSidebar');
+      var oldUserProfileInput = document.getElementById('oldUserProfile');
       var displayTypeInput = document.getElementsByName("displayType");
       var removePreviewsInput = document.getElementById("removePreviews");
       var removePlaylistsInput = document.getElementById("removePlaylists");
@@ -217,6 +359,9 @@ function settingsMenu() {
          }
          if(get.hideSidebar == "on"){
             hideSidebarInput.checked = true;
+         }
+         if (get.oldUserProfile == "on") {
+            oldUserProfileInput.checked = true;
          }
          if(get.displayType == "list"){
             displayTypeInput[1].checked = true;
@@ -251,12 +396,30 @@ function settingsMenu() {
          }
       });
 
-      // Load tags properly in the settings menu
       setTimeout(function() {
+         // Load tags properly in the settings menu
          insignia(skipTags, {
             delimiter: ',',
             deletion: true
          });
+
+         document.getElementById("settings").style.display = "block";
+         var tabContainer = document.getElementsByClassName('tab');
+         for (var i = 0; i < tabContainer.length; i++) {
+            tabContainer[i].addEventListener('click', function() {
+               for (var k = 0; k < tabContainer.length; k++) {
+                  tabContainer[k].className = "tab";
+               }
+               this.className = "tab active";
+               var tabPage = document.querySelectorAll(".tabPage");
+               for (j = 0; j < tabPage.length; j++) {
+                   tabPage[j].style.display = "none";
+               }
+               var getPage = this.getAttribute('data-page');
+               document.getElementById(getPage).style.display = "block";
+            });
+         }
+
       }, 100);
 
    }, false);
@@ -269,6 +432,9 @@ function settingsMenu() {
       }
       if (data.hideSidebar != "on") {
          data.hideSidebar = "off";
+      }
+      if (data.oldUserProfile != "on") {
+         data.oldUserProfile = "off";
       }
       if (data.displayType == "default"){
          data.displayType = "";
@@ -303,6 +469,7 @@ function settingsMenu() {
 
       setGlobalSettings.darkMode = data.darkMode;
       setGlobalSettings.hideSidebar = data.hideSidebar;
+      setGlobalSettings.oldUserProfile = data.oldUserProfile;
       setGlobalSettings.displayType = data.displayType;
       setGlobalSettings.removePreviews = data.removePreviews;
       setGlobalSettings.removePlaylists = data.removePlaylists;
@@ -328,7 +495,7 @@ function settingsMenu() {
 function injectedJavascript() {
    // Variables
    window.skipPrevious = "false";
-   var stream = document.querySelector('#content .lazyLoadingList ul');
+   var stream = document.querySelectorAll('.lazyLoadingList > ul');
    var content = document.getElementById('content');
    var soundBadge = document.getElementsByClassName('playbackSoundBadge')[0];
    var tags = document.getElementsByClassName('soundTitle__tagContent');
@@ -339,7 +506,7 @@ function injectedJavascript() {
 
    // Create quick display switcher on stream
    if(location.href == "https://soundcloud.com/stream"){
-      var streamHeader = document.getElementsByClassName('stream__header')[0];
+      var streamHeader = document.querySelectorAll('.stream__header')[0];
       var checkStreamController = document.querySelector("#stream-controller");
 
       if (checkStreamController == null) {
@@ -469,10 +636,14 @@ function injectedJavascript() {
       multiFollow();
 
       // Run the function after a lazyload
-      var unfollowObserver = new MutationObserver(function (mutationRecords, observer) {
-         mutationRecords.forEach(function (mutation) {multiFollow();});
-      });
-      unfollowObserver.observe(stream, config);
+      for (var i = 0; i < stream.length; i++) {
+         var unfollowObserver = new MutationObserver(function (mutationRecords, observer) {
+            mutationRecords.forEach(function (mutation) {
+               multiFollow();
+            });
+         });
+         unfollowObserver.observe(stream[i], config);
+      }
 
       var confirm = document.getElementById('confirm-unfollow-button');
       var undo = document.getElementById('undo-unfollow-button');
@@ -524,10 +695,14 @@ function injectedJavascript() {
          hideReposts();
 
          // Run the function after a lazyload
-         var repostObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {hideReposts();});
-         });
-         repostObserver.observe(stream, config);
+         for (var i = 0; i < stream.length; i++) {
+            var repostObserver = new MutationObserver(function (mutationRecords, observer) {
+               mutationRecords.forEach(function (mutation) {
+                  hideReposts();
+               });
+            });
+            repostObserver.observe(stream[i], config);
+         }
       }
 
       // Remove songs with a specific tag
@@ -553,76 +728,190 @@ function injectedJavascript() {
          checkTags();
 
          // Run function after a lazyload
-         var tagsObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {checkTags();});
-         });
-         tagsObserver.observe(stream, config);
+         for (var i = 0; i < stream.length; i++) {
+            var tagsObserver = new MutationObserver(function (mutationRecords, observer) {
+               mutationRecords.forEach(function (mutation) {
+                  checkTags();
+               });
+            });
+            tagsObserver.observe(stream[i], config);
+         }
       }
 
       // Add related tracks option to the more context menu
-      if(get.relatedContext == "on"){
-         function relatedContext() {
-            window.relatedContextMode = 0;
-            window.registerMoreClick = document.querySelectorAll('.soundActions button.sc-button-more');
-            if (window.registerMoreClick.length == 0) {
-               window.registerMoreClick = document.querySelectorAll('.audibleTile__actions button.sc-button-more');
-               window.relatedContextMode = 1;
-            }
-            for (var i = 0; i < window.registerMoreClick.length; i++) {
-               registerMoreClick[i].addEventListener('click', function() {
-                  var getMoreContextMenu = document.querySelector('.moreActions div');
-                  if (window.relatedContextMode == 1) {
-                     if (location.href == "https://soundcloud.com/you/likes") {
+      var detectUser = document.querySelectorAll('.userMain .userMain__content')[0];
+      function relatedContext() {
+         if(detectUser != null){
+            window.displayType = document.getElementsByClassName('lazyLoadingList')[0];
+            window.displayTypeList = document.querySelectorAll('.lazyLoadingList ul.soundList.sc-list-nostyle');
+         } else if (location.href == "https://soundcloud.com/you/collection") {
+            window.displayType = document.getElementsByClassName('lazyLoadingList')[1];
+            window.displayTypeList = document.querySelectorAll('.lazyLoadingList ul.lazyLoadingList__list');
+         } else {
+            window.displayType = document.getElementsByClassName('lazyLoadingList')[0];
+            window.displayTypeList = document.querySelectorAll('.lazyLoadingList ul.lazyLoadingList__list');
+         }
+
+         // Resets the context menu type, based on display type
+         var detectToggle = document.querySelectorAll('.listDisplayToggle__optionToggle');
+         for (var i = 0; i < detectToggle.length; i++) {
+            detectToggle[i].addEventListener('click', function() {
+               setTimeout(function(){ relatedContext(); }, 1000);
+            });
+         }
+         var displayTypeClass = window.displayType.className;
+
+         if(displayTypeClass.includes("badgeList") == true || displayTypeClass.includes("personalRecommended") == true){
+            var badgeList = document.querySelectorAll('.audibleTile__actions button.sc-button-more');
+            for (var i = 0; i < badgeList.length; i++) {
+               badgeList[i].addEventListener('click', function() {
+                  var getMoreContextMenu = document.querySelectorAll('.moreActions div')[0];
+                  if (getMoreContextMenu != null) {
+                     if (location.href == "https://soundcloud.com/you/likes" || location.href == "https://soundcloud.com/you/collection") {
                         var getSongContainer = this.closest('.badgeList__item');
                      }else{
                         var getSongContainer = this.closest('.soundGallery__sliderPanelSlide');
                      }
                      var getSongLinks = getSongContainer.querySelector('.audibleTile .audibleTile__artwork .audibleTile__artworkLink');
                      var getSongHref = getSongLinks.getAttribute("href");
-                     var checkContextMenu = document.querySelector('.moreActions div #related-button');
+                     var checkContextMenu = document.querySelectorAll('.moreActions div #related-button')[0];
                      if (checkContextMenu == null) {
-                        var createAchor = document.createElement("a");
-                        createAchor.setAttribute('href', getSongHref + "/recommended");
+                        var checkPlaylists = getSongContainer.querySelector('.audibleTile__trackCount');
+                        var checkForTag = getSongContainer.querySelector('.soundTitle__tagContent');
+                        var checkForTagButton = getSongContainer.querySelector('#tag-button');
 
-                        var createButton = document.createElement("button");
-                        createButton.setAttribute('id',"related-button");
-                        createButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
-                        createButton.setAttribute('title',"Go to related tracks");
-                        createButton.innerText = "Related tracks";
+                        if(checkForTag != null){
+                           if (checkForTagButton == null) {
+                              var createTagRemoveButton = document.createElement("button");
+                              createTagRemoveButton.setAttribute('id',"tag-button");
+                              createTagRemoveButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                              createTagRemoveButton.setAttribute('title',"Click to ban this track's tag");
+                              createTagRemoveButton.setAttribute('data-hashtag', checkForTag.innerText);
+                              createTagRemoveButton.innerText = "Blacklist tag";
 
-                        createAchor.appendChild(createButton);
-                        getMoreContextMenu.appendChild(createAchor);
+                              getMoreContextMenu.appendChild(createTagRemoveButton);
+
+                              var getTagRemoveButton = document.getElementById('tag-button');
+                              getTagRemoveButton.addEventListener("click", function() {
+                                 var setGlobalSettings = {};
+                                 var bannedTag = this.getAttribute("data-hashtag");
+                                 var newTagsArray = get.tagsArray + "," + bannedTag;
+                                 setGlobalSettings.tagsArray = newTagsArray;
+
+                                 // Store all options in chrome
+                                 chrome.storage.sync.set(setGlobalSettings, function(){
+                                    if (chrome.runtime.lastError) {
+                                       alert('Error settings:\n\n'+chrome.runtime.lastError);
+                                    }
+                                 });
+
+                                 //Refresh the page
+                                 location.reload();
+                              });
+                           }
+                        }
+
+                        if (checkPlaylists == null) {
+                           if(get.relatedContext == "on"){
+                              var createAchor = document.createElement("a");
+                              createAchor.setAttribute('href', getSongHref + "/recommended");
+
+                              var createButton = document.createElement("button");
+                              createButton.setAttribute('id',"related-button");
+                              createButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                              createButton.setAttribute('title',"Go to related tracks");
+                              createButton.innerText = "Related tracks";
+
+                              createAchor.appendChild(createButton);
+                              getMoreContextMenu.appendChild(createAchor);
+                           }
+                        }
                      }
-                  } else {
-                     var getSongContainer = this.closest('.sound__content');
-                     var getSongLinks = getSongContainer.querySelector('.sound__header .soundTitle .soundTitle__titleContainer .soundTitle__usernameTitleContainer .soundTitle__title');
+                  }
+               });
+            }
+         } else {
+            var soundList = document.querySelectorAll('.soundActions button.sc-button-more');
+            for (var i = 0; i < soundList.length; i++) {
+               soundList[i].addEventListener('click', function() {
+                  var getMoreContextMenu = document.querySelector('.moreActions div');
+                  if (getMoreContextMenu != null) {
+                     var getSongContainer = this.closest('.sound__body');
+                     if (getSongContainer == null) {
+                        var getSongContainer = this.closest('.visualSound__wrapper');
+                     }
+                     var getSongLinks = getSongContainer.querySelector('.sound__header .soundTitle .soundTitle__titleContainer .soundTitle__usernameTitleContainer a.soundTitle__title');
                      var getSongHref = getSongLinks.getAttribute("href");
-                     var checkContextMenu = document.querySelector('.moreActions div #related-button');
+                     var checkContextMenu = document.querySelectorAll('.moreActions div #related-button')[0];
                      if (checkContextMenu == null) {
-                        var createAchor = document.createElement("a");
-                        createAchor.setAttribute('href', getSongHref + "/recommended");
+                        var checkPlaylists = getSongContainer.querySelector('.playlistTrackCount');
+                        var checkForTag = getSongContainer.querySelector('.soundTitle__tagContent');
+                        var checkForTagButton = getSongContainer.querySelector('#tag-button');
 
-                        var createButton = document.createElement("button");
-                        createButton.setAttribute('id',"related-button");
-                        createButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
-                        createButton.setAttribute('title',"Go to related tracks");
-                        createButton.innerText = "Related tracks";
+                        if(checkForTag != null){
+                           if (checkForTagButton == null) {
+                              var createTagRemoveButton = document.createElement("button");
+                              createTagRemoveButton.setAttribute('id',"tag-button");
+                              createTagRemoveButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                              createTagRemoveButton.setAttribute('title',"Click to ban this track's tag");
+                              createTagRemoveButton.setAttribute('data-hashtag', checkForTag.innerText);
+                              createTagRemoveButton.innerText = "Blacklist tag";
 
-                        createAchor.appendChild(createButton);
-                        getMoreContextMenu.appendChild(createAchor);
+                              getMoreContextMenu.appendChild(createTagRemoveButton);
+
+                              var getTagRemoveButton = document.getElementById('tag-button');
+                              getTagRemoveButton.addEventListener("click", function() {
+                                 var setGlobalSettings = {};
+                                 var bannedTag = this.getAttribute("data-hashtag");
+                                 var newTagsArray = get.tagsArray + "," + bannedTag;
+                                 setGlobalSettings.tagsArray = newTagsArray;
+
+                                 // Store all options in chrome
+                                 chrome.storage.sync.set(setGlobalSettings, function(){
+                                    if (chrome.runtime.lastError) {
+                                       alert('Error settings:\n\n'+chrome.runtime.lastError);
+                                    }
+                                 });
+
+                                 //Refresh the page
+                                 location.reload();
+                              });
+                           }
+                        }
+
+                        if (checkPlaylists == null) {
+                           if(get.relatedContext == "on"){
+                              var createAchor = document.createElement("a");
+                              createAchor.setAttribute('href', getSongHref + "/recommended");
+
+                              var createButton = document.createElement("button");
+                              createButton.setAttribute('id',"related-button");
+                              createButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                              createButton.setAttribute('title',"Go to related tracks");
+                              createButton.innerText = "Related tracks";
+
+                              createAchor.appendChild(createButton);
+                              getMoreContextMenu.appendChild(createAchor);
+                           }
+                        }
                      }
                   }
                });
             }
          }
-         relatedContext();
-
-         // Run the function after a lazyload
-         var moreClickObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {relatedContext();});
-         });
-         moreClickObserver.observe(stream, config);
       }
+
+      // Run the function after a lazyload
+      moreClickObserver = new MutationObserver(function (mutations) {
+         mutations.forEach(function (mutation) {
+            relatedContext();
+         });
+      });
+      for (var m = 0; m < stream.length; m++) {
+         moreClickObserver.observe(document.querySelectorAll('.lazyLoadingList ul')[m], config);
+      }
+
+      relatedContext();
 
       // Remove previews
       if(get.removePreviews == "on"){
@@ -641,10 +930,14 @@ function injectedJavascript() {
          hidePreviews();
 
          // Run the function after a lazyload
-         var previewObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {hidePreviews();});
-         });
-         previewObserver.observe(stream, config);
+         for (var i = 0; i < stream.length; i++) {
+            var previewObserver = new MutationObserver(function (mutationRecords, observer) {
+               mutationRecords.forEach(function (mutation) {
+                  hidePreviews();
+               });
+            });
+            previewObserver.observe(stream[i], config);
+         }
       }
 
       // Remove playlist
@@ -662,10 +955,14 @@ function injectedJavascript() {
          hidePlaylists();
 
          // Run the function after a lazyload
-         var playlistObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {hidePlaylists();});
-         });
-         playlistObserver.observe(stream, config);
+         for (var i = 0; i < stream.length; i++) {
+            var playlistObserver = new MutationObserver(function (mutationRecords, observer) {
+               mutationRecords.forEach(function (mutation) {
+                  hidePlaylists();
+               });
+            });
+            playlistObserver.observe(stream[i], config);
+         }
 
       }
 
@@ -692,10 +989,14 @@ function injectedJavascript() {
          checkCanvas();
 
          // Run the function after a lazyload
-         var canvasObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {checkCanvas();});
-         });
-         canvasObserver.observe(stream, config);
+         for (var i = 0; i < stream.length; i++) {
+            var canvasObserver = new MutationObserver(function (mutationRecords, observer) {
+               mutationRecords.forEach(function (mutation) {
+                  checkCanvas();
+               });
+            });
+            canvasObserver.observe(stream[i], config);
+         }
       }
 
       if (get.removeUserActivity == "on") {
@@ -715,10 +1016,14 @@ function injectedJavascript() {
          checkUserActivity();
 
          // Run the function after a lazyload
-         var userActivityObserver = new MutationObserver(function (mutationRecords, observer) {
-            mutationRecords.forEach(function (mutation) {checkUserActivity();});
-         });
-         userActivityObserver.observe(stream, config);
+         for (var i = 0; i < stream.length; i++) {
+            var userActivityObserver = new MutationObserver(function (mutationRecords, observer) {
+               mutationRecords.forEach(function (mutation) {
+                  checkUserActivity();
+               });
+            });
+            userActivityObserver.observe(stream[i], config);
+         }
       }
    });
 
@@ -737,10 +1042,15 @@ function injectedJavascript() {
    markPlaylists();
 
    // Run the function after a lazyload
-   var markPlaylistsObserver = new MutationObserver(function (mutationRecords, observer) {
-      mutationRecords.forEach(function (mutation) {markPlaylists();});
-   });
-   markPlaylistsObserver.observe(stream, config);
+   var markPlaylistsObserver = [];
+   for (var i = 0; i < stream.length; i++) {
+      markPlaylistsObserver[i] = new MutationObserver(function (mutationRecords, observer) {
+         mutationRecords.forEach(function (mutation) {
+            markPlaylists();
+         });
+      });
+      markPlaylistsObserver[i].observe(stream[i], config);
+   }
 
    window.skipPrevious = "false";
    var nextSongObserver = new MutationObserver(function (mutationRecords, observer) {

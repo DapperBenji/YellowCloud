@@ -6,6 +6,7 @@ var getGlobalSettings = [];
 //Get settings from chrome storage
 getGlobalSettings.push('darkMode');
 getGlobalSettings.push('hideSidebar');
+getGlobalSettings.push('oldUserProfile');
 getGlobalSettings.push('displayType');
 getGlobalSettings.push('removePreviews');
 getGlobalSettings.push('removePlaylists');
@@ -26,6 +27,7 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
 // Populate settings dialogbox
 var darkModeInput = document.getElementById('darkMode');
 var hideSidebarInput = document.getElementById('hideSidebar');
+var oldUserProfileInput = document.getElementById('oldUserProfile');
 var displayTypeInput = document.getElementsByName("displayType");
 var removePreviewsInput = document.getElementById("removePreviews");
 var removePlaylistsInput = document.getElementById("removePlaylists");
@@ -42,6 +44,9 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
    }
    if(get.hideSidebar == "on"){
       hideSidebarInput.checked = true;
+   }
+   if (get.oldUserProfile == "on") {
+      oldUserProfileInput.checked = true;
    }
    if(get.displayType == "list"){
       displayTypeInput[1].checked = true;
@@ -94,6 +99,9 @@ submit.addEventListener('click', function() {
    if (hideSidebarInput.checked != true) {
       hideSidebarInput.value = "off";
    }
+   if (oldUserProfileInput.checked != true) {
+      oldUserProfileInput.value = "off";
+   }
    for (var i = 0, length = displayTypeInput.length; i < length; i++) {
       if (displayTypeInput[i].checked) {
          displayTypeInput.value = displayTypeInput[i].value;
@@ -130,6 +138,7 @@ submit.addEventListener('click', function() {
 
    setGlobalSettings.darkMode = darkModeInput.value;
    setGlobalSettings.hideSidebar = hideSidebarInput.value;
+   setGlobalSettings.oldUserProfile = oldUserProfileInput.value;
    setGlobalSettings.displayType = displayTypeInput.value;
    setGlobalSettings.removePreviews = removePreviewsInput.value;
    setGlobalSettings.removePlaylists = removePlaylistsInput.value;
