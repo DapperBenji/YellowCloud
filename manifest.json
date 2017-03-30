@@ -1,7 +1,7 @@
 {
    "manifest_version": 2,
 
-   "version": "2.0",
+   "version": "2.1",
    "name": "SoundCloud Enhancer",
    "short_name": "SCE",
    "description": "This extension gives you tools, that will make your SoundCloud more customizable.",
@@ -28,5 +28,5 @@
       "default_title": "SoundCloud Enhancer",
       "default_popup": "popup.html"
    },
-   "permissions": [ "tabs", "storage", "activeTab", "https://soundcloud.com/" ]
+   "permissions": [ "storage", "https://soundcloud.com/" ]
 }
