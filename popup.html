@@ -5,7 +5,7 @@
    <link rel="stylesheet" href="css/popup.css">
 </head>
 <body id="body">
-   <h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.1</h1>
+   <h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.2</h1>
    <span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji" target="_blank">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer" target="_blank">Trello</a>.</span>
    <h2>Design:</h2>
    <div class="settings-option">
@@ -17,9 +17,23 @@
    </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="removeSettingsBtn" id="removeSettingsBtn" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Removes the "Enhancer settings" button</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
          <input type="checkbox" name="hideSidebar" id="hideSidebar" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
          <span class="sc-checkbox-label">Hide sidebar</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="hideTheUpload" id="hideTheUpload" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Hide "The Upload" from the "Discover" tab</span>
       </label>
    </div>
    <div class="settings-option">
@@ -103,7 +117,7 @@
          <span class="sc-checkbox-label">Show outline of hidden tracks</span>
       </label>
    </div>
-   <button id="submit" class="sc-button">Save changes</button>
+   <button id="submit" type="button" class="sc-button">Save changes</button>
    <span class="donation"><a href="https://www.paypal.me/benjaminbach" target="_blank">Buy me a cup of coffee</a></span>
    <!-- Load scripts -->
    <script src="js/jquery.min.js"></script>

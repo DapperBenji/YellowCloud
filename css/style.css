@@ -3,6 +3,8 @@
 .header__logo{background: none !important; position: relative;}
 .notice{font-size: 11px;}
 .tabPage{display: none;}
+#submit{cursor: pointer;}
+#mass-unfollow{margin-left: 15px;}
 #changelog-container{margin: 0;}
 #changelog-container .changelog-item span{font-size: 12px;}
 #changelog-container .changelog-item hr{width: 100px;height: 3px;margin: 10px 0;}
@@ -66,6 +68,9 @@
 .announcement>.announcement__message>a{color: #000000 !important;}
 .announcement__dismiss{-webkit-filter: brightness(0.5);}
 
+/* Hide the "The Upload" playlist */
+body[data-theupload="hidden"] .personalRecommendedMain__banner{display: none;}
+
 /* New profile CSS */
 body[data-profile="new"] .l-user-main{width: 100%; margin: 0 !important; display: table-footer-group !important;}
 body[data-profile="new"] .l-user-sidebar-right{width: 100%; position: initial; display: table-header-group !important;}
@@ -77,6 +82,15 @@ body[data-profile="new"] .l-user-sidebar-right .infoStats .infoStats__table tbod
 body[data-profile="new"] .l-user-sidebar-right .infoStats .infoStats__table .infoStats__stat{border: none !important;}
 
 /* Dark mode CSS */
+body[data-theme="dark"] .sc-button.sc-button-translucent:not(.sc-button-cta) {background-color: rgba(0, 0, 0, 0.8); border-color: rgba(255, 255, 255, 0.2);}
+body[data-theme="dark"] .sc-button.sc-button-translucent:not(.sc-button-cta):hover, body[data-theme="dark"] .sc-button.sc-button-translucent:not(.sc-button-cta):focus, body[data-theme="dark"] .sc-button.sc-button-translucent.sc-button-active:not(.sc-button-cta) { background-color: rgb(0, 0, 0); border-color: rgba(0,0,0,.3);}
+body[data-theme="dark"] .queue__itemsHeight{background: none;}
+body[data-theme="dark"] .playControls__bg{border-top: none; top: 0;}
+body[data-theme="dark"] .queueFallback__stationMode{border-top: none;}
+body[data-theme="dark"] .queueItemView:hover, body[data-theme="dark"] .queueItemView.m-active {background: #3e3e3e;}
+body[data-theme="dark"] .playControls__inner{border-top: 1px solid #3f3f3f;}
+body[data-theme="dark"] .queue__panel{border-bottom: 1px solid #484848;}
+body[data-theme="dark"] .queue__itemWrapper, body[data-theme="dark"] .queue{background: #333;}
 body[data-theme="dark"] #tab-container a.tab.active{background: rgb(23, 23, 23);}
 body[data-theme="dark"] .announcement{background-color: rgba(0,0,0,.9) !important; color: rgb(145, 145, 145) !important;}
 body[data-theme="dark"] .sc-button.sc-button-small:before{-webkit-filter: brightness(3.5);}

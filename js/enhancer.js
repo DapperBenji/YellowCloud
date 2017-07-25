@@ -27,7 +27,9 @@ setInterval(function() {
 
 //Get settings from chrome storage
 getGlobalSettings.push('darkMode');
+getGlobalSettings.push('removeSettingsBtn');
 getGlobalSettings.push('hideSidebar');
+getGlobalSettings.push('hideTheUpload');
 getGlobalSettings.push('oldUserProfile');
 getGlobalSettings.push('displayType');
 getGlobalSettings.push('removePreviews');
@@ -40,24 +42,27 @@ getGlobalSettings.push('relatedContext');
 getGlobalSettings.push('hiddenOutline');
 
 chrome.storage.sync.get(getGlobalSettings, function(get){
-   if(get.oldUserProfile != "on"){
+   if (get.oldUserProfile != "on"){
       body.setAttribute("data-profile", "new");
    }
-   if(get.darkMode == "on"){
+   if (get.darkMode == "on"){
       body.setAttribute("data-theme", "dark");
    }
-   if(get.hideSidebar == "on"){
+   if (get.hideSidebar == "on"){
       body.setAttribute("data-sidebar", "hidden");
-   }else{
+   } else {
       body.setAttribute("data-sidebar", "show");
    }
-   if(get.displayType == "list"){
+   if (get.displayType == "list"){
       body.setAttribute("data-display", "list");
    }
    else if(get.displayType == "grid"){
       body.setAttribute("data-display", "grid");
-   }else{
+   } else {
       body.setAttribute("data-display", "default");
+   }
+   if (get.hideTheUpload == "on") {
+      body.setAttribute("data-theupload", "hidden");
    }
    if (get.hiddenOutline == "on") {
       body.setAttribute("data-hidden-outline", "show");
@@ -100,19 +105,45 @@ function settingsSetup(){
    /*--------------------------------------------------------------------------
    | Setup SoundCloud Enhancer button
    --------------------------------------------------------------------------*/
-   var checkButton = document.querySelector("#enhancer-btn");
-   if(checkButton == null){
-      var div = document.createElement("div");
-      div.setAttribute('id',"enhancer-container");
+   chrome.storage.sync.get(getGlobalSettings, function(get) {
+      if (get.removeSettingsBtn != "on") {
+         var checkButton = document.querySelector("#enhancer-btn");
+         if(checkButton == null){
+            var div = document.createElement("div");
+            div.setAttribute('id',"enhancer-container");
 
-      var button = document.createElement("button");
-      button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
-      button.setAttribute('id',"enhancer-btn");
+            var button = document.createElement("button");
+            button.setAttribute('class',"sc-button-edit sc-button sc-button-medium sc-button-responsive");
+            button.setAttribute('id',"enhancer-btn");
 
-      button.innerText = "Enhancer settings";
+            button.innerText = "Enhancer settings";
 
-      div.appendChild(button);
-      soundPanelInner.appendChild(div);
+            div.appendChild(button);
+            soundPanelInner.appendChild(div);
+         }
+      }
+   });
+
+   /*--------------------------------------------------------------------------
+   | Add the "The Upload" playlist to the stream explore tab
+   --------------------------------------------------------------------------*/
+
+   var exploreTab = document.querySelectorAll('.streamExploreTabs ul.g-tabs')[0];
+   var checkExploreTab = document.querySelector("#the-upload-tab");
+   if (exploreTab != null) {
+      if(checkExploreTab == null){
+         var tabItem = document.createElement("li");
+         tabItem.setAttribute("class", "g-tabs-item");
+
+         var tabItemLink = document.createElement("a");
+         tabItemLink.setAttribute("class", "g-tabs-link");
+         tabItemLink.setAttribute("id", "the-upload-tab");
+         tabItemLink.setAttribute("href", "/discover/the-upload");
+         tabItemLink.innerText = "The Upload";
+
+         tabItem.appendChild(tabItemLink);
+         exploreTab.appendChild(tabItem);
+      }
    }
 
    /*--------------------------------------------------------------------------
@@ -138,362 +169,405 @@ function settingsSetup(){
 }
 
 function settingsMenu() {
-   // Create settings dialogbox
-   var setGlobalSettings = {};
-   var settingsbtn = document.getElementById('enhancer-btn');
+   chrome.storage.sync.get(getGlobalSettings, function(get) {
+      if (get.removeSettingsBtn != "on") {
 
-   settingsbtn.addEventListener("click", function(){
-      vex.dialog.open({
-         className: 'vex-theme-top',
-         input: [
-            '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.0</h1>',
-            '<span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
-            '<ul id="tab-container">',
-               '<li><a href="javascript:void(0)" data-page="settings" class="tab active">Settings</a></li>',
-               '<li><a href="javascript:void(0)" data-page="changelog" class="tab">Changelog</a></li>',
-            '</ul>',
-            '<div id="settings" class="tabPage">',
-               '<h2>Design:</h2>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="darkMode" id="darkMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Enable dark mode</span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="hideSidebar" id="hideSidebar" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Hide sidebar</span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="oldUserProfile" id="oldUserProfile" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Use old profile page</span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<span>View mode on stream</span>',
-                  '<ul class="settings-display-list">',
-                     '<label>',
-                        '<input type="radio" name="displayType" value="default" class="hidden">',
-                        '<li class="setting-display-tile default-icon" title="Default"></li>',
-                     '</label>',
-                     '<label>',
-                        '<input type="radio" name="displayType" value="list" class="hidden">',
-                        '<li class="setting-display-tile list-icon" title="Compact"></li>',
-                     '</label>',
-                     '<label>',
-                        '<input type="radio" name="displayType" value="grid" class="hidden">',
-                        '<li class="setting-display-tile grid-icon" title="Grid"></li>',
-                     '</label>',
+         // Create settings dialogbox
+         var setGlobalSettings = {};
+         var settingsbtn = document.getElementById('enhancer-btn');
+
+         settingsbtn.addEventListener("click", function(){
+            vex.dialog.open({
+               className: 'vex-theme-top',
+               input: [
+                  '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.2</h1>',
+                  '<span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
+                  '<ul id="tab-container">',
+                     '<li><a href="javascript:void(0)" data-page="settings" class="tab active">Settings</a></li>',
+                     '<li><a href="javascript:void(0)" data-page="changelog" class="tab">Changelog</a></li>',
                   '</ul>',
-               '</div>',
-               '<h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Filter all previews</span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="removePlaylists" id="removePlaylists" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Filter all playlists</span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Filter own user activity <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Hides all your own posts, reposts and playlists from the stream">?</button></span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<span class="skiptags-span">Filter tracks with specific tags:</span>',
-                  '<div class="input">',
-                     '<input id="skipTags" placeholder="Add tags..." value="">',
+                  '<div id="settings" class="tabPage">',
+                     '<h2>Design:</h2>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="darkMode" id="darkMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Enable dark mode</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="removeSettingsBtn" id="removeSettingsBtn" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Removes the "Enhancer settings" button</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="hideSidebar" id="hideSidebar" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Hide sidebar</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="hideTheUpload" id="hideTheUpload" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Hide "The Upload" from the "Discover" tab</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="oldUserProfile" id="oldUserProfile" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Use old profile page</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<span>View mode on stream</span>',
+                        '<ul class="settings-display-list">',
+                           '<label>',
+                              '<input type="radio" name="displayType" value="default" class="hidden">',
+                              '<li class="setting-display-tile default-icon" title="Default"></li>',
+                           '</label>',
+                           '<label>',
+                              '<input type="radio" name="displayType" value="list" class="hidden">',
+                              '<li class="setting-display-tile list-icon" title="Compact"></li>',
+                           '</label>',
+                           '<label>',
+                              '<input type="radio" name="displayType" value="grid" class="hidden">',
+                              '<li class="setting-display-tile grid-icon" title="Grid"></li>',
+                           '</label>',
+                        '</ul>',
+                     '</div>',
+                     '<h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Filter all previews</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="removePlaylists" id="removePlaylists" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Filter all playlists</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Filter own user activity <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Hides all your own posts, reposts and playlists from the stream">?</button></span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<span class="skiptags-span">Filter tracks with specific tags:</span>',
+                        '<div class="input">',
+                           '<input id="skipTags" placeholder="Add tags..." value="">',
+                        '</div>',
+                     '</div>',
+                     '<h2>Features:</h2>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Add "related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Show outline of hidden tracks</span>',
+                        '</label>',
+                     '</div>',
                   '</div>',
-               '</div>',
-               '<h2>Features:</h2>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Add "related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
-                  '</label>',
-               '</div>',
-               '<div class="settings-option">',
-                  '<label class="checkbox sc-checkbox">',
-                     '<input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                     '<div class="sc-checkbox-check"></div>',
-                     '<span class="sc-checkbox-label">Show outline of hidden tracks</span>',
-                  '</label>',
-               '</div>',
-            '</div>',
-            '<div id="changelog" class="tabPage">',
-               '<ul id="changelog-container">',
-                  '<article class="changelog-item">',
-                     '<h2>Version 2.1 (30. mar 2017)</h2>',
-                     '<li>The extension has asking to read browser history, which wasnt used for anything. That have been fixed.</li>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 2.0 (27. mar 2017)</h2>',
-                     '<li>Huge stability changes</li>',
-                     '<li>Made the "related tracks" more menu addition, more consistent. Before it wouldnt load on specific pages and tracks with coverart</li>',
-                     '<li>Fixed a bug where "related tracks" would show for a playlist</li>',
-                     '<li>Added a new userpage design</li>',
-                     '<li>Added a version number to the SCE logo in the header</li>',
-                     '<li>Added a "Like" tab to profiles</li>',
-                     '<li>Added a quick tag blacklist (Hit the "more" button on tracks with a tag</li>',
-                     '<hr>',
-                     '<span>Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) <br>Remember to follow me on Twitter, and @ me if there is any problems or suggestions!</span>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.9 (6. feb 2017)</h2>',
-                     '<li>Added the SCE settings menu to the popup menu.</li>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.8 (19. jan 2017)</h2>',
-                     '<li>Added tooltips to some options.</li>',
-                     '<li>Added the option to skip all reposts (Requested by <a href="https://twitter.com/Paraspitfire">@Paraspitfire</a>).</li>',
-                     '<li>Fixed SC announcement being displayed incorrectly.</li>',
-                     '<li>Replace the SC logo with the SCE logo.</li>',
-                     '<li>Various dark mode improvements.</li>',
-                     '<li>Fixed a bug where the SCE button wouldn’t work on some SC subpages.</li>',
-                     '<hr>',
-                     '<span>Thanks to <a href="https://twitter.com/Paraspitfire">@Paraspitfire</a> for donating 10$, really appreciate it :D <br>Remember to leave suggestions and drop a rating</span>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.7 (15. jan 2017)</h2>',
-                     '<li>More reliable change load.</li>',
-                     '<li>Added the option to skip playlists/albums.</li>',
-                     '<li>Added the option to hide own user activity.</li>',
-                     '<li>Rework to the song skipping code (Better reverse song detection).</li>',
-                     '<li>Dark mode tweaks.</li>',
-                     '<li>Now showing “Not available in your country” in grid mode.</li>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.6 (10. jan 2017)</h2>',
-                     '<li>Added a mass unfollow option inside <a href="https://soundcloud.com/you/following">https://soundcloud.com/you/following</a>.</li>',
-                     '<li>Minor improvements to the dark mode.</li>',
-                     '<li>Added a notice in the settings menu under the “filter” options.</li>',
-                     '<hr>',
-                     '<span>In the next couple of updates I will be focusing on the extension’s stability. Follow the development here: <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">https://trello.com/b/n7jrTzxO/soundcloud-enhancer</a>.</span>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.5 (7. jan 2017)</h2>',
-                     '<li>Fixed a huge bug where the tracks skipping changes wasn’t loaded. It will now automaticly scroll the page to load changes into DOM.</li>',
-                     '<li>Added a quick display type switch for the stream page.</li>',
-                     '<li>Added the option to show hidden tracks.</li>',
-                     '<li>Added a link to the project’s new trello board.</li>',
-                     '<li>Added an option to hide longer tracks (May still me bugs).</li>',
-                     '<li>Cleaned the code a bit.</li>',
-                     '<li>Added short name to the manifest.</li>',
-                     '<li>Removed the popup code.</li>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.1 (31. dec 2016)</h2>',
-                     '<li>Added a option to add related tracks to the “more” context menu.</li>',
-                     '<li>Fixed a typo.</li>',
-                     '<li>Various fixes to the dark mode (Special thanks to <a href="https://soundcloud.com/lasseppedersen">https://soundcloud.com/lasseppedersen</a>).</li>',
-                     '<li>Made the settings button responsive.</li>',
-                  '</article>',
-                  '<article class="changelog-item">',
-                     '<h2>Version 1.0 (8. dec 2016)</h2>',
-                     '<li>Added Dark mode.</li>',
-                     '<li>Added an option to remove the sidebar.</li>',
-                     '<li>Made a view mode toogle (default, list and grid view).</li>',
-                     '<li>Added a specific tag filter.</li>',
-                     '<li>Added a preview song filter.</li>',
-                  '</article>',
-               '</ul>',
-            '</div>',
-            '<span class="donation"><a href="https://www.paypal.me/benjaminbach">Buy me a cup of coffee</a></span>'
-         ].join(''),
-         buttons: [
-            $.extend({}, vex.dialog.buttons.YES, { text: 'Save settings', className: 'sc-button' }),
-            $.extend({}, vex.dialog.buttons.NO, { text: 'Cancel', className: 'sc-button-nostyle' })
-         ],
-         callback: function(data) {
-             if (!data) {
-               console.log('No data saved!');
-            } else {
-               saveSettings(data);
-            }
-         }
-      })
-
-      // Populate settings dialogbox
-      var darkModeInput = document.getElementById('darkMode');
-      var hideSidebarInput = document.getElementById('hideSidebar');
-      var oldUserProfileInput = document.getElementById('oldUserProfile');
-      var displayTypeInput = document.getElementsByName("displayType");
-      var removePreviewsInput = document.getElementById("removePreviews");
-      var removePlaylistsInput = document.getElementById("removePlaylists");
-      var removeLongTracksInput = document.getElementById("removeLongTracks");
-      var removeUserActivityInput = document.getElementById("removeUserActivity");
-      var removeRepostsInput = document.getElementById('removeReposts');
-      var skipTagsInput = document.getElementById("skipTags");
-      var relatedContextInput = document.getElementById("relatedContext");
-      var hiddenOutlineInput = document.getElementById("hiddenOutline");
-
-      chrome.storage.sync.get(getGlobalSettings, function(get){
-         if(get.darkMode == "on"){
-            darkModeInput.checked = true;
-         }
-         if(get.hideSidebar == "on"){
-            hideSidebarInput.checked = true;
-         }
-         if (get.oldUserProfile == "on") {
-            oldUserProfileInput.checked = true;
-         }
-         if(get.displayType == "list"){
-            displayTypeInput[1].checked = true;
-         }else if (get.displayType == "grid") {
-            displayTypeInput[2].checked = true;
-         } else {
-            displayTypeInput[0].checked = true;
-         }
-         if(get.removePreviews == "on"){
-            removePreviewsInput.checked = true;
-         }
-         if(get.removePlaylists == "on"){
-            removePlaylistsInput.checked = true;
-         }
-         if (get.removeLongTracks == "on") {
-            removeLongTracksInput.checked = true;
-         }
-         if (get.removeUserActivity == "on") {
-            removeUserActivityInput.checked = true;
-         }
-         if (get.removeReposts == "on") {
-           removeRepostsInput.checked = true;
-         }
-         if (get.tagsArray != null) {
-            skipTagsInput.setAttribute("value", get.tagsArray);
-         }
-         if(get.relatedContext == "on"){
-            relatedContextInput.checked = true;
-         }
-         if (get.hiddenOutline == "on") {
-            hiddenOutlineInput.checked = true;
-         }
-      });
-
-      setTimeout(function() {
-         // Load tags properly in the settings menu
-         insignia(skipTags, {
-            delimiter: ',',
-            deletion: true
-         });
-
-         document.getElementById("settings").style.display = "block";
-         var tabContainer = document.getElementsByClassName('tab');
-         for (var i = 0; i < tabContainer.length; i++) {
-            tabContainer[i].addEventListener('click', function() {
-               for (var k = 0; k < tabContainer.length; k++) {
-                  tabContainer[k].className = "tab";
+                  '<div id="changelog" class="tabPage">',
+                     '<ul id="changelog-container">',
+                        '<article class="changelog-item">',
+                           '<h2>Version 2.2 (25. july 2017)</h2>',
+                           '<li>Name changed in the chrome webstore.</li>',
+                           '<li>Added the "The Upload" playlist in the stream explore bar, like so <a href="http://i.imgur.com/ynid7at.png">http://i.imgur.com/ynid7at.png</a>.</li>',
+                           '<li>Various dark mode improvements, mainly with the newly added queue menu.</li>',
+                           '<li>Added the option the remove the in-website settings button.</li>',
+                           '<li>Added the option to remove the "The Upload" from the discover tab.</li>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 2.1 (30. mar 2017)</h2>',
+                           '<li>The extension has asking to read browser history, which wasnt used for anything. That have been fixed.</li>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 2.0 (27. mar 2017)</h2>',
+                           '<li>Huge stability changes</li>',
+                           '<li>Made the "related tracks" more menu addition, more consistent. Before it wouldnt load on specific pages and tracks with coverart</li>',
+                           '<li>Fixed a bug where "related tracks" would show for a playlist</li>',
+                           '<li>Added a new userpage design</li>',
+                           '<li>Added a version number to the SCE logo in the header</li>',
+                           '<li>Added a "Like" tab to profiles</li>',
+                           '<li>Added a quick tag blacklist (Hit the "more" button on tracks with a tag</li>',
+                           '<hr>',
+                           '<span>Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) <br>Remember to follow me on Twitter, and @ me if there is any problems or suggestions!</span>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.9 (6. feb 2017)</h2>',
+                           '<li>Added the SCE settings menu to the popup menu.</li>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.8 (19. jan 2017)</h2>',
+                           '<li>Added tooltips to some options.</li>',
+                           '<li>Added the option to skip all reposts (Requested by <a href="https://twitter.com/Paraspitfire">@Paraspitfire</a>).</li>',
+                           '<li>Fixed SC announcement being displayed incorrectly.</li>',
+                           '<li>Replace the SC logo with the SCE logo.</li>',
+                           '<li>Various dark mode improvements.</li>',
+                           '<li>Fixed a bug where the SCE button wouldn’t work on some SC subpages.</li>',
+                           '<hr>',
+                           '<span>Thanks to <a href="https://twitter.com/Paraspitfire">@Paraspitfire</a> for donating 10$, really appreciate it :D <br>Remember to leave suggestions and drop a rating</span>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.7 (15. jan 2017)</h2>',
+                           '<li>More reliable change load.</li>',
+                           '<li>Added the option to skip playlists/albums.</li>',
+                           '<li>Added the option to hide own user activity.</li>',
+                           '<li>Rework to the song skipping code (Better reverse song detection).</li>',
+                           '<li>Dark mode tweaks.</li>',
+                           '<li>Now showing “Not available in your country” in grid mode.</li>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.6 (10. jan 2017)</h2>',
+                           '<li>Added a mass unfollow option inside <a href="https://soundcloud.com/you/following">https://soundcloud.com/you/following</a>.</li>',
+                           '<li>Minor improvements to the dark mode.</li>',
+                           '<li>Added a notice in the settings menu under the “filter” options.</li>',
+                           '<hr>',
+                           '<span>In the next couple of updates I will be focusing on the extension’s stability. Follow the development here: <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">https://trello.com/b/n7jrTzxO/soundcloud-enhancer</a>.</span>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.5 (7. jan 2017)</h2>',
+                           '<li>Fixed a huge bug where the tracks skipping changes wasn’t loaded. It will now automaticly scroll the page to load changes into DOM.</li>',
+                           '<li>Added a quick display type switch for the stream page.</li>',
+                           '<li>Added the option to show hidden tracks.</li>',
+                           '<li>Added a link to the project’s new trello board.</li>',
+                           '<li>Added an option to hide longer tracks (May still me bugs).</li>',
+                           '<li>Cleaned the code a bit.</li>',
+                           '<li>Added short name to the manifest.</li>',
+                           '<li>Removed the popup code.</li>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.1 (31. dec 2016)</h2>',
+                           '<li>Added a option to add related tracks to the “more” context menu.</li>',
+                           '<li>Fixed a typo.</li>',
+                           '<li>Various fixes to the dark mode (Special thanks to <a href="https://soundcloud.com/lasseppedersen">https://soundcloud.com/lasseppedersen</a>).</li>',
+                           '<li>Made the settings button responsive.</li>',
+                        '</article>',
+                        '<article class="changelog-item">',
+                           '<h2>Version 1.0 (8. dec 2016)</h2>',
+                           '<li>Added Dark mode.</li>',
+                           '<li>Added an option to remove the sidebar.</li>',
+                           '<li>Made a view mode toogle (default, list and grid view).</li>',
+                           '<li>Added a specific tag filter.</li>',
+                           '<li>Added a preview song filter.</li>',
+                        '</article>',
+                     '</ul>',
+                  '</div>',
+                  '<span class="donation"><a href="https://www.paypal.me/benjaminbach">Buy me a cup of coffee</a></span>'
+               ].join(''),
+               buttons: [
+                  $.extend({}, vex.dialog.buttons.YES, { text: 'Save settings', className: 'sc-button' }),
+                  $.extend({}, vex.dialog.buttons.NO, { text: 'Cancel', className: 'sc-button-nostyle' })
+               ],
+               callback: function(data) {
+                   if (!data) {
+                     console.log('No data saved!');
+                  } else {
+                     saveSettings(data);
+                  }
                }
-               this.className = "tab active";
-               var tabPage = document.querySelectorAll(".tabPage");
-               for (j = 0; j < tabPage.length; j++) {
-                   tabPage[j].style.display = "none";
+            })
+
+            // Populate settings dialogbox
+            var darkModeInput = document.getElementById('darkMode');
+            var removeSettingsBtnInput = document.getElementById('removeSettingsBtn');
+            var hideSidebarInput = document.getElementById('hideSidebar');
+            var hideTheUploadInput = document.getElementById('hideTheUpload');
+            var oldUserProfileInput = document.getElementById('oldUserProfile');
+            var displayTypeInput = document.getElementsByName("displayType");
+            var removePreviewsInput = document.getElementById("removePreviews");
+            var removePlaylistsInput = document.getElementById("removePlaylists");
+            var removeLongTracksInput = document.getElementById("removeLongTracks");
+            var removeUserActivityInput = document.getElementById("removeUserActivity");
+            var removeRepostsInput = document.getElementById('removeReposts');
+            var skipTagsInput = document.getElementById("skipTags");
+            var relatedContextInput = document.getElementById("relatedContext");
+            var hiddenOutlineInput = document.getElementById("hiddenOutline");
+
+            chrome.storage.sync.get(getGlobalSettings, function(get){
+               if (get.darkMode == "on"){
+                  darkModeInput.checked = true;
                }
-               var getPage = this.getAttribute('data-page');
-               document.getElementById(getPage).style.display = "block";
+               if (get.removeSettingsBtn == "on") {
+                  removeSettingsBtnInput.checked = true;
+               }
+               if (get.hideSidebar == "on"){
+                  hideSidebarInput.checked = true;
+               }
+               if (get.hideTheUpload == "on") {
+                  hideTheUploadInput.checked = true;
+               }
+               if (get.oldUserProfile == "on") {
+                  oldUserProfileInput.checked = true;
+               }
+               if(get.displayType == "list"){
+                  displayTypeInput[1].checked = true;
+               }else if (get.displayType == "grid") {
+                  displayTypeInput[2].checked = true;
+               } else {
+                  displayTypeInput[0].checked = true;
+               }
+               if(get.removePreviews == "on"){
+                  removePreviewsInput.checked = true;
+               }
+               if(get.removePlaylists == "on"){
+                  removePlaylistsInput.checked = true;
+               }
+               if (get.removeLongTracks == "on") {
+                  removeLongTracksInput.checked = true;
+               }
+               if (get.removeUserActivity == "on") {
+                  removeUserActivityInput.checked = true;
+               }
+               if (get.removeReposts == "on") {
+                 removeRepostsInput.checked = true;
+               }
+               if (get.tagsArray != null) {
+                  skipTagsInput.setAttribute("value", get.tagsArray);
+               }
+               if(get.relatedContext == "on"){
+                  relatedContextInput.checked = true;
+               }
+               if (get.hiddenOutline == "on") {
+                  hiddenOutlineInput.checked = true;
+               }
             });
+
+            setTimeout(function() {
+               // Load tags properly in the settings menu
+               insignia(skipTags, {
+                  delimiter: ',',
+                  deletion: true
+               });
+
+               document.getElementById("settings").style.display = "block";
+               var tabContainer = document.getElementsByClassName('tab');
+               for (var i = 0; i < tabContainer.length; i++) {
+                  tabContainer[i].addEventListener('click', function() {
+                     for (var k = 0; k < tabContainer.length; k++) {
+                        tabContainer[k].className = "tab";
+                     }
+                     this.className = "tab active";
+                     var tabPage = document.querySelectorAll(".tabPage");
+                     for (j = 0; j < tabPage.length; j++) {
+                         tabPage[j].style.display = "none";
+                     }
+                     var getPage = this.getAttribute('data-page');
+                     document.getElementById(getPage).style.display = "block";
+                  });
+               }
+
+            }, 100);
+
+         }, false);
+
+         // Save settings from the setting dialogbox
+         function saveSettings(data) {
+            // Data handling
+            if (data.darkMode != "on") {
+               data.darkMode = "off";
+            }
+            if (data.removeSettingsBtn != "on") {
+               data.removeSettingsBtn = "off";
+            }
+            if (data.hideSidebar != "on") {
+               data.hideSidebar = "off";
+            }
+            if (data.hideTheUpload != "on") {
+               data.hideTheUpload = "off";
+            }
+            if (data.oldUserProfile != "on") {
+               data.oldUserProfile = "off";
+            }
+            if (data.displayType == "default"){
+               data.displayType = "";
+            }
+            if (data.removePreviews != "on") {
+               data.removePreviews = "off";
+            }
+            if (data.removePlaylists != "on") {
+               data.removePlaylists = "off";
+            }
+            if (data.removeLongTracks != "on") {
+               data.removeLongTracks = "off";
+            }
+            if (data.removeUserActivity != "on") {
+               data.removeUserActivity = "off";
+            }
+            if (data.removeReposts != "on") {
+              data.removeReposts = "off";
+            }
+            if (data.relatedContext != "on") {
+               data.relatedContext = "off";
+            }
+            if (data.hiddenOutline != "on"){
+               data.hiddenOutline = "off";
+            }
+
+            var tagsArray = [];
+            var tagElement = document.getElementsByClassName("nsg-tag");
+            for (var i = 0; i < tagElement.length; i++) {
+               tagsArray.push(tagElement[i].innerText);
+            }
+
+            setGlobalSettings.darkMode = data.darkMode;
+            setGlobalSettings.removeSettingsBtn = data.removeSettingsBtn;
+            setGlobalSettings.hideSidebar = data.hideSidebar;
+            setGlobalSettings.hideTheUpload = data.hideTheUpload;
+            setGlobalSettings.oldUserProfile = data.oldUserProfile;
+            setGlobalSettings.displayType = data.displayType;
+            setGlobalSettings.removePreviews = data.removePreviews;
+            setGlobalSettings.removePlaylists = data.removePlaylists;
+            setGlobalSettings.removeLongTracks = data.removeLongTracks;
+            setGlobalSettings.removeUserActivity = data.removeUserActivity;
+            setGlobalSettings.removeReposts = data.removeReposts;
+            setGlobalSettings.tagsArray = tagsArray;
+            setGlobalSettings.relatedContext = data.relatedContext;
+            setGlobalSettings.hiddenOutline = data.hiddenOutline;
+
+            // Store all options in chrome
+            chrome.storage.sync.set(setGlobalSettings, function(){
+               if (chrome.runtime.lastError) {
+                  alert('Error settings:\n\n'+chrome.runtime.lastError);
+               }
+            });
+
+            // Refresh webpage
+            location.reload();
          }
-
-      }, 100);
-
-   }, false);
-
-   // Save settings from the setting dialogbox
-   function saveSettings(data) {
-      // Data handling
-      if (data.darkMode != "on") {
-         data.darkMode = "off";
       }
-      if (data.hideSidebar != "on") {
-         data.hideSidebar = "off";
-      }
-      if (data.oldUserProfile != "on") {
-         data.oldUserProfile = "off";
-      }
-      if (data.displayType == "default"){
-         data.displayType = "";
-      }
-      if (data.removePreviews != "on") {
-         data.removePreviews = "off";
-      }
-      if (data.removePlaylists != "on") {
-         data.removePlaylists = "off";
-      }
-      if (data.removeLongTracks != "on") {
-         data.removeLongTracks = "off";
-      }
-      if (data.removeUserActivity != "on") {
-         data.removeUserActivity = "off";
-      }
-      if (data.removeReposts != "on") {
-        data.removeReposts = "off";
-      }
-      if (data.relatedContext != "on") {
-         data.relatedContext = "off";
-      }
-      if (data.hiddenOutline != "on"){
-         data.hiddenOutline = "off";
-      }
-
-      var tagsArray = [];
-      var tagElement = document.getElementsByClassName("nsg-tag");
-      for (var i = 0; i < tagElement.length; i++) {
-         tagsArray.push(tagElement[i].innerText);
-      }
-
-      setGlobalSettings.darkMode = data.darkMode;
-      setGlobalSettings.hideSidebar = data.hideSidebar;
-      setGlobalSettings.oldUserProfile = data.oldUserProfile;
-      setGlobalSettings.displayType = data.displayType;
-      setGlobalSettings.removePreviews = data.removePreviews;
-      setGlobalSettings.removePlaylists = data.removePlaylists;
-      setGlobalSettings.removeLongTracks = data.removeLongTracks;
-      setGlobalSettings.removeUserActivity = data.removeUserActivity;
-      setGlobalSettings.removeReposts = data.removeReposts;
-      setGlobalSettings.tagsArray = tagsArray;
-      setGlobalSettings.relatedContext = data.relatedContext;
-      setGlobalSettings.hiddenOutline = data.hiddenOutline;
-
-      // Store all options in chrome
-      chrome.storage.sync.set(setGlobalSettings, function(){
-         if (chrome.runtime.lastError) {
-            alert('Error settings:\n\n'+chrome.runtime.lastError);
-         }
-      });
-
-      // Refresh webpage
-      location.reload();
-   }
+   });
 }
 
 function injectedJavascript() {

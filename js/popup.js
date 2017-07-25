@@ -5,7 +5,9 @@ var getGlobalSettings = [];
 
 //Get settings from chrome storage
 getGlobalSettings.push('darkMode');
+getGlobalSettings.push('removeSettingsBtn');
 getGlobalSettings.push('hideSidebar');
+getGlobalSettings.push('hideTheUpload');
 getGlobalSettings.push('oldUserProfile');
 getGlobalSettings.push('displayType');
 getGlobalSettings.push('removePreviews');
@@ -26,7 +28,9 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
 
 // Populate settings dialogbox
 var darkModeInput = document.getElementById('darkMode');
+var removeSettingsBtnInput = document.getElementById('removeSettingsBtn');
 var hideSidebarInput = document.getElementById('hideSidebar');
+var hideTheUploadInput = document.getElementById('hideTheUpload');
 var oldUserProfileInput = document.getElementById('oldUserProfile');
 var displayTypeInput = document.getElementsByName("displayType");
 var removePreviewsInput = document.getElementById("removePreviews");
@@ -42,8 +46,14 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
    if(get.darkMode == "on"){
       darkModeInput.checked = true;
    }
+   if (get.removeSettingsBtn == "on") {
+      removeSettingsBtnInput.checked = true;
+   }
    if(get.hideSidebar == "on"){
       hideSidebarInput.checked = true;
+   }
+   if (get.hideTheUpload == "on") {
+      hideTheUploadInput.checked = true;
    }
    if (get.oldUserProfile == "on") {
       oldUserProfileInput.checked = true;
@@ -96,8 +106,14 @@ submit.addEventListener('click', function() {
    if (darkModeInput.checked != true) {
       darkModeInput.value = "off";
    }
+   if (removeSettingsBtnInput.checked != true) {
+      removeSettingsBtnInput.value = "off";
+   }
    if (hideSidebarInput.checked != true) {
       hideSidebarInput.value = "off";
+   }
+   if (hideTheUploadInput.checked != true) {
+      hideTheUploadInput.value = "off";
    }
    if (oldUserProfileInput.checked != true) {
       oldUserProfileInput.value = "off";
@@ -137,7 +153,9 @@ submit.addEventListener('click', function() {
    }
 
    setGlobalSettings.darkMode = darkModeInput.value;
+   setGlobalSettings.removeSettingsBtn = removeSettingsBtn.value;
    setGlobalSettings.hideSidebar = hideSidebarInput.value;
+   setGlobalSettings.hideTheUpload = hideTheUploadInput.value;
    setGlobalSettings.oldUserProfile = oldUserProfileInput.value;
    setGlobalSettings.displayType = displayTypeInput.value;
    setGlobalSettings.removePreviews = removePreviewsInput.value;
