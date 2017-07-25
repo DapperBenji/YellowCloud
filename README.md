@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v1.8#
+# SoundCloud Enhancer v2.2#
 
 ## Description: ##
 ----------------------------------------
@@ -63,3 +63,24 @@ Remember to leave suggestions and drop a rating
 
 ### Version 1.9 ###
 - Added the SCE settings menu to the popup menu
+
+### Version 2.0 ###
+- Huge stability changes
+- Made the "related tracks" more menu addition, more consistent. Before it wouldn't load on specific pages and tracks with coverart
+- Fixed a bug where "related tracks" would show for a playlist
+- Added a new userpage design
+- Added a version number to the SCE logo in the header
+- Added a "Like" tab to profiles
+- Added a quick tag blacklist (Hit the "more" button on tracks with a tag
+
+Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) Remember to follow me on Twitter, and @ me if there is any problems or suggestions!
+
+### Version 2.1 ###
+- The extension has asking to read browser history, which wasnt used for anything. That have been fixed.
+
+### Version 2.2 ###
+- Name changed in the chrome webstore.
+- Added the "The Upload" playlist in the stream explore bar, like so http://i.imgur.com/ynid7at.png.
+- Various dark mode improvements, mainly with the newly added queue menu.
+- Added the option the remove the in-website settings button.
+- Added the option to remove the "The Upload" from the discover tab.
