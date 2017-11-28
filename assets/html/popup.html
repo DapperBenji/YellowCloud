@@ -1,11 +1,11 @@
 <head>
    <title>SoundCloud Enhancer Settings Menu</title>
-   <link rel="stylesheet" href="css/style.css">
-   <link rel="stylesheet" href="css/insignia.min.css">
-   <link rel="stylesheet" href="css/popup.css">
+   <link rel="stylesheet" href="/assets/css/style.css">
+   <link rel="stylesheet" href="/assets/css/insignia.min.css">
+   <link rel="stylesheet" href="/assets/css/popup.css">
 </head>
 <body id="body">
-   <h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.2</h1>
+   <h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.3</h1>
    <span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji" target="_blank">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer" target="_blank">Trello</a>.</span>
    <h2>Design:</h2>
    <div class="settings-option">
@@ -41,6 +41,13 @@
          <input type="checkbox" name="oldUserProfile" id="oldUserProfile" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
          <span class="sc-checkbox-label">Use old profile page</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="profileImages" id="profileImages" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Square profile pics</span>
       </label>
    </div>
    <div class="settings-option">
@@ -102,14 +109,6 @@
          <input id="skipTags" placeholder="Add tags..." value="">
       </div>
    </div>
-   <h2>Features:</h2>
-   <div class="settings-option">
-      <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
-         <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Add "related tracks" option on tracks</span>
-      </label>
-   </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
@@ -117,10 +116,25 @@
          <span class="sc-checkbox-label">Show outline of hidden tracks</span>
       </label>
    </div>
+   <h2>Context menu:</h2>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Add "Related tracks" option on tracks</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="bannedContext" id="bannedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Add "Blacklist tag" option on tracks</span>
+      </label>
+   </div>
    <button id="submit" type="button" class="sc-button">Save changes</button>
    <span class="donation"><a href="https://www.paypal.me/benjaminbach" target="_blank">Buy me a cup of coffee</a></span>
    <!-- Load scripts -->
-   <script src="js/jquery.min.js"></script>
-   <script src="js/insignia.min.js"></script>
-   <script src="js/popup.js"></script>
+   <script src="/assets/js/jquery.min.js"></script>
+   <script src="/assets/js/insignia.min.js"></script>
+   <script src="/assets/js/popup.js"></script>
 </body>

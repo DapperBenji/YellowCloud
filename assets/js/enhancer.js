@@ -39,33 +39,42 @@ getGlobalSettings.push('removeUserActivity');
 getGlobalSettings.push('removeReposts');
 getGlobalSettings.push('tagsArray');
 getGlobalSettings.push('relatedContext');
+getGlobalSettings.push('bannedContext');
 getGlobalSettings.push('hiddenOutline');
+getGlobalSettings.push('profileImages');
 
 chrome.storage.sync.get(getGlobalSettings, function(get){
-   if (get.oldUserProfile != "on"){
+   if (get.oldUserProfile != "on") {
       body.setAttribute("data-profile", "new");
    }
-   if (get.darkMode == "on"){
+   if (get.darkMode == "on") {
       body.setAttribute("data-theme", "dark");
    }
-   if (get.hideSidebar == "on"){
+   if (get.hideSidebar == "on") {
       body.setAttribute("data-sidebar", "hidden");
    } else {
       body.setAttribute("data-sidebar", "show");
    }
-   if (get.displayType == "list"){
-      body.setAttribute("data-display", "list");
-   }
-   else if(get.displayType == "grid"){
-      body.setAttribute("data-display", "grid");
-   } else {
-      body.setAttribute("data-display", "default");
+   if (location.href == "https://soundcloud.com/stream") {
+      if (get.displayType == "list") {
+         body.setAttribute("data-display", "list");
+      }
+      else if(get.displayType == "grid") {
+         body.setAttribute("data-display", "grid");
+      } else {
+         body.setAttribute("data-display", "default");
+      }
    }
    if (get.hideTheUpload == "on") {
       body.setAttribute("data-theupload", "hidden");
    }
    if (get.hiddenOutline == "on") {
       body.setAttribute("data-hidden-outline", "show");
+   }
+   if (location.href != "https://soundcloud.com/you/following") {
+      if (get.profileImages == "on") {
+         body.setAttribute("data-image", "square");
+      }
    }
 });
 
@@ -180,7 +189,7 @@ function settingsMenu() {
             vex.dialog.open({
                className: 'vex-theme-top',
                input: [
-                  '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.2</h1>',
+                  '<h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.3</h1>',
                   '<span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer">Trello</a>.</span>',
                   '<ul id="tab-container">',
                      '<li><a href="javascript:void(0)" data-page="settings" class="tab active">Settings</a></li>',
@@ -221,6 +230,13 @@ function settingsMenu() {
                            '<input type="checkbox" name="oldUserProfile" id="oldUserProfile" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
                            '<div class="sc-checkbox-check"></div>',
                            '<span class="sc-checkbox-label">Use old profile page</span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="profileImages" id="profileImages" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Square profile pics</span>',
                         '</label>',
                      '</div>',
                      '<div class="settings-option">',
@@ -282,14 +298,6 @@ function settingsMenu() {
                            '<input id="skipTags" placeholder="Add tags..." value="">',
                         '</div>',
                      '</div>',
-                     '<h2>Features:</h2>',
-                     '<div class="settings-option">',
-                        '<label class="checkbox sc-checkbox">',
-                           '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
-                           '<div class="sc-checkbox-check"></div>',
-                           '<span class="sc-checkbox-label">Add "related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
-                        '</label>',
-                     '</div>',
                      '<div class="settings-option">',
                         '<label class="checkbox sc-checkbox">',
                            '<input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
@@ -297,9 +305,38 @@ function settingsMenu() {
                            '<span class="sc-checkbox-label">Show outline of hidden tracks</span>',
                         '</label>',
                      '</div>',
+                     '<h2>Context menu:</h2>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Add "Related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>',
+                        '</label>',
+                     '</div>',
+                     '<div class="settings-option">',
+                        '<label class="checkbox sc-checkbox">',
+                           '<input type="checkbox" name="bannedContext" id="bannedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">',
+                           '<div class="sc-checkbox-check"></div>',
+                           '<span class="sc-checkbox-label">Add "Blacklist tag" option on tracks with a tag</span>',
+                        '</label>',
+                     '</div>',
                   '</div>',
                   '<div id="changelog" class="tabPage">',
                      '<ul id="changelog-container">',
+                        '<article class="changelog-item">',
+                           '<h2>Version 2.3 (28. nov 2017)</h2>',
+                           '<li>Added the option to make profile pictures square.</li>',
+                           '<li>Various dark mode improvement, most notably the media controls are now optimized.</li>',
+                           '<li>Removed all http:// loaded content (replaced with base64).</li>',
+                           '<li>Fixed a bug with the mass unfollowers counter.</li>',
+                           '<li>Fixed a visual bug with the "add to queue" button in grid view mode.</li>',
+                           '<li>Fixed a bug were grid mode disabled comments cross-site.</li>',
+                           '<li>Fixed the playlist filter.</li>',
+                           '<li>Made the "Block tag" context menu item an optional feature.</li>',
+                           '<li>Rearranged the settings menu sections.</li>',
+                           '<li>Gave the "Block tag" context menu item a unique icon.</li>',
+                           '<li>Cleaned up unused extension files.</li>',
+                        '</article>',
                         '<article class="changelog-item">',
                            '<h2>Version 2.2 (25. july 2017)</h2>',
                            '<li>Name changed in the chrome webstore.</li>',
@@ -414,6 +451,8 @@ function settingsMenu() {
             var skipTagsInput = document.getElementById("skipTags");
             var relatedContextInput = document.getElementById("relatedContext");
             var hiddenOutlineInput = document.getElementById("hiddenOutline");
+            var profileImagesInput = document.getElementById("profileImages");
+            var bannedContextInput = document.getElementById("bannedContext");
 
             chrome.storage.sync.get(getGlobalSettings, function(get){
                if (get.darkMode == "on"){
@@ -431,17 +470,17 @@ function settingsMenu() {
                if (get.oldUserProfile == "on") {
                   oldUserProfileInput.checked = true;
                }
-               if(get.displayType == "list"){
+               if (get.displayType == "list") {
                   displayTypeInput[1].checked = true;
-               }else if (get.displayType == "grid") {
+               } else if (get.displayType == "grid") {
                   displayTypeInput[2].checked = true;
                } else {
                   displayTypeInput[0].checked = true;
                }
-               if(get.removePreviews == "on"){
+               if (get.removePreviews == "on") {
                   removePreviewsInput.checked = true;
                }
-               if(get.removePlaylists == "on"){
+               if (get.removePlaylists == "on") {
                   removePlaylistsInput.checked = true;
                }
                if (get.removeLongTracks == "on") {
@@ -456,11 +495,17 @@ function settingsMenu() {
                if (get.tagsArray != null) {
                   skipTagsInput.setAttribute("value", get.tagsArray);
                }
-               if(get.relatedContext == "on"){
+               if (get.relatedContext == "on") {
                   relatedContextInput.checked = true;
+               }
+               if (get.bannedContext == "on") {
+                  bannedContextInput.checked = true;
                }
                if (get.hiddenOutline == "on") {
                   hiddenOutlineInput.checked = true;
+               }
+               if (get.profileImages == "on") {
+                  profileImagesInput.checked = true;
                }
             });
 
@@ -510,7 +555,7 @@ function settingsMenu() {
             if (data.oldUserProfile != "on") {
                data.oldUserProfile = "off";
             }
-            if (data.displayType == "default"){
+            if (data.displayType == "default") {
                data.displayType = "";
             }
             if (data.removePreviews != "on") {
@@ -531,8 +576,14 @@ function settingsMenu() {
             if (data.relatedContext != "on") {
                data.relatedContext = "off";
             }
-            if (data.hiddenOutline != "on"){
+            if (data.bannedContext != "on") {
+               data.bannedContext = "off";
+            }
+            if (data.hiddenOutline != "on") {
                data.hiddenOutline = "off";
+            }
+            if (data.profileImages != "on") {
+               data.profileImages = "off";
             }
 
             var tagsArray = [];
@@ -554,7 +605,9 @@ function settingsMenu() {
             setGlobalSettings.removeReposts = data.removeReposts;
             setGlobalSettings.tagsArray = tagsArray;
             setGlobalSettings.relatedContext = data.relatedContext;
+            setGlobalSettings.bannedContext = data.bannedContext;
             setGlobalSettings.hiddenOutline = data.hiddenOutline;
+            setGlobalSettings.profileImages = data.profileImages;
 
             // Store all options in chrome
             chrome.storage.sync.set(setGlobalSettings, function(){
@@ -583,7 +636,7 @@ function injectedJavascript() {
    var soundBadge_config = {childList: true};
 
    // Create quick display switcher on stream
-   if(location.href == "https://soundcloud.com/stream"){
+   if(location.href == "https://soundcloud.com/stream") {
       var streamHeader = document.querySelectorAll('.stream__header')[0];
       var checkStreamController = document.querySelector("#stream-controller");
 
@@ -635,7 +688,7 @@ function injectedJavascript() {
          // Mark the current selected display mode
          if (get.displayType == "list") {
             getCompactList.className = "listDisplayToggle setting-display-tile list-icon active";
-         }else if (get.displayType == "grid") {
+         } else if (get.displayType == "grid") {
             getGridList.className = "listDisplayToggle setting-display-tile grid-icon active";
          } else {
             getDefaultList.className = "listDisplayToggle setting-display-tile default-icon active";
@@ -649,7 +702,7 @@ function injectedJavascript() {
                var getData = this.getAttribute("data-id");
                setGlobalSettings.displayType = getData;
 
-               chrome.storage.sync.set(setGlobalSettings, function(){
+               chrome.storage.sync.set(setGlobalSettings, function() {
                   if (chrome.runtime.lastError) {
                      alert('Error settings:\n\n'+chrome.runtime.lastError);
                   }
@@ -661,7 +714,7 @@ function injectedJavascript() {
       });
    }
 
-   if(location.href == "https://soundcloud.com/you/following"){
+   if(location.href == "https://soundcloud.com/you/following") {
       var collectionHeader = document.getElementsByClassName('collectionSection__top')[0];
       var massUnfollowButton = document.querySelector("#mass-unfollow");
 
@@ -697,7 +750,7 @@ function injectedJavascript() {
       function multiFollow() {
          var followingUsers = document.querySelectorAll('.userBadgeListItem');
          for (var i = 0; i < followingUsers.length; i++) {
-            if(followingUsers[i].querySelector(".userBadgeListItem__checkbox") == undefined){
+            if(followingUsers[i].querySelector(".userBadgeListItem__checkbox") == undefined) {
                var checkboxDiv = document.createElement("label");
                checkboxDiv.setAttribute('class', "userBadgeListItem__checkbox");
                var checkboxElement = document.createElement("input");
@@ -728,15 +781,15 @@ function injectedJavascript() {
 
       confirm.addEventListener('click', function() {
          var unfollowLoop = document.getElementsByClassName('badgeList__item');
-         var oldFollowCount = unfollowLoop.length;
+         var newFollowCount = 0;
          for (var i = 0; i < unfollowLoop.length; i++) {
             var checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
             if(checkFollowStatus.checked == true){
                var closestUnfollowButton = unfollowLoop[i].querySelector('.userBadgeListItem .userBadgeListItem__action button.sc-button-follow');
                closestUnfollowButton.click();
+               newFollowCount++;
             }
          }
-         var newFollowCount = oldFollowCount-unfollowLoop.length;
          if (newFollowCount == 1) {
             confirm.innerText = newFollowCount + " account got unfollowed!";
          } else {
@@ -759,7 +812,7 @@ function injectedJavascript() {
    chrome.storage.sync.get(getGlobalSettings, function(get){
 
       // Remove reposts
-      if(get.removeReposts == "on"){
+      if (get.removeReposts == "on") {
          // Function to skip all reposts
          function hideReposts() {
             var repost = document.getElementsByClassName('soundContext__repost');
@@ -784,8 +837,8 @@ function injectedJavascript() {
       }
 
       // Remove songs with a specific tag
-      if(get.tagsArray != null){
-         function checkTags(){
+      if (get.tagsArray != null) {
+         function checkTags() {
             var tags = document.getElementsByClassName('soundTitle__tagContent');
             var tagArray = get.tagsArray;
             var tagArray2 = "" + tagArray + "";
@@ -819,7 +872,7 @@ function injectedJavascript() {
       // Add related tracks option to the more context menu
       var detectUser = document.querySelectorAll('.userMain .userMain__content')[0];
       function relatedContext() {
-         if(detectUser != null){
+         if (detectUser != null) {
             window.displayType = document.getElementsByClassName('lazyLoadingList')[0];
             window.displayTypeList = document.querySelectorAll('.lazyLoadingList ul.soundList.sc-list-nostyle');
          } else if (location.href == "https://soundcloud.com/you/collection") {
@@ -839,7 +892,7 @@ function injectedJavascript() {
          }
          var displayTypeClass = window.displayType.className;
 
-         if(displayTypeClass.includes("badgeList") == true || displayTypeClass.includes("personalRecommended") == true){
+         if (displayTypeClass.includes("badgeList") == true || displayTypeClass.includes("personalRecommended") == true) {
             var badgeList = document.querySelectorAll('.audibleTile__actions button.sc-button-more');
             for (var i = 0; i < badgeList.length; i++) {
                badgeList[i].addEventListener('click', function() {
@@ -847,7 +900,7 @@ function injectedJavascript() {
                   if (getMoreContextMenu != null) {
                      if (location.href == "https://soundcloud.com/you/likes" || location.href == "https://soundcloud.com/you/collection") {
                         var getSongContainer = this.closest('.badgeList__item');
-                     }else{
+                     } else {
                         var getSongContainer = this.closest('.soundGallery__sliderPanelSlide');
                      }
                      var getSongLinks = getSongContainer.querySelector('.audibleTile .audibleTile__artwork .audibleTile__artworkLink');
@@ -858,39 +911,41 @@ function injectedJavascript() {
                         var checkForTag = getSongContainer.querySelector('.soundTitle__tagContent');
                         var checkForTagButton = getSongContainer.querySelector('#tag-button');
 
-                        if(checkForTag != null){
-                           if (checkForTagButton == null) {
-                              var createTagRemoveButton = document.createElement("button");
-                              createTagRemoveButton.setAttribute('id',"tag-button");
-                              createTagRemoveButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
-                              createTagRemoveButton.setAttribute('title',"Click to ban this track's tag");
-                              createTagRemoveButton.setAttribute('data-hashtag', checkForTag.innerText);
-                              createTagRemoveButton.innerText = "Blacklist tag";
+                        if (get.bannedContext == "on") {
+                           if (checkForTag != null) {
+                              if (checkForTagButton == null) {
+                                 var createTagRemoveButton = document.createElement("button");
+                                 createTagRemoveButton.setAttribute('id',"tag-button");
+                                 createTagRemoveButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
+                                 createTagRemoveButton.setAttribute('title',"Click to ban this track's tag");
+                                 createTagRemoveButton.setAttribute('data-hashtag', checkForTag.innerText);
+                                 createTagRemoveButton.innerText = "Blacklist tag";
 
-                              getMoreContextMenu.appendChild(createTagRemoveButton);
+                                 getMoreContextMenu.appendChild(createTagRemoveButton);
 
-                              var getTagRemoveButton = document.getElementById('tag-button');
-                              getTagRemoveButton.addEventListener("click", function() {
-                                 var setGlobalSettings = {};
-                                 var bannedTag = this.getAttribute("data-hashtag");
-                                 var newTagsArray = get.tagsArray + "," + bannedTag;
-                                 setGlobalSettings.tagsArray = newTagsArray;
+                                 var getTagRemoveButton = document.getElementById('tag-button');
+                                 getTagRemoveButton.addEventListener("click", function() {
+                                    var setGlobalSettings = {};
+                                    var bannedTag = this.getAttribute("data-hashtag");
+                                    var newTagsArray = get.tagsArray + "," + bannedTag;
+                                    setGlobalSettings.tagsArray = newTagsArray;
 
-                                 // Store all options in chrome
-                                 chrome.storage.sync.set(setGlobalSettings, function(){
-                                    if (chrome.runtime.lastError) {
-                                       alert('Error settings:\n\n'+chrome.runtime.lastError);
-                                    }
+                                    // Store all options in chrome
+                                    chrome.storage.sync.set(setGlobalSettings, function(){
+                                       if (chrome.runtime.lastError) {
+                                          alert('Error settings:\n\n'+chrome.runtime.lastError);
+                                       }
+                                    });
+
+                                    //Refresh the page
+                                    location.reload();
                                  });
-
-                                 //Refresh the page
-                                 location.reload();
-                              });
+                              }
                            }
                         }
 
-                        if (checkPlaylists == null) {
-                           if(get.relatedContext == "on"){
+                        if (get.relatedContext == "on") {
+                           if (checkPlaylists == null) {
                               var createAchor = document.createElement("a");
                               createAchor.setAttribute('href', getSongHref + "/recommended");
 
@@ -926,39 +981,41 @@ function injectedJavascript() {
                         var checkForTag = getSongContainer.querySelector('.soundTitle__tagContent');
                         var checkForTagButton = getSongContainer.querySelector('#tag-button');
 
-                        if(checkForTag != null){
-                           if (checkForTagButton == null) {
-                              var createTagRemoveButton = document.createElement("button");
-                              createTagRemoveButton.setAttribute('id',"tag-button");
-                              createTagRemoveButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-related");
-                              createTagRemoveButton.setAttribute('title',"Click to ban this track's tag");
-                              createTagRemoveButton.setAttribute('data-hashtag', checkForTag.innerText);
-                              createTagRemoveButton.innerText = "Blacklist tag";
+                        if (get.bannedContext == "on") {
+                           if (checkForTag != null) {
+                              if (checkForTagButton == null) {
+                                 var createTagRemoveButton = document.createElement("button");
+                                 createTagRemoveButton.setAttribute('id',"tag-button");
+                                 createTagRemoveButton.setAttribute('class',"moreActions__button sc-button-medium sc-button-blacklist");
+                                 createTagRemoveButton.setAttribute('title',"Click to blacklist this track's tag");
+                                 createTagRemoveButton.setAttribute('data-hashtag', checkForTag.innerText);
+                                 createTagRemoveButton.innerText = "Blacklist tag";
 
-                              getMoreContextMenu.appendChild(createTagRemoveButton);
+                                 getMoreContextMenu.appendChild(createTagRemoveButton);
 
-                              var getTagRemoveButton = document.getElementById('tag-button');
-                              getTagRemoveButton.addEventListener("click", function() {
-                                 var setGlobalSettings = {};
-                                 var bannedTag = this.getAttribute("data-hashtag");
-                                 var newTagsArray = get.tagsArray + "," + bannedTag;
-                                 setGlobalSettings.tagsArray = newTagsArray;
+                                 var getTagRemoveButton = document.getElementById('tag-button');
+                                 getTagRemoveButton.addEventListener("click", function() {
+                                    var setGlobalSettings = {};
+                                    var bannedTag = this.getAttribute("data-hashtag");
+                                    var newTagsArray = get.tagsArray + "," + bannedTag;
+                                    setGlobalSettings.tagsArray = newTagsArray;
 
-                                 // Store all options in chrome
-                                 chrome.storage.sync.set(setGlobalSettings, function(){
-                                    if (chrome.runtime.lastError) {
-                                       alert('Error settings:\n\n'+chrome.runtime.lastError);
-                                    }
+                                    // Store all options in chrome
+                                    chrome.storage.sync.set(setGlobalSettings, function() {
+                                       if (chrome.runtime.lastError) {
+                                          alert('Error settings:\n\n'+chrome.runtime.lastError);
+                                       }
+                                    });
+
+                                    //Refresh the page
+                                    location.reload();
                                  });
-
-                                 //Refresh the page
-                                 location.reload();
-                              });
+                              }
                            }
                         }
 
-                        if (checkPlaylists == null) {
-                           if(get.relatedContext == "on"){
+                        if (get.relatedContext == "on") {
+                           if (checkPlaylists == null) {
                               var createAchor = document.createElement("a");
                               createAchor.setAttribute('href', getSongHref + "/recommended");
 
@@ -992,12 +1049,12 @@ function injectedJavascript() {
       relatedContext();
 
       // Remove previews
-      if(get.removePreviews == "on"){
+      if(get.removePreviews == "on") {
          // Function to skip all previews
          function hidePreviews() {
             var preview = document.getElementsByClassName('sc-snippet-badge sc-snippet-badge-medium sc-snippet-badge-grey');
-            for (i = 0; i < preview.length; i++){
-               if(preview[i].innerHTML != ""){
+            for (i = 0; i < preview.length; i++) {
+               if (preview[i].innerHTML != "") {
                   var previewsClosest = preview[i].closest('.soundList__item');
                   previewsClosest.setAttribute("data-skip", "true");
                   previewsClosest.setAttribute("data-type", "preview");
@@ -1055,7 +1112,7 @@ function injectedJavascript() {
                   var getCanvas = lastElement.getContext("2d");
                   var lengthCalc = lastElement.width - 27;
                   var pixelData = getCanvas.getImageData(lengthCalc,27,1,1).data;
-                  if(pixelData[0] == 0 && pixelData[1] == 0 && pixelData[2] == 0 && pixelData[3] == 255){
+                  if(pixelData[0] == 0 && pixelData[1] == 0 && pixelData[2] == 0 && pixelData[3] == 255) {
                      var canvasClosest = canvas[i].closest('.soundList__item');
                      canvasClosest.setAttribute("data-skip", "true");
                      canvasClosest.setAttribute("data-type", "long");
@@ -1107,13 +1164,24 @@ function injectedJavascript() {
 
    function markPlaylists() {
       var getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext');
-      for (var i = 0; i < getPlaylists.length; i++){
+      for (var i = 0; i < getPlaylists.length; i++) {
          var getPlaylist = getPlaylists[i].className;
-         if(getPlaylist.includes("playlist") == true){
-            var getTrackCount = getPlaylists[i].getElementsByClassName('genericTrackCount__title')[0].innerText;
+         if (getPlaylist.includes("playlist") == true) {
+            var getTrackCount = getPlaylists[i].querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
+            if (getTrackCount.length < 5) {
+               var getTrackCountNum = getTrackCount.length;
+            } else {
+               var checkMoreLink = getPlaylists[i].querySelectorAll('.compactTrackList__moreLink')[0];
+               if (checkMoreLink) {
+                  var checkMoreLinkContent = checkMoreLink.innerText;
+                  var getTrackCountNum = checkMoreLinkContent.replace(/\D/g,'');
+               } else {
+                  var getTrackCountNum = getTrackCount.length;
+               }
+            }
             var playlistClosest = getPlaylists[i].closest('.soundList__item');
             playlistClosest.setAttribute("data-playlist", "true");
-            playlistClosest.setAttribute("data-count", getTrackCount);
+            playlistClosest.setAttribute("data-count", getTrackCountNum);
          }
       }
    }
@@ -1133,7 +1201,7 @@ function injectedJavascript() {
    window.skipPrevious = "false";
    var nextSongObserver = new MutationObserver(function (mutationRecords, observer) {
       mutationRecords.forEach(function (mutation) {
-         chrome.storage.sync.get(getGlobalSettings, function(get){
+         chrome.storage.sync.get(getGlobalSettings, function(get) {
             var getPath = document.getElementsByClassName('playbackSoundBadge__titleContextContainer')[0].getElementsByClassName('playbackSoundBadge__title')[0];
             var getTitleAttribute = getPath.getAttribute("title");
             var getStreamItems = document.getElementsByClassName('soundList__item');

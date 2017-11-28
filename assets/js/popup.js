@@ -17,7 +17,9 @@ getGlobalSettings.push('removeUserActivity');
 getGlobalSettings.push('removeReposts');
 getGlobalSettings.push('tagsArray');
 getGlobalSettings.push('relatedContext');
+getGlobalSettings.push('bannedContext');
 getGlobalSettings.push('hiddenOutline');
+getGlobalSettings.push('profileImages');
 
 // Detect dark mode
 chrome.storage.sync.get(getGlobalSettings, function(get){
@@ -40,16 +42,18 @@ var removeUserActivityInput = document.getElementById("removeUserActivity");
 var removeRepostsInput = document.getElementById('removeReposts');
 var skipTagsInput = document.getElementById("skipTags");
 var relatedContextInput = document.getElementById("relatedContext");
+var bannedContextInput = document.getElementById("bannedContext");
 var hiddenOutlineInput = document.getElementById("hiddenOutline");
+var profileImagesInput = document.getElementById("profileImages");
 
-chrome.storage.sync.get(getGlobalSettings, function(get){
-   if(get.darkMode == "on"){
+chrome.storage.sync.get(getGlobalSettings, function(get) {
+   if (get.darkMode == "on") {
       darkModeInput.checked = true;
    }
    if (get.removeSettingsBtn == "on") {
       removeSettingsBtnInput.checked = true;
    }
-   if(get.hideSidebar == "on"){
+   if (get.hideSidebar == "on") {
       hideSidebarInput.checked = true;
    }
    if (get.hideTheUpload == "on") {
@@ -58,17 +62,17 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
    if (get.oldUserProfile == "on") {
       oldUserProfileInput.checked = true;
    }
-   if(get.displayType == "list"){
+   if (get.displayType == "list") {
       displayTypeInput[1].checked = true;
-   }else if (get.displayType == "grid") {
+   } else if (get.displayType == "grid") {
       displayTypeInput[2].checked = true;
    } else {
       displayTypeInput[0].checked = true;
    }
-   if(get.removePreviews == "on"){
+   if (get.removePreviews == "on") {
       removePreviewsInput.checked = true;
    }
-   if(get.removePlaylists == "on"){
+   if (get.removePlaylists == "on") {
       removePlaylistsInput.checked = true;
    }
    if (get.removeLongTracks == "on") {
@@ -83,11 +87,17 @@ chrome.storage.sync.get(getGlobalSettings, function(get){
    if (get.tagsArray != null) {
       skipTagsInput.setAttribute("value", get.tagsArray);
    }
-   if(get.relatedContext == "on"){
+   if (get.relatedContext == "on") {
       relatedContextInput.checked = true;
+   }
+   if (get.bannedContext == "on") {
+      bannedContextInput.checked = true;
    }
    if (get.hiddenOutline == "on") {
       hiddenOutlineInput.checked = true;
+   }
+   if (get.profileImages == "on") {
+      profileImagesInput.checked = true;
    }
 });
 
@@ -142,8 +152,14 @@ submit.addEventListener('click', function() {
    if (relatedContextInput.checked != true) {
       relatedContextInput.value = "off";
    }
-   if (hiddenOutlineInput.checked != true){
+   if (bannedContextInput.checked != true) {
+      bannedContextInput.value = "off";
+   }
+   if (hiddenOutlineInput.checked != true) {
       hiddenOutlineInput.value = "off";
+   }
+   if (profileImagesInput.checked != true) {
+      profileImagesInput.value = "off";
    }
 
    var tagsArray = [];
@@ -165,7 +181,9 @@ submit.addEventListener('click', function() {
    setGlobalSettings.removeReposts = removeRepostsInput.value;
    setGlobalSettings.tagsArray = tagsArray;
    setGlobalSettings.relatedContext = relatedContextInput.value;
+   setGlobalSettings.bannedContext = bannedContext.value;
    setGlobalSettings.hiddenOutline = hiddenOutlineInput.value;
+   setGlobalSettings.profileImages = profileImagesInput.value;
 
    // Store all options in chrome
    chrome.storage.sync.set(setGlobalSettings, function(){
