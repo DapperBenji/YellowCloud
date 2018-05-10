@@ -1,19 +1,19 @@
 {
    "manifest_version": 2,
-   "version": "2.3",
+   "version": "2.4",
    "name": "SoundCloud Enhancer - Darkmode and more",
    "short_name": "SCE",
    "description": "This extension gives you tools, that will make your SoundCloud more customizable.",
-   "homepage_url": "http://benjaminbachjensen.com",
+   "homepage_url": "https://twitter.com/DapperBenji",
    "icons": {
      "16": "assets/icons/icon-16.png",
      "48": "assets/icons/icon-48.png",
      "128": "assets/icons/icon-128.png"
    },
    "content_scripts": [ {
-      "js": ["assets/js/jquery.min.js","assets/js/vex.combined.min.js", "assets/js/insignia.min.js", "assets/js/enhancer.js"],
-      "css" : ["assets/css/vex.css", "assets/css/vex-theme-top.css", "assets/css/insignia.min.css", "assets/css/style.css"],
-      "matches": [ "https://soundcloud.com/*" ],
+      "js": ["assets/js/insignia.min.js", "assets/js/enhancer.js"],
+      "css" : ["assets/css/insignia.min.css", "assets/css/style.css"],
+      "matches": ["https://soundcloud.com/*"],
       "run_at": "document_end"
    } ],
    "browser_action": {
@@ -24,5 +24,6 @@
       "default_title": "SoundCloud Enhancer",
       "default_popup": "assets/html/popup.html"
    },
-   "permissions": [ "storage", "https://soundcloud.com/" ]
+   "permissions": ["storage", "https://soundcloud.com/"],
+   "web_accessible_resources": ["assets/html/*"]
 }

@@ -1,12 +1,4 @@
-<head>
-   <title>SoundCloud Enhancer Settings Menu</title>
-   <link rel="stylesheet" href="/assets/css/style.css">
-   <link rel="stylesheet" href="/assets/css/insignia.min.css">
-   <link rel="stylesheet" href="/assets/css/popup.css">
-</head>
-<body id="body">
-   <h1 class="g-modal-title-h1 sc-truncate">SoundCloud Enhancer Settings 2.4</h1>
-   <span class="credits">Made with <span class="heart">&hearts;</span> in Denmark by <a href="https://twitter.com/DapperBenji" target="_blank">@DapperBenji</a>. Follow development on <a href="https://trello.com/b/n7jrTzxO/soundcloud-enhancer" target="_blank">Trello</a>.</span>
+<form id="sce-settings-form">
    <h2>Design:</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
@@ -67,7 +59,7 @@
          </label>
       </ul>
    </div>
-   <h2>Filter:<br><span class="notice">(Filter options only work when you listen to music on the stream page)</span></h2>
+   <h2>Filter:</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
@@ -86,29 +78,45 @@
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="removeLongTracks" id="removeLongTracks" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Filter all tracks above 10min (Can be buggy)</span>
+         <span class="sc-checkbox-label">Filter all tracks above 10min</span>
       </label>
    </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="removeUserActivity" id="removeUserActivity" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Filter own user activity</span>
+         <span class="sc-checkbox-label">Filter own user activity <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Hides all your own posts, reposts and playlists from the stream">?</button></span>
       </label>
    </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="removeReposts" id="removeReposts" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Filter all reposts</span>
+         <span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>
       </label>
    </div>
    <div class="settings-option">
       <span class="skiptags-span">Filter tracks with specific tags:</span>
       <div class="input">
-         <input id="skipTags" placeholder="Add tags..." value="">
+         <input id="skipTags" name="skipTags" placeholder="Add tags..." value="">
       </div>
    </div>
+   <h2>Context menu:</h2>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Add "Related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="bannedContext" id="bannedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Add "Blacklist tag" option on tracks with a tag</span>
+      </label>
+   </div>
+   <h2>Miscellaneous:</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
@@ -116,25 +124,8 @@
          <span class="sc-checkbox-label">Show outline of hidden tracks</span>
       </label>
    </div>
-   <h2>Context menu:</h2>
-   <div class="settings-option">
-      <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
-         <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Add "Related tracks" option on tracks</span>
-      </label>
+   <div id="sce-settings-footer">
+      <button type="button" class="sc-button-nostyle sce-close-settings">Cancel</button>
+      <button type="button" class="sc-button" id="sce-settings-save">Save changes</button>
    </div>
-   <div class="settings-option">
-      <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="bannedContext" id="bannedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
-         <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Add "Blacklist tag" option on tracks</span>
-      </label>
-   </div>
-   <button id="submit" type="button" class="sc-button">Save changes</button>
-   <span class="donation"><a href="https://www.paypal.me/BenjaminBachJensen" target="_blank">Buy me a cup of coffee</a></span>
-   <!-- Load scripts -->
-   <script src="/assets/js/jquery.min.js"></script>
-   <script src="/assets/js/insignia.min.js"></script>
-   <script src="/assets/js/popup.js"></script>
-</body>
+</form>
