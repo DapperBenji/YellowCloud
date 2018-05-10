@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v2.2#
+# SoundCloud Enhancer v2.4#
 
 ## Description: ##
 ----------------------------------------
@@ -73,7 +73,7 @@ Remember to leave suggestions and drop a rating
 - Added a "Like" tab to profiles
 - Added a quick tag blacklist (Hit the "more" button on tracks with a tag
 
-Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) Remember to follow me on Twitter, and @ me if there is any problems or suggestions!
+Thanks to Michael Griffiths for donating 10� and leaving a nice message ;) Remember to follow me on Twitter, and @ me if there is any problems or suggestions!
 
 ### Version 2.1 ###
 - The extension has asking to read browser history, which wasnt used for anything. That have been fixed.
@@ -84,3 +84,27 @@ Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) Reme
 - Various dark mode improvements, mainly with the newly added queue menu.
 - Added the option the remove the in-website settings button.
 - Added the option to remove the "The Upload" from the discover tab.
+
+### Version 2.3 ###
+- Added the option to make profile pictures square
+- Various dark mode improvement, most notably the media controls are now optimized
+- Removed all http:// loaded content (replaced with base64)
+- Fixed a bug with the mass unfollowers counter
+- Fixed a visual bug with the "add to queue" button in grid view mode
+- Fixed a bug were grid mode disabled comments cross-site
+- Fixed the playlist filter
+- Made the "Block tag" context menu item an optional feature
+- Rearranged the settings menu's sections
+- Gave the "Block tag" context menu item a unique icon
+- Cleaned up unused extension files
+
+### Version 2.4 ###
+- Updated the donation link.
+- Updated "The upload" menu URL to the new URL format.
+- All links in the settings menu, now opens a new tab.
+- The in-app setting menu got rewritten to vanilla javascript.
+- The in-app setting menu also got a facelift. It now looks and feels more like SoundCloud.
+- SCE will no longer auto scroll on the stream page.
+- Various dark mode improvements
+
+Code slowly being rewritten. Leading up to the huge 3.0 update!
