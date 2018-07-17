@@ -1,197 +1,114 @@
 // Global variables
-var body = document.getElementById('body');
-var submit = document.getElementById('submit');
-var getGlobalSettings = [];
-
-//Get settings from chrome storage
-getGlobalSettings.push('darkMode');
-getGlobalSettings.push('removeSettingsBtn');
-getGlobalSettings.push('hideSidebar');
-getGlobalSettings.push('hideTheUpload');
-getGlobalSettings.push('oldUserProfile');
-getGlobalSettings.push('displayType');
-getGlobalSettings.push('removePreviews');
-getGlobalSettings.push('removePlaylists');
-getGlobalSettings.push('removeLongTracks');
-getGlobalSettings.push('removeUserActivity');
-getGlobalSettings.push('removeReposts');
-getGlobalSettings.push('tagsArray');
-getGlobalSettings.push('relatedContext');
-getGlobalSettings.push('bannedContext');
-getGlobalSettings.push('hiddenOutline');
-getGlobalSettings.push('profileImages');
+const body = document.getElementById('body'),
+submit = document.getElementById('submit'),
+setGlobalSettings = {},
+getGlobalSettings = ["darkMode", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
 
 // Detect dark mode
-chrome.storage.sync.get(getGlobalSettings, function(get){
-   if(get.darkMode == "on"){
-      body.setAttribute("data-theme", "dark");
-   }
+chrome.storage.sync.get(getGlobalSettings, get => {
+   if (get.darkMode == "on") body.setAttribute("data-theme", "dark");
 });
 
 // Populate settings dialogbox
-var darkModeInput = document.getElementById('darkMode');
-var removeSettingsBtnInput = document.getElementById('removeSettingsBtn');
-var hideSidebarInput = document.getElementById('hideSidebar');
-var hideTheUploadInput = document.getElementById('hideTheUpload');
-var oldUserProfileInput = document.getElementById('oldUserProfile');
-var displayTypeInput = document.getElementsByName("displayType");
-var removePreviewsInput = document.getElementById("removePreviews");
-var removePlaylistsInput = document.getElementById("removePlaylists");
-var removeLongTracksInput = document.getElementById("removeLongTracks");
-var removeUserActivityInput = document.getElementById("removeUserActivity");
-var removeRepostsInput = document.getElementById('removeReposts');
-var skipTagsInput = document.getElementById("skipTags");
-var relatedContextInput = document.getElementById("relatedContext");
-var bannedContextInput = document.getElementById("bannedContext");
-var hiddenOutlineInput = document.getElementById("hiddenOutline");
-var profileImagesInput = document.getElementById("profileImages");
+const darkModeInput = document.querySelector('#darkMode'),
+fullwidthModeInput = document.querySelector('#fullwidthMode'),
+removeSettingsBtnInput = document.querySelector('#removeSettingsBtn'),
+hideSidebarInput = document.querySelector('#hideSidebar'),
+hideTheUploadInput = document.querySelector('#hideTheUpload'),
+hideBrandingInput =  document.querySelector('#hideBranding'),
+displayTypeInput = document.querySelectorAll('input[name="displayType"]'),
+removePreviewsInput = document.querySelector('#removePreviews'),
+removePlaylistsInput = document.querySelector('#removePlaylists'),
+removeLongTracksInput = document.querySelector('#removeLongTracks'),
+removeUserActivityInput = document.querySelector('#removeUserActivity'),
+removeRepostsInput = document.querySelector('#removeReposts'),
+hiddenOutlineInput = document.querySelector('#hiddenOutline'),
+profileImagesInput = document.querySelector('#profileImages'),
+relatedActionMenuInput = document.querySelector('#relatedActionMenu'),
+tagActionMenuInput = document.querySelector('#tagActionMenu'),
+artistActionMenuInput = document.querySelector('#artistActionMenu'),
+trackActionMenuInput = document.querySelector('#trackActionMenu'),
+disableUnfollowerInput = document.querySelector('#disableUnfollower'),
+disableDiscoverToggleInput = document.querySelector('#disableDiscoverToggle');
 
-chrome.storage.sync.get(getGlobalSettings, function(get) {
-   if (get.darkMode == "on") {
-      darkModeInput.checked = true;
-   }
-   if (get.removeSettingsBtn == "on") {
-      removeSettingsBtnInput.checked = true;
-   }
-   if (get.hideSidebar == "on") {
-      hideSidebarInput.checked = true;
-   }
-   if (get.hideTheUpload == "on") {
-      hideTheUploadInput.checked = true;
-   }
-   if (get.oldUserProfile == "on") {
-      oldUserProfileInput.checked = true;
-   }
-   if (get.displayType == "list") {
-      displayTypeInput[1].checked = true;
-   } else if (get.displayType == "grid") {
-      displayTypeInput[2].checked = true;
-   } else {
-      displayTypeInput[0].checked = true;
-   }
-   if (get.removePreviews == "on") {
-      removePreviewsInput.checked = true;
-   }
-   if (get.removePlaylists == "on") {
-      removePlaylistsInput.checked = true;
-   }
-   if (get.removeLongTracks == "on") {
-      removeLongTracksInput.checked = true;
-   }
-   if (get.removeUserActivity == "on") {
-      removeUserActivityInput.checked = true;
-   }
-   if (get.removeReposts == "on") {
-     removeRepostsInput.checked = true;
-   }
-   if (get.tagsArray != null) {
-      skipTagsInput.setAttribute("value", get.tagsArray);
-   }
-   if (get.relatedContext == "on") {
-      relatedContextInput.checked = true;
-   }
-   if (get.bannedContext == "on") {
-      bannedContextInput.checked = true;
-   }
-   if (get.hiddenOutline == "on") {
-      hiddenOutlineInput.checked = true;
-   }
-   if (get.profileImages == "on") {
-      profileImagesInput.checked = true;
+chrome.storage.sync.get(getGlobalSettings, get => {
+   if (get.darkMode == "on") darkModeInput.checked = true;
+   if (get.fullwidthMode == "on") fullwidthModeInput.checked = true;
+   if (get.removeSettingsBtn == "on") removeSettingsBtnInput.checked = true;
+   if (get.hideSidebar == "on") hideSidebarInput.checked = true;
+   if (get.hideTheUpload == "on") hideTheUploadInput.checked = true;
+   if (get.hideBranding == "on") hideBrandingInput.checked = true;
+   if (get.oldUserProfile == "on") oldUserProfileInput.checked = true;
+   if (get.displayType == "list") displayTypeInput[1].checked = true;
+   else if (get.displayType == "grid") displayTypeInput[2].checked = true;
+   else displayTypeInput[0].checked = true;
+   if (get.removePreviews == "on") removePreviewsInput.checked = true;
+   if (get.removePlaylists == "on") removePlaylistsInput.checked = true;
+   if (get.removeLongTracks == "on") removeLongTracksInput.checked = true;
+   if (get.removeUserActivity == "on") removeUserActivityInput.checked = true;
+   if (get.removeReposts == "on") removeRepostsInput.checked = true;
+   if (get.hiddenOutline == "on") hiddenOutlineInput.checked = true;
+   if (get.profileImages == "on") profileImagesInput.checked = true;
+   if (get.disableUnfollower == "on") disableUnfollowerInput.checked = true;
+   if (get.disableDiscoverToggle == "on") disableDiscoverToggleInput.checked = true;
+   if (get.moreActionMenu) {
+      if (get.moreActionMenu.relatedActionMenu == "on") relatedActionMenuInput.checked = true;
+      if (get.moreActionMenu.tagActionMenu == "on") tagActionMenuInput.checked = true;
+      if (get.moreActionMenu.artistActionMenu == "on") artistActionMenuInput.checked = true;
+      if (get.moreActionMenu.trackActionMenu == "on") trackActionMenuInput.checked = true;
    }
 });
 
-// Load tags properly in the settings menu
-setTimeout(function() {
-   insignia(skipTags, {
-      delimiter: ',',
-      deletion: true
-   });
-}, 100);
+submit.addEventListener("click", ()=> {
+   const length = displayTypeInput.length, moreActionMenuObject = {};
+   for (let i = 0; i < length; i++)
+      if (displayTypeInput[i].checked) displayTypeInput.value = displayTypeInput[i].value;
 
-submit.addEventListener('click', function() {
-   var setGlobalSettings = {};
+   if (darkModeInput.checked != true) darkMode.value = "off";
+   if (fullwidthModeInput.checked != true) fullwidthMode.value = "off";
+   if (removeSettingsBtnInput.checked != true) removeSettingsBtn.value = "off";
+   if (hideSidebarInput.checked != true) hideSidebar.value = "off";
+   if (hideBrandingInput.checked != true) hideBranding.value = "off";
+   if (removePreviewsInput.checked != true) removePreviews.value = "off";
+   if (removePlaylistsInput.checked != true) removePlaylists.value = "off";
+   if (removeLongTracksInput.checked != true) removeLongTracks.value = "off";
+   if (removeUserActivityInput.checked != true) removeUserActivity.value = "off";
+   if (removeRepostsInput.checked != true) removeReposts.value = "off";
+   if (hiddenOutlineInput.checked != true) hiddenOutline.value = "off";
+   if (profileImagesInput.checked != true) profileImages.value = "off";
+   if (disableUnfollowerInput.checked != true) disableUnfollower.value = "off";
+   if (disableDiscoverToggleInput.checked != true) disableDiscoverToggle.value = "off";
 
-   // Data handling
-   if (darkModeInput.checked != true) {
-      darkModeInput.value = "off";
-   }
-   if (removeSettingsBtnInput.checked != true) {
-      removeSettingsBtnInput.value = "off";
-   }
-   if (hideSidebarInput.checked != true) {
-      hideSidebarInput.value = "off";
-   }
-   if (hideTheUploadInput.checked != true) {
-      hideTheUploadInput.value = "off";
-   }
-   if (oldUserProfileInput.checked != true) {
-      oldUserProfileInput.value = "off";
-   }
-   for (var i = 0, length = displayTypeInput.length; i < length; i++) {
-      if (displayTypeInput[i].checked) {
-         displayTypeInput.value = displayTypeInput[i].value;
-         break;
-      }
-   }
-   if (removePreviewsInput.checked != true) {
-      removePreviewsInput.value = "off";
-   }
-   if (removePlaylistsInput.checked != true) {
-      removePlaylistsInput.value = "off";
-   }
-   if (removeLongTracksInput.checked != true) {
-      removeLongTracksInput.value = "off";
-   }
-   if (removeUserActivityInput.checked != true) {
-      removeUserActivityInput.value = "off";
-   }
-   if (removeRepostsInput.checked != true) {
-     removeRepostsInput.value = "off";
-   }
-   if (relatedContextInput.checked != true) {
-      relatedContextInput.value = "off";
-   }
-   if (bannedContextInput.checked != true) {
-      bannedContextInput.value = "off";
-   }
-   if (hiddenOutlineInput.checked != true) {
-      hiddenOutlineInput.value = "off";
-   }
-   if (profileImagesInput.checked != true) {
-      profileImagesInput.value = "off";
-   }
+   // More action menu
+   if (relatedActionMenuInput.checked != true) moreActionMenuObject.relatedActionMenu = "off";
+   else moreActionMenuObject.relatedActionMenu = "on";
+   if (tagActionMenuInput.checked != true) moreActionMenuObject.tagActionMenu = "off";
+   else moreActionMenuObject.tagActionMenu = "on";
+   if (artistActionMenuInput.checked != true) moreActionMenuObject.artistActionMenu = "off";
+   else moreActionMenuObject.artistActionMenu = "on";
+   if (trackActionMenuInput.checked != true) moreActionMenuObject.trackActionMenu = "off";
+   else moreActionMenuObject.trackActionMenu = "on";
 
-   var tagsArray = [];
-   var tagElement = document.getElementsByClassName("nsg-tag");
-   for (var i = 0; i < tagElement.length; i++) {
-      tagsArray.push(tagElement[i].innerText);
-   }
-
-   setGlobalSettings.darkMode = darkModeInput.value;
+   setGlobalSettings.darkMode = darkMode.value;
+   setGlobalSettings.fullwidthMode = fullwidthMode.value;
    setGlobalSettings.removeSettingsBtn = removeSettingsBtn.value;
-   setGlobalSettings.hideSidebar = hideSidebarInput.value;
-   setGlobalSettings.hideTheUpload = hideTheUploadInput.value;
-   setGlobalSettings.oldUserProfile = oldUserProfileInput.value;
+   setGlobalSettings.hideSidebar = hideSidebar.value;
+   setGlobalSettings.hideBranding = hideBranding.value;
    setGlobalSettings.displayType = displayTypeInput.value;
-   setGlobalSettings.removePreviews = removePreviewsInput.value;
-   setGlobalSettings.removePlaylists = removePlaylistsInput.value;
-   setGlobalSettings.removeLongTracks = removeLongTracksInput.value;
-   setGlobalSettings.removeUserActivity = removeUserActivityInput.value;
-   setGlobalSettings.removeReposts = removeRepostsInput.value;
-   setGlobalSettings.tagsArray = tagsArray;
-   setGlobalSettings.relatedContext = relatedContextInput.value;
-   setGlobalSettings.bannedContext = bannedContext.value;
-   setGlobalSettings.hiddenOutline = hiddenOutlineInput.value;
-   setGlobalSettings.profileImages = profileImagesInput.value;
+   setGlobalSettings.removePreviews = removePreviews.value;
+   setGlobalSettings.removePlaylists = removePlaylists.value;
+   setGlobalSettings.removeLongTracks = removeLongTracks.value;
+   setGlobalSettings.removeUserActivity = removeUserActivity.value;
+   setGlobalSettings.removeReposts = removeReposts.value;
+   setGlobalSettings.hiddenOutline = hiddenOutline.value;
+   setGlobalSettings.profileImages = profileImages.value;
+   setGlobalSettings.disableUnfollower = disableUnfollower.value;
+   setGlobalSettings.disableDiscoverToggle = disableDiscoverToggle.value;
+   setGlobalSettings.moreActionMenu = moreActionMenuObject;
 
    // Store all options in chrome
-   chrome.storage.sync.set(setGlobalSettings, function(){
-      if (chrome.runtime.lastError) {
-         alert('Error settings:\n\n'+chrome.runtime.lastError);
-      }
+   chrome.storage.sync.set(setGlobalSettings, ()=> {
+      if (chrome.runtime.lastError) alert('Error settings:\n\n'+chrome.runtime.lastError);
+      else location.reload();
    });
-
-   // Refresh page
-   location.reload();
 });

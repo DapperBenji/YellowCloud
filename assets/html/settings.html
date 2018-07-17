@@ -1,5 +1,5 @@
 <form id="sce-settings-form">
-   <h2>Design:</h2>
+   <h2>Design & layout</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="darkMode" id="darkMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
@@ -9,9 +9,16 @@
    </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="removeSettingsBtn" id="removeSettingsBtn" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <input type="checkbox" name="fullwidthMode" id="fullwidthMode" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Removes the "Enhancer settings" button</span>
+         <span class="sc-checkbox-label">Enable fullwidth</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="profileImages" id="profileImages" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Enable square profile pics</span>
       </label>
    </div>
    <div class="settings-option">
@@ -23,23 +30,9 @@
    </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="hideTheUpload" id="hideTheUpload" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <input type="checkbox" name="removeSettingsBtn" id="removeSettingsBtn" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Hide "The Upload" from the "Discover" tab (Deprecated)</span>
-      </label>
-   </div>
-   <div class="settings-option">
-      <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="oldUserProfile" id="oldUserProfile" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
-         <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Use old profile page</span>
-      </label>
-   </div>
-   <div class="settings-option">
-      <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="profileImages" id="profileImages" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
-         <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Square profile pics</span>
+         <span class="sc-checkbox-label">Hide "Enhancer settings" button</span>
       </label>
    </div>
    <div class="settings-option">
@@ -59,7 +52,7 @@
          </label>
       </ul>
    </div>
-   <h2>Filter:</h2>
+   <h2>Filtering</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="removePreviews" id="removePreviews" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
@@ -95,34 +88,66 @@
          <span class="sc-checkbox-label">Filter all reposts <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Warning: This option can be really laggy, so be patient">?</button></span>
       </label>
    </div>
-   <div class="settings-option">
-      <span class="skiptags-span">Filter tracks with specific tags:</span>
-      <div class="input">
-         <input id="skipTags" name="skipTags" placeholder="Add tags..." value="">
-      </div>
-   </div>
-   <h2>Context menu:</h2>
+   <h2>More action menu (beta)</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="relatedContext" id="relatedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <input type="checkbox" name="relatedActionMenu" id="relatedActionMenu" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Add "Related tracks" option on tracks <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>
+         <span class="sc-checkbox-label">Disable "Related tracks" menu item <button class="sc-button sc-button-small tooltip-button" type="button" data-tooltip="Adds a link to related tracks on tracks with a “more“ or “...“ button">?</button></span>
       </label>
    </div>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
-         <input type="checkbox" name="bannedContext" id="bannedContext" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <input type="checkbox" name="tagActionMenu" id="tagActionMenu" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
-         <span class="sc-checkbox-label">Add "Blacklist tag" option on tracks with a tag</span>
+         <span class="sc-checkbox-label">Disable "Blacklist tag" menu item</span>
       </label>
    </div>
-   <h2>Miscellaneous:</h2>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="artistActionMenu" id="artistActionMenu" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Disable "Blacklist artist" menu item</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="trackActionMenu" id="trackActionMenu" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Disable "Blacklist track / playlist" menu item</span>
+      </label>
+   </div>
+   <h2>Miscellaneous</h2>
    <div class="settings-option">
       <label class="checkbox sc-checkbox">
          <input type="checkbox" name="hiddenOutline" id="hiddenOutline" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
          <div class="sc-checkbox-check"></div>
          <span class="sc-checkbox-label">Show outline of hidden tracks</span>
       </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="hideBranding" id="hideBranding" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Hide SCE branding</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="disableDiscoverToggle" id="disableDiscoverToggle" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Disable discover module toggle</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <label class="checkbox sc-checkbox">
+         <input type="checkbox" name="disableUnfollower" id="disableUnfollower" class="sc-checkbox-input sc-visuallyhidden" aria-required="false">
+         <div class="sc-checkbox-check"></div>
+         <span class="sc-checkbox-label">Disable mass unfollower</span>
+      </label>
+   </div>
+   <div class="settings-option">
+      <button type="button" class="sc-button-nostyle" id="sce-settings-reset" warning="false">Reset all SCEnhancer settings</button>
    </div>
    <div id="sce-settings-footer">
       <button type="button" class="sc-button-nostyle sce-close-settings">Cancel</button>

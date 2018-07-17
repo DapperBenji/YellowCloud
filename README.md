@@ -1,15 +1,15 @@
-# SoundCloud Enhancer v2.4#
+# SoundCloud Enhancer v3.0 #
 
 ## Description: ##
 ----------------------------------------
-SoundCloud Enhancer alters the look and functionality of the platform. You can change the whole website to a sexy looking dark theme, together with other changes to the layout like sidebar removal and stream listing design. One of the biggest features allows you to ban specific tags in your stream, so you only listen to the genres that you enjoy. Please send me suggestions and report bugs upon using my extension.
+SoundCloud Enhancer offers loads of customizations enhancing the SoundCloud experience.
 
 ## Changelog: ##
 ----------------------------------------
 ### Version 1.0 (Release) ###
 - Added Dark mode.
 - Added an option to remove the sidebar.
-- Made a view mode toogle (default, list and grid view).
+- Made a view mode toggle (default, list and grid view).
 - Added a specific tag filter.
 - Added a preview song filter.
 
@@ -19,11 +19,11 @@ SoundCloud Enhancer alters the look and functionality of the platform. You can c
 - Various fixes to the dark mode (Special thanks to https://soundcloud.com/lasseppedersen).
 - Made the settings button responsive.
 
-### Version 1.5 (Big update) ###
-- Fixed a huge bug where the tracks skipping changes wasn't loaded. It will now automaticly scroll the page to load changes into DOM.
+### Version 1.5 ###
+- Fixed a huge bug where the tracks skipping changes wasn't loaded. It will now automatically scroll the page to load changes into DOM.
 - Added a quick display type switch for the stream page.
 - Added the option to show hidden tracks.
-- Added a link to the project's new trello board.
+- Added a link to the project's new Trello board.
 - Added an option to hide longer tracks (May still me bugs).
 - Cleaned the code a bit.
 - Added short name to the manifest.
@@ -31,7 +31,7 @@ SoundCloud Enhancer alters the look and functionality of the platform. You can c
 
 #### Known bugs: ####
 - There may occur bugs when using the previous track button.
-- Changes not loaded when chrome reopens soundcloud window.
+- Changes not loaded when chrome reopens Soundcloud window.
 
 ### Version 1.6 ###
 - Added a mass unfollow option inside https://soundcloud.com/you/following.
@@ -52,14 +52,11 @@ Follow the development here: https://trello.com/b/n7jrTzxO/soundcloud-enhancer.
 
 ### Version 1.8 ###
 - Added tooltips to some options.
-- Added the option to skip all reposts (Requested by @Paraspitfire).
+- Added the option to skip all reposts.
 - Fixed SC announcement being displayed incorrectly.
 - Replace the SC logo with the SCE logo.
 - Various dark mode improvements.
 - Fixed a bug where the SCE button wouldn't work on some SC subpages.
-
-Thanks to @Paraspitfire for donating 10$, really appreciate it :D
-Remember to leave suggestions and drop a rating
 
 ### Version 1.9 ###
 - Added the SCE settings menu to the popup menu
@@ -68,15 +65,13 @@ Remember to leave suggestions and drop a rating
 - Huge stability changes
 - Made the "related tracks" more menu addition, more consistent. Before it wouldn't load on specific pages and tracks with coverart
 - Fixed a bug where "related tracks" would show for a playlist
-- Added a new userpage design
+- Added a new user page design
 - Added a version number to the SCE logo in the header
 - Added a "Like" tab to profiles
 - Added a quick tag blacklist (Hit the "more" button on tracks with a tag
 
-Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) Remember to follow me on Twitter, and @ me if there is any problems or suggestions!
-
 ### Version 2.1 ###
-- The extension has asking to read browser history, which wasnt used for anything. That have been fixed.
+- The extension has asking to read browser history, which wasn't used for anything. That have been fixed.
 
 ### Version 2.2 ###
 - Name changed in the chrome webstore.
@@ -108,3 +103,27 @@ Thanks to Michael Griffiths for donating 10£ and leaving a nice message ;) Remem
 - Various dark mode improvements
 
 Code slowly being rewritten. Leading up to the huge 3.0 update!
+
+### Version 3.0 ###
+- SCE menu overhaul, with the addition of the menus "filter" and "about"
+- Added the ability to blacklist artists, playlists and tracks (beta).
+- Added the ability to import and export SCE settings.
+- Added the ability to reset all SCE settings.
+- Added responsive design to Soundcloud.
+- Added fullwidth mode, that replace Soundcloud's boxed default layout.
+- Added a section/module toggle for the "discover" page.
+- Added an option to hide SCE branding from the header.
+- Updated the mass-unfollower. It now has select/deselect options and an improved checkbox hitbox.
+- Made the tag filter non-case sensitive.
+- "Add to blacklist" filters are now stored and applied in realtime.
+- Display mode switcher, now updates the layout in realtime.
+- A new SCE menu button has been added in the user navigation menu.
+- SCE buttons now have the SCE logo as icons.
+- Various dark mode improvements, mainly icon visibility.
+- Various smaller bug fixes.
+
+#### Known bugs: ####
+- Google sync issues.
+- Issue with comments in grid mode.
+- Filtering outside the main stream is inconsistent.
+- Scaling issue when changing display mode.

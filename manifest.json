@@ -1,9 +1,9 @@
 {
    "manifest_version": 2,
-   "version": "2.4",
-   "name": "SoundCloud Enhancer - Darkmode and more",
+   "version": "3.0",
+   "name": "SoundCloud Enhancer - Dark mode and more",
    "short_name": "SCE",
-   "description": "This extension gives you tools, that will make your SoundCloud more customizable.",
+   "description": "SoundCloud Enhancer offers loads of customizations enhancing the SoundCloud experience.",
    "homepage_url": "https://twitter.com/DapperBenji",
    "icons": {
      "16": "assets/icons/icon-16.png",
@@ -12,7 +12,7 @@
    },
    "content_scripts": [ {
       "js": ["assets/js/insignia.min.js", "assets/js/enhancer.js"],
-      "css" : ["assets/css/insignia.min.css", "assets/css/style.css"],
+      "css" : ["assets/css/style.css"],
       "matches": ["https://soundcloud.com/*"],
       "run_at": "document_end"
    } ],
