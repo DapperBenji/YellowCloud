@@ -127,3 +127,7 @@ Code slowly being rewritten. Leading up to the huge 3.0 update!
 - Issue with comments in grid mode.
 - Filtering outside the main stream is inconsistent.
 - Scaling issue when changing display mode.
+
+### Version 3.1 ###
+- Fullwidth mode cast icon bug
+- Small hotfix

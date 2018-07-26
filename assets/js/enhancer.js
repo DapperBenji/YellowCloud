@@ -721,7 +721,7 @@ let settingsSetup = ()=> {
    soundPanel = document.querySelector('.playControls'),
    soundPanelInner = document.querySelector('.playControls__inner'),
    announcements = document.querySelector('.announcements.g-z-index-fixed-top'),
-   userMenu = document.querySelector('.userNav__button.userNav__usernameButton'),
+   userMenu = document.querySelector('.header__userNavUsernameButton'),
    logo = document.querySelector('.header__logo.left');
 
    // Force-open sound control panel
@@ -1272,7 +1272,7 @@ let injectedJavascript = ()=> {
    const content = document.querySelector('#content'),
    soundBadge = document.querySelector('.playbackSoundBadge'),
    streamHeader = document.querySelector('.stream__header'),
-   getUsername = document.querySelector('.userNav__button.userNav__usernameButton'),
+   getUsername = document.querySelector('.header__userNavUsernameButton'),
    getUsernameHref = getUsername.getAttribute("href"),
    nextControl = document.querySelector('.skipControl__next'),
    previousControl = document.querySelector('.skipControl__previous');

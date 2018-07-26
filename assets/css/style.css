@@ -421,7 +421,7 @@ body[hidden-outline][data-display="grid"] .soundList__item.hidden{display: inlin
 }
 
 @media screen and (min-width: 1256px) {
-   body[fullwidth] .playControls__soundBadge{width: inherit; position: absolute; left: 970px; right: 0px;}
+   body[fullwidth] .playControls__soundBadge{width: inherit; position: absolute; left: 1000px; right: 0px;}
    body[fullwidth] .playControls__control{margin: 0 0 0 25px;}
    body[fullwidth] .playControls__timeline, body[fullwidth] .playControls__repeat{margin-right: 25px;}
    body[fullwidth] .playbackSoundBadge__actions, body[fullwidth] .playbackSoundBadge__showQueue{margin-left: 10px;}
