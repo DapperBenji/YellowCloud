@@ -1,18 +1,18 @@
 {
    "manifest_version": 2,
-   "version": "3.1",
+   "version": "3.2",
    "name": "SoundCloud Enhancer - Dark mode and more",
    "short_name": "SCE",
    "description": "SoundCloud Enhancer offers loads of customizations enhancing the SoundCloud experience.",
-   "homepage_url": "https://twitter.com/DapperBenji",
+   "homepage_url": "https://dapperbenji.com/scenhancer",
    "icons": {
-     "16": "assets/icons/icon-16.png",
-     "48": "assets/icons/icon-48.png",
-     "128": "assets/icons/icon-128.png"
+      "16": "assets/icons/icon-16.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
    },
    "content_scripts": [ {
-      "js": ["assets/js/insignia.min.js", "assets/js/enhancer.js"],
-      "css" : ["assets/css/style.css"],
+      "js": ["assets/js/insignia.min.js", "assets/js/enhancer.min.js"],
+      "css" : ["assets/css/style.min.css"],
       "matches": ["https://soundcloud.com/*"],
       "run_at": "document_end"
    } ],
@@ -24,6 +24,6 @@
       "default_title": "SoundCloud Enhancer",
       "default_popup": "assets/html/popup.html"
    },
-   "permissions": ["storage", "https://soundcloud.com/"],
+   "permissions": ["storage", "activeTab", "https://soundcloud.com/"],
    "web_accessible_resources": ["assets/html/*"]
 }

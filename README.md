@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v3.0 #
+# SoundCloud Enhancer v3.2 #
 
 ## Description: ##
 ----------------------------------------
@@ -131,3 +131,9 @@ Code slowly being rewritten. Leading up to the huge 3.0 update!
 ### Version 3.1 ###
 - Fullwidth mode cast icon bug
 - Small hotfix
+
+### Version 3.2 ###
+- Fixed darkmode padding issue.
+- Optimized files with minified versions.
+- Optimized initializing load time for changes. This should fix some of the track wave scaling issues.
+- Made a [https://dapperbenji.com/scenhancer][dedicated website] for SCE.

@@ -1,17 +1,25 @@
+/* jshint esversion: 6 */
+/* jshint browser: true */
+/* jshint node: true */
+/* jshint -W117 */
+/* global chrome */
+
 "use strict";
 // =============================================================
 // Global variables
 // =============================================================
 
-const debugMode = 1,
+const debugMode = 0,
 manifestData = chrome.runtime.getManifest(),
 globalConfig = {childList: true},
 altConfig = {attributes: true, childList: true, subtree: true},
 body = document.querySelector('body'),
 app = document.querySelector('#app'),
 defaultFilter = {"artists": [], "tracks": []},
+setGlobalSettings = {},
 getGlobalSettings = ["darkMode", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
-let setGlobalSettings = {}, skipPrevious = false, oldLocation = location.href;
+let skipPrevious = false,
+oldLocation = location.href;
 
 if (debugMode) console.log("-=- SCE DEBUGMODE ACTIVE -=-");
 
@@ -20,12 +28,12 @@ if (debugMode) console.log("-=- SCE DEBUGMODE ACTIVE -=-");
 // =============================================================
 
 // Insert Element node after a reference node
-let insertAfter = (newNode, referenceNode)=> {
+const insertAfter = (newNode, referenceNode)=> {
    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
-}
+};
 
 // Converts a timestamp to a relative time output
-let relativeTime = timestamp => {
+const relativeTime = timestamp => {
    let output = null;
    const minutes = 60,
    hours = minutes * 60,
@@ -43,10 +51,10 @@ let relativeTime = timestamp => {
    else output = Math.round(elapsed / years) + ' yrs ago';
 
    return output;
-}
+};
 
 // Run an instance of a mutation observer
-let runObserver = (target, callback, sensitive, callbackParam = null)=> {
+const runObserver = (target, callback, sensitive, callbackParam = null)=> {
    const sensitiveObserver = sensitive || false,
    useConfig = (sensitiveObserver) ? altConfig : globalConfig;
 
@@ -72,10 +80,10 @@ let runObserver = (target, callback, sensitive, callbackParam = null)=> {
       }
    });
    observer.observe(target, useConfig);
-}
+};
 
 // Fetches browser cookie data by cookie name
-let getCookie = cname => {
+const getCookie = cname => {
    const name = cname + "=", ca = document.cookie.split(';');
    for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
@@ -83,11 +91,11 @@ let getCookie = cname => {
       if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
    }
    return "";
-}
+};
 const userID = getCookie('i'), userName = getCookie('p');
 
 // Fetch local extension files
-let fetchFile = (el, file, callback)=> {
+const fetchFile = (el, file, callback)=> {
    const xhr = new XMLHttpRequest();
    xhr.open("GET", chrome.extension.getURL(file), true);
    xhr.onload = ()=> {
@@ -98,10 +106,10 @@ let fetchFile = (el, file, callback)=> {
       }
    };
    xhr.send();
-}
+};
 
 // Modal closing animation for the SCE menu
-let disassembleSettings = ()=> {
+const disassembleSettings = ()=> {
    const modal = document.querySelector('#sce-settings');
    modal.classList.add("invisible");
    modal.style.overflow = "hidden";
@@ -113,10 +121,10 @@ let disassembleSettings = ()=> {
          body.classList.remove("g-overflow-hidden");
       }, 100);
    }, 300);
-}
+};
 
 // Generate mass unfollower checkboxes
-let multiFollow = ()=> {
+const multiFollow = ()=> {
    const followingUsers = document.querySelectorAll('.userBadgeListItem'), followingUserCount = followingUsers.length;
    for (let i = 0; i < followingUserCount; i++) {
       if (followingUsers[i].querySelector(".userBadgeListItem__checkbox") == null) {
@@ -134,23 +142,23 @@ let multiFollow = ()=> {
          followingUsers[i].appendChild(checkboxDiv);
       }
    }
-}
+};
 
 // Return URL contents after "https://soundcloud.com/"
-let stripLinkDomain = url => {
-   let slug = url.replace('https://soundcloud.com/', '');
+const stripLinkDomain = url => {
+   const slug = url.replace('https://soundcloud.com/', '');
    return slug;
-}
+};
 
 // Selects and unselects all mass unfollower checkboxes
-let massSelector = bool => {
-   let massSelectorLoop = ()=> {
+const massSelector = bool => {
+   const massSelectorLoop = ()=> {
       const unfollowLoop = document.querySelectorAll('.badgeList__item'), unfollowLoopCount = unfollowLoop.length;
       for (let i = 0; i < unfollowLoopCount; i++) {
          const checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
          checkFollowStatus.checked = bool;
       }
-   }
+   };
    if (bool == true) {
       let scrollInterval = setInterval(()=> {
          const detectLoadingBlock = document.querySelector('.collectionSection .badgeList.lazyLoadingList .loading');
@@ -164,26 +172,26 @@ let massSelector = bool => {
         }
       }, 50);
    } else massSelectorLoop();
-}
+};
 
 // Checks if URL is a playlist URL
-let isPlaylistURL = url => {
+const isPlaylistURL = url => {
    const strip = url.split("/"), stripLength = strip.length;
    let output = false;
    for (let i = 0; i < stripLength; i++) if (strip[i] == "sets") output = true;
    return output;
-}
+};
 
 // ...
-let moreActionParentClassName = element => {
+const moreActionParentClassName = element => {
    const moreActionButtonParent = element.closest('.lazyLoadingList'),
    parentList = moreActionButtonParent.querySelector('div > ul > li, ul > li').className,
    parentListClassName = '.' + parentList.split(/\s+/)[0];
    return parentListClassName;
-}
+};
 
 // Insert content into more action menus
-let moreActionMenuContent = trackContainer => {
+const moreActionMenuContent = trackContainer => {
    getLocalStorage(get => {
       const moreActionMenu = document.querySelector('.moreActions div'),
       hasPlaylists = trackContainer.querySelector('.playlistTrackCount') || trackContainer.querySelector('.compactTrackList__moreLink'),
@@ -196,10 +204,10 @@ let moreActionMenuContent = trackContainer => {
       createMoreActionsGroup.className = "moreActions__group";
       createMoreActionsGroup.id = "sce-moreActions-group";
 
-      let relatedLink = ()=> {
+      const relatedLink = ()=> {
          window.location.href = hasTrack.href + "/recommended";
-      }
-      let renderMoreActionButton = (key, element = null)=> {
+      };
+      const renderMoreActionButton = (key, element = null)=> {
          const hasButton = document.querySelector('#sce-'+ key +'-button');
          if (!hasButton) {
             const createButton = document.createElement("button");
@@ -231,7 +239,7 @@ let moreActionMenuContent = trackContainer => {
                if (stripLinkDomain(hasArtist.href) != userName) createMoreActionsGroup.appendChild(createButton);
             } else createMoreActionsGroup.appendChild(createButton);
          }
-      }
+      };
 
       let disableRelatedMenu = false, disableTagMenu = false, disableArtistMenu = false, disableTrackMenu = false;
       if (get.moreActionMenu) {
@@ -261,11 +269,11 @@ let moreActionMenuContent = trackContainer => {
       if (!disableArtistMenu && artistButton) addItemToFilter(artistButton, "artists");
       if (!disableTrackMenu && trackButton) addItemToFilter(trackButton, "tracks");
    });
-}
+};
 
 // Activates filter adder button
-let addItemToFilter = (button, key)=> {
-   let addItemToFilterCallback = ()=> {
+const addItemToFilter = (button, key)=> {
+   const addItemToFilterCallback = ()=> {
       getLocalStorage(get => {
          let loopElement;
          const blacklistItem = button.getAttribute('data-item'),
@@ -296,14 +304,14 @@ let addItemToFilter = (button, key)=> {
             }
          }, {filter : filterStructure});
       });
-   }
+   };
    button.removeEventListener("click", addItemToFilterCallback);
    button.addEventListener("click", addItemToFilterCallback);
-}
+};
 
 // ...
-let addTagToFilter = button => {
-   let addTagToFilterCallback = ()=> {
+const addTagToFilter = button => {
+   const addTagToFilterCallback = ()=> {
       getLocalStorage(get => {
          const bannedTag = button.getAttribute("data-item"), tagArray = get.tagsArray || [];
          tagArray.push(bannedTag);
@@ -321,21 +329,21 @@ let addTagToFilter = button => {
             }
          }, {tagsArray: tagArray});
       }, ["tagsArray"]);
-   }
+   };
    button.removeEventListener("click", addTagToFilterCallback);
    button.addEventListener("click", addTagToFilterCallback);
-}
+};
 
 // Sorts an array and eliminates any duplicates
-let eliminateDuplicates = array => {
+const eliminateDuplicates = array => {
    let i, arrayLength = array.length, out = [], obj = {};
    for (i = 0; i < arrayLength; i++) obj[array[i]] = 0;
    for (i in obj) out.push(i);
    return out;
-}
+};
 
 // Enabling a .json export and import of SCE settings
-let exportimportInit = get => {
+const exportimportInit = get => {
    const importElement = document.querySelector('#sce-import input[type="file"]'),
    exportElement = document.querySelector('#sce-export a');
 
@@ -356,13 +364,13 @@ let exportimportInit = get => {
       });
    });
 
-   let importRead = e => {
+   const importRead = e => {
       const files = e.target.files, reader = new FileReader();
       reader.onload = importPrase;
       reader.readAsText(files[0]);
-   }
+   };
 
-   let importPrase = e => {
+   const importPrase = e => {
       const prasedImport = JSON.parse(e.target.result),
       prasedObject = Object.keys(prasedImport),
       importedSettings = {};
@@ -414,7 +422,7 @@ let exportimportInit = get => {
                   else tempMoreActionObject[key] = "off";
                }
                importedSettings.moreActionMenu = tempMoreActionObject;
-               break
+               break;
             default:
                let setting = prasedImport[prasedObject[option]];
                if (setting != "on") setting = "off";
@@ -425,12 +433,12 @@ let exportimportInit = get => {
          if (chrome.runtime.lastError) alert('Error settings:\n\n'+chrome.runtime.lastError);
          else location.reload();
       }, importedSettings);
-   }
+   };
    importElement.addEventListener("change", importRead, false);
-}
+};
 
 // Initializing the settings in the SCE menu
-let settingsInit = ()=> {
+const settingsInit = ()=> {
    if (debugMode) console.log("callback settingsInit: Initializing");
 
    const darkModeInput = document.querySelector('#darkMode'),
@@ -458,7 +466,7 @@ let settingsInit = ()=> {
    settingsCloseCount = settingsClose.length;
 
    // Activates all menu-closing buttons
-   for (let i = 0; i < settingsCloseCount; i++) settingsClose[i].addEventListener("click", ()=> {disassembleSettings()});
+   for (let i = 0; i < settingsCloseCount; i++) settingsClose[i].addEventListener("click", ()=> {disassembleSettings();});
 
    // Activates the ability to close the menu by clicking outside of it
    document.addEventListener("mousedown", e => {
@@ -491,7 +499,6 @@ let settingsInit = ()=> {
       if (get.hideSidebar == "on") hideSidebarInput.checked = true;
       if (get.hideTheUpload == "on") hideTheUploadInput.checked = true;
       if (get.hideBranding == "on") hideBrandingInput.checked = true;
-      if (get.oldUserProfile == "on") oldUserProfileInput.checked = true;
       if (get.displayType == "list") displayTypeInput[1].checked = true;
       else if (get.displayType == "grid") displayTypeInput[2].checked = true;
       else displayTypeInput[0].checked = true;
@@ -529,10 +536,10 @@ let settingsInit = ()=> {
       }
       saveSettings(data);
    });
-}
+};
 
 // Initializing the filter lists in the SCE menu
-let filterInit = ()=> {
+const filterInit = ()=> {
    if (debugMode) console.log("callback filterInit: Initializing");
    const artistBlacklist = document.querySelector('#artist-blacklist'),
    trackBlacklist = document.querySelector('#track-blacklist'),
@@ -541,7 +548,7 @@ let filterInit = ()=> {
 
    getLocalStorage(get => {
       if (get.tagsArray != null) skipTagsInput.value = get.tagsArray;
-      insignia(skipTags, {delimiter: ',', deletion: true})
+      insignia(skipTags, {delimiter: ',', deletion: true});
 
       const target = document.querySelector('.nsg-tags');
       runObserver(target, ()=> {
@@ -554,31 +561,30 @@ let filterInit = ()=> {
       }, true);
    });
 
-   let filterNameFormatter = string => {
+   const filterNameFormatter = string => {
       let strip = string.split("/"), output = strip[0];
       if (strip[1] == "sets") output = strip[2];
       else if (strip[1]) output = strip[1];
       output = output.replace(/-/g, " ");
       output = output.replace(/_/g, " ");
       return output;
-   }
+   };
 
-   let renderFilterList = (element, key)=> {
+   const renderFilterList = (element, key)=> {
       getLocalStorage(get => {
-         let filterArray = [], filterArrayLength = 0, tempFilterArray = [];
-         let trackArraySort = bool => {
-            filterArray = get.filter.tracks, filterArrayLength = filterArray.length;
+         let filterArray = get.filter.tracks, filterArrayLength = filterArray.length, tempFilterArray = [];
+         const trackArraySort = bool => {
             for (let i = 0; i < filterArrayLength; i++) {
                if (bool == true) if (isPlaylistURL(filterArray[i].slug)) tempFilterArray.push(filterArray[i]);
                if (bool == false) if (!isPlaylistURL(filterArray[i].slug)) tempFilterArray.push(filterArray[i]);
             }
             filterArray = tempFilterArray;
-         }
-         let removeObjectByAttribute = (array, attribute, value)=> {
+         };
+         const removeObjectByAttribute = (array, attribute, value)=> {
             let i = array.length;
             while (i--) if (array[i] && array[i].hasOwnProperty(attribute) && array[i][attribute] === value) array.splice(i, 1);
             return array;
-         }
+         };
          if (get.filter) {
             if (key == "artists" && get.filter.artists) filterArray = get.filter.artists;
             else if (key == "tracks" && get.filter.tracks) trackArraySort(false);
@@ -626,11 +632,11 @@ let filterInit = ()=> {
                      setLocalStorage(()=> {
                         listItemDelete.closest("li").remove();
                         const filterContainers = document.querySelectorAll('.filter-container'), filterContainerCount = filterContainers.length;
-                        for (let i = 0; i < filterContainerCount; i++) {
+                        for (let j = 0; j < filterContainerCount; j++) {
                            if (!filterContainers[i].hasChildNodes()) {
                               const emptyMessage = document.createElement("span");
                               emptyMessage.innerHTML = "No " + key + " has been filtered!";
-                              filterContainers[i].appendChild(emptyMessage);
+                              filterContainers[j].appendChild(emptyMessage);
                            }
                         }
                      }, {filter: filterObject});
@@ -639,43 +645,43 @@ let filterInit = ()=> {
             }
          }
       });
-   }
+   };
    renderFilterList(artistBlacklist, "artists");
    renderFilterList(trackBlacklist, "tracks");
    renderFilterList(playlistBlacklist, "playlists");
-}
+};
 
 // Fetching data from local/online browser storage
-let getLocalStorage = (callback, localSettings = null)=> {
+const getLocalStorage = (callback, localSettings = null)=> {
    const getSettings = localSettings || getGlobalSettings;
    chrome.storage.sync.get(getSettings, callback);
-}
+};
 
 // Sending data to local/online browser storage
-let setLocalStorage = (callback, localSettings = null)=> {
+const setLocalStorage = (callback, localSettings = null)=> {
    const setSettings = localSettings || setGlobalSettings;
    chrome.storage.sync.set(setSettings, callback);
-}
+};
 
 // Factory resets all SCE created local/online browser storage
-let resetLocalStorage = callback => {
+const resetLocalStorage = callback => {
    chrome.storage.sync.remove(getGlobalSettings, callback);
-}
+};
 
 // Run setup after tab/window reload
-let readyStateCheck = ()=> {
+const readyStateCheck = ()=> {
    let timer, bodyObserver = new MutationObserver(mutations => {
       clearTimeout(timer);
       timer = setTimeout(()=> {
          if (debugMode) console.log("readyState: Complete");
          bodyObserver.disconnect();
-         setAttributes();
+
          settingsSetup();
          injectedJavascript();
       }, 200);
    });
-   bodyObserver.observe(body, altConfig);
-}
+   bodyObserver.observe(body, globalConfig);
+};
 document.addEventListener("readystatechange", readyStateCheck);
 
 // Detect new page load
@@ -692,7 +698,7 @@ setInterval(()=> {
 // =============================================================
 
 // Inserts <body> attributes
-let setAttributes = ()=> {
+const setAttributes = ()=> {
    if (debugMode) console.log("function setAttributes: Initializing");
 
    getLocalStorage(get => {
@@ -709,10 +715,11 @@ let setAttributes = ()=> {
       if (get.hiddenOutline == "on") body.setAttribute("hidden-outline", "");
       if (get.profileImages == "on") body.setAttribute("square", "");
    });
-}
+};
+setAttributes();
 
 // Setting up initial functionality
-let settingsSetup = ()=> {
+const settingsSetup = ()=> {
    if (debugMode) console.log("function settingsSetup: Initializing");
 
    const hasStreamController = document.querySelector('#stream-controller'),
@@ -760,7 +767,7 @@ let settingsSetup = ()=> {
 
       // Add the "The Upload" playlist to the stream explore tab
       if (location.href == "https://soundcloud.com/stream" || location.href == "https://soundcloud.com/charts/top" || location.href == "https://soundcloud.com/discover") {
-         let renderTheUploadShortcut = setInterval(()=> {
+         const renderTheUploadShortcut = setInterval(()=> {
             const hasExploreTab = document.querySelector('.streamExploreTabs ul.g-tabs');
             if (hasExploreTab.querySelectorAll('li').length == 3) {
                clearInterval(renderTheUploadShortcut);
@@ -783,7 +790,7 @@ let settingsSetup = ()=> {
       }
 
       // Add a "like" menu point to the profiles
-      let renderProfileLikesShortcut = setInterval(()=> {
+      const renderProfileLikesShortcut = setInterval(()=> {
          const hasProfileMenu = document.querySelector('ul.profileTabs.g-tabs');
          if (hasProfileMenu) {
             const hasProfileLikeButton = document.querySelector('#profile-tab-like');
@@ -806,7 +813,7 @@ let settingsSetup = ()=> {
       }, 100);
 
       // Render a SCE button in the user navigation menu
-      let renderEnhancerProfileMenu = ()=> {
+      const renderEnhancerProfileMenu = ()=> {
          const hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
          if (!hasEnhancerMenuItems) {
             userMenu.removeEventListener("click", renderEnhancerProfileMenu);
@@ -834,7 +841,7 @@ let settingsSetup = ()=> {
                }
             }, 100);
          }
-      }
+      };
       userMenu.removeEventListener("click", renderEnhancerProfileMenu);
       userMenu.addEventListener("click", renderEnhancerProfileMenu);
 
@@ -845,7 +852,7 @@ let settingsSetup = ()=> {
                const hasDiscoverContainer = document.querySelector('div.modularHome.lazyLoadingList ul.lazyLoadingList__list');
                if (hasDiscoverContainer) {
                   clearInterval(discoverInterval);
-                  let discoverModuleHider = ()=> {
+                  const discoverModuleHider = ()=> {
                      getLocalStorage(get => {
                         if (debugMode) console.log("function discoverModuleHider: Running");
                         const discoverModule = hasDiscoverContainer.querySelectorAll('.selectionModule'), discoverModuleCount = discoverModule.length;
@@ -892,7 +899,7 @@ let settingsSetup = ()=> {
                            }
                         }
                      });
-                  }
+                  };
                   discoverModuleHider();
                   runObserver(hasDiscoverContainer, discoverModuleHider);
                }
@@ -1026,7 +1033,8 @@ let settingsSetup = ()=> {
                   selectAll = document.querySelector('#all-unfollow-button');
 
                   confirmSection.addEventListener('click', ()=> {
-                     const unfollowLoop = document.querySelectorAll('.badgeList__item'), unfollowLoopCount = unfollowLoop.length, newFollowCount = 0;
+                     const unfollowLoop = document.querySelectorAll('.badgeList__item'), unfollowLoopCount = unfollowLoop.length;
+                     let newFollowCount = 0;
                      for (let i = 0; i < unfollowLoopCount; i++) {
                         const checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
                         if (checkFollowStatus.checked == true) {
@@ -1037,19 +1045,23 @@ let settingsSetup = ()=> {
                      }
                      if (newFollowCount == 1) confirmSection.innerText = "1 account got unfollowed!";
                      else confirmSection.innerText = newFollowCount + " accounts got unfollowed!";
-                     setTimeout(()=> {confirmSection.innerText = "Mass unfollow"}, 3000);
+                     setTimeout(()=> {confirmSection.innerText = "Mass unfollow";}, 3000);
                   });
-                  undoSection.addEventListener('click', ()=> {massSelector(false)});
-                  selectAll.addEventListener('click', ()=> {massSelector(true)});
+                  undoSection.addEventListener('click', ()=> {
+                     massSelector(false);
+                  });
+                  selectAll.addEventListener('click', ()=> {
+                     massSelector(true);
+                  });
                }
             }, 100);
          }
       }
    });
-}
+};
 
 // Rendering SCE menu shell
-let renderSettings = ()=> {
+const renderSettings = ()=> {
    if (debugMode) console.log("function renderSettings: Initializing");
 
    body.className = "g-overflow-hidden";
@@ -1180,8 +1192,8 @@ let renderSettings = ()=> {
    modal.appendChild(modalContainer);
    body.appendChild(modal);
 
-   setTimeout(()=> {modal.classList.remove("invisible")}, 10);
-   setTimeout(()=> {modal.style.overflow = null}, 400);
+   setTimeout(()=> {modal.classList.remove("invisible");}, 10);
+   setTimeout(()=> {modal.style.overflow = null;}, 400);
 
    fetchFile(modalPageSettings, '/assets/html/settings.html', settingsInit);
    fetchFile(modalPageFilter, '/assets/html/filter.html', filterInit);
@@ -1202,10 +1214,10 @@ let renderSettings = ()=> {
    }
 
    getLocalStorage(exportimportInit);
-}
+};
 
 // Storing saved SCE settings
-let saveSettings = data => {
+const saveSettings = data => {
    const moreActionMenuObject = {};
    if (data.darkMode != "on") data.darkMode = "off";
    if (data.fullwidthMode != "on") data.fullwidthMode = "off";
@@ -1254,20 +1266,20 @@ let saveSettings = data => {
       if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
       else location.reload();
    });
-}
+};
 
 // Assigning SCE menus to SCE buttons
-let settingsMenu = ()=> {
+const settingsMenu = ()=> {
    if (debugMode) console.log("function settingsMenu: Initializing");
    const settingsButtons = document.querySelectorAll('.sc-enhancer'), settingsButtonCount = settingsButtons.length;
    for (let i = 0; i < settingsButtonCount; i++) {
       settingsButtons[i].removeEventListener("click", renderSettings);
       settingsButtons[i].addEventListener("click", renderSettings);
    }
-}
+};
 
 // Run music-stream manipulating functions
-let injectedJavascript = ()=> {
+const injectedJavascript = ()=> {
    if (debugMode) console.log("function injectedJavascript: Initializing");
    const content = document.querySelector('#content'),
    soundBadge = document.querySelector('.playbackSoundBadge'),
@@ -1282,7 +1294,7 @@ let injectedJavascript = ()=> {
    // =============================================================
 
    // Filter user inputed tags, artists and tracks
-   let runFilters = ()=> {
+   const runFilters = ()=> {
       getLocalStorage(get => {
          const filters = ["tag", "artist", "track"], filtersLength = filters.length;
          for (let filter = 0; filter < filtersLength; filter++) {
@@ -1297,7 +1309,7 @@ let injectedJavascript = ()=> {
                   if (get.tagsArray) data = get.tagsArray;
                   filterFunction = (callback, element, data) => {
                      if (element.innerText.toUpperCase() == data.toUpperCase()) callback(data);
-                  }
+                  };
                   break;
                case "artist":
                   element = document.querySelectorAll('.soundTitle__username');
@@ -1325,9 +1337,9 @@ let injectedJavascript = ()=> {
             }
          }
       }, ["filter", "tagsArray"]);
-   }
+   };
 
-   let markPlaylists = ()=> {
+   const markPlaylists = ()=> {
       if (debugMode) console.log("function markPlaylists: Running");
       const getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'), getPlaylistCount = getPlaylists.length;
       for (let i = 0; i < getPlaylistCount; i++) {
@@ -1345,9 +1357,9 @@ let injectedJavascript = ()=> {
             playlistClosest.setAttribute("data-count", getTrackCountNum);
          }
       }
-   }
+   };
 
-   let hidePreviews = ()=> {
+   const hidePreviews = ()=> {
       if (debugMode) console.log("function hidePreviews: Running");
       let previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'), previewCount = previews.length;
       for (let i = 0; i < previewCount; i++) {
@@ -1358,9 +1370,9 @@ let injectedJavascript = ()=> {
             previewsClosest.className = "soundList__item hidden";
          }
       }
-   }
+   };
 
-   let hidePlaylists = ()=> {
+   const hidePlaylists = ()=> {
       if (debugMode) console.log("function hidePlaylists: Running");
       let playlists = document.querySelectorAll('.soundList__item'), playlistCount = playlists.length;
       for (let i = 0; i < playlistCount; i++) {
@@ -1370,9 +1382,9 @@ let injectedJavascript = ()=> {
             playlists[i].className = "soundList__item hidden";
          }
       }
-   }
+   };
 
-   let hideReposts = ()=> {
+   const hideReposts = ()=> {
       if (debugMode) console.log("function hideReposts: Running");
       let reposts = document.querySelectorAll('.soundContext__repost'), repostCount = reposts.length;
       for (let i = 0; i < repostCount; i++) {
@@ -1381,9 +1393,9 @@ let injectedJavascript = ()=> {
          repostClosest.setAttribute("data-type", "repost");
          repostClosest.className = "soundList__item hidden";
       }
-   }
+   };
 
-   let checkCanvas = ()=> {
+   const checkCanvas = ()=> {
       if (debugMode) console.log("function checkCanvas: Running");
       let canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene');
       for (let i = 0; i < canvas.length; i++) {
@@ -1401,9 +1413,9 @@ let injectedJavascript = ()=> {
             }
          }
       }
-   }
+   };
 
-   let checkUserActivity = ()=> {
+   const checkUserActivity = ()=> {
       if (debugMode) console.log("function checkUserActivity: Running");
       let yourTracks = document.querySelectorAll('.soundContext__usernameLink'), yourTrackCount = yourTracks.length;
       for (let i = 0; i < yourTrackCount; i++) {
@@ -1415,26 +1427,26 @@ let injectedJavascript = ()=> {
             trackClosest.className = "soundList__item hidden";
          }
       }
-   }
+   };
 
-   let renderMoreActionCallback = e => {
+   const renderMoreActionCallback = e => {
       const checkMoreActionMenu = document.querySelector('.moreActions #sce-moreActions-group');
       if (!checkMoreActionMenu) {
          const parentClassName = moreActionParentClassName(e.target), trackContainer = e.target.closest(parentClassName);
          moreActionMenuContent(trackContainer);
       }
-   }
+   };
 
-   let renderMoreAction = ()=> {
+   const renderMoreAction = ()=> {
       const moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small'), moreActionButtonCount = moreActionButtons.length;
       for (let i = 0; i < moreActionButtonCount; i++) {
          moreActionButtons[i].removeEventListener('click', renderMoreActionCallback);
          moreActionButtons[i].addEventListener('click', renderMoreActionCallback);
       }
-   }
+   };
 
    // Main initializing function
-   let initStreamManipulator = setInterval(()=> {
+   const initStreamManipulator = setInterval(()=> {
       const mainStream = document.querySelector('.l-fluid-fixed > .l-main .lazyLoadingList ul, .l-fixed-fluid > .l-main .lazyLoadingList > ul, .l-hero-fluid-fixed .l-main .lazyLoadingList, .l-collection .l-main .lazyLoadingList');
       if (mainStream) {
          const stream = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul'), steamCount = stream.length;
@@ -1461,11 +1473,6 @@ let injectedJavascript = ()=> {
                if (get.removeLongTracks == "on") runObserver(stream[i], checkCanvas);
                if (get.removeUserActivity == "on") runObserver(stream[i], checkUserActivity);
             }
-            /*
-            let detectToggle = document.querySelectorAll('.listDisplayToggle__optionToggle');
-            for (let i = 0; i < detectToggle.length; i++)
-               detectToggle[i].addEventListener('click', ()=> {setTimeout(()=> {relatedContext()}, 1000);});
-            */
          });
 
          // Next song manager
@@ -1481,7 +1488,9 @@ let injectedJavascript = ()=> {
                   if (getPlaying.includes("playing") == true) {
                      if (debugMode) console.log("Skip song?: " + getSkipStatus);
                      if (getSkipStatus == "true") {
-                        previousControl.addEventListener("click", ()=> {skipPrevious = true});
+                        previousControl.addEventListener("click", ()=> {
+                           skipPrevious = true;
+                        });
                         if (getPlaylistType == true) {
                            let skipCount = getStreamItems[i].getAttribute("data-count");
                            if (skipPrevious == true) for (let t = 0; t < skipCount; t++) previousControl.click();
@@ -1497,4 +1506,4 @@ let injectedJavascript = ()=> {
          });
       }
    }, 100);
-}
+};
