@@ -1,6 +1,6 @@
 {
    "manifest_version": 2,
-   "version": "3.2",
+   "version": "3.3",
    "name": "SoundCloud Enhancer - Dark mode and more",
    "short_name": "SCE",
    "description": "SoundCloud Enhancer offers loads of customizations enhancing the SoundCloud experience.",
@@ -14,7 +14,7 @@
       "js": ["assets/js/insignia.min.js", "assets/js/enhancer.min.js"],
       "css" : ["assets/css/style.min.css"],
       "matches": ["https://soundcloud.com/*"],
-      "run_at": "document_end"
+      "run_at": "document_idle"
    } ],
    "browser_action": {
       "default_icon": {

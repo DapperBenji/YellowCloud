@@ -15,6 +15,8 @@
 .readMoreTile__tile{filter: blur(5px); -webkit-filter: blur(5px);}
 .hidden{display: none !important;}
 .sidebarModule .sidebarContent{min-height: inherit !important;}
+body .l-fluid-fixed .l-main{min-height: 100vh;}
+body {padding-bottom: 49px!important;}
 
 /* SCE Setting menu */
 #sce-settings .modal__modal{position: unset; margin: 50px auto; width: 550px;}
@@ -57,6 +59,9 @@
 .settings-option .sc-checkbox{width: 100%;}
 .settings-option .sc-checkbox-input:focus+.sc-checkbox-check{border-color: inherit;}
 .settings-option .sc-checkbox-check{float: right;}
+.setting-indent{padding-left: 10px; margin: 10px 0 0; border-left: 5px solid #373737;}
+.setting-indent li{display: block; margin-bottom: 10px;}
+.setting-indent li:last-of-type{margin: 0;}
 .filter-section {display: block; margin-bottom: 20px;}
 .filter-container li{display: flex; padding: 5px 8px; font-size: 13px; position: relative; color: #333; background: #eee; border-radius: 5px; margin-bottom: 8px;}
 .filter-container li:last-of-type{border: none; margin: 0;}
@@ -148,6 +153,7 @@ body[fullwidth][data-sidebar="hidden"] .l-user-sidebar-right .infoStats .infoSta
 body[fullwidth][data-sidebar="hidden"] .l-user-sidebar-right .infoStats .infoStats__table .infoStats__stat{border: none !important;}
 
 /* Dark mode CSS */
+body[data-theme="dark"] .playControls__castControl>button{--disconnected-color: #777;}
 body[data-theme="dark"] #skipTags{border-color: rgb(23, 23, 23); background: none;}
 body[data-theme="dark"] .moreActions__button:hover{background-color: rgba(255, 255, 255, 0.05);}
 body[data-theme="dark"][fullwidth], body[data-theme="dark"] .nsg-tag-remove:after{background: #222;}
@@ -349,7 +355,9 @@ body[data-display="grid"] .stream ul .waveform__emptyWaveform{height: 100% !impo
 body[data-display="grid"] .stream ul .soundList__item .soundTitle.streamContext .soundTitle__title{color: #fff;}
 body[data-display="grid"] .stream ul .soundList__item .sound__soundActions{background: transparent;}
 body[data-display="grid"] .waveformWrapper__empty{display: none !important;}
-body[data-display="grid"] .stream ul .soundList__item{margin: 1%; display: inline-table; width: 31.3333333333%; height: auto; overflow: hidden;}
+body[data-display="grid"] .stream ul.lazyLoadingList__list{display: grid; grid-template-columns: repeat(3,1fr); grid-gap: 25px; height: auto; overflow: hidden;} /*margin: 1%; display: inline-table; width: 31.3333333333%;*/
+body[data-display="grid"] .stream ul.lazyLoadingList__list:before{display: none;}
+body[data-display="grid"] .stream ul .soundList__item{margin-bottom: 0;}
 body[data-display="grid"] .stream ul .soundList__item .sound__body{display: block;}
 body[data-display="grid"] .stream ul .soundList__item .sound__header{position: absolute; margin: 0; padding: 0; height: 100%; width: 100%;left: 0; right: 0; bottom: 0; top: 0;}
 body[data-display="grid"] .stream ul .soundList__item .playButton{position: absolute;top: 50%;left: 50%;-webkit-transform: translateX(-50%) translateY(-50%);transform: translateX(-50%) translateY(-50%);}
@@ -398,8 +406,8 @@ body[hidden-outline][data-display="grid"] .soundList__item.hidden{display: inlin
 
 /* Responsive media screens */
 @media screen and (min-width: 1700px) {
-   body[fullwidth][data-display="grid"][data-sidebar="hidden"] .stream ul .soundList__item {width: 18%;}
-   body[fullwidth][data-display="grid"][data-sidebar="show"] .stream ul .soundList__item {width: 23%;}
+   body[fullwidth][data-display="grid"][data-sidebar="hidden"] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(5,1fr);}
+   body[fullwidth][data-display="grid"][data-sidebar="show"] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(4,1fr);}
 }
 
 @media screen and (min-width: 1600px) {
@@ -418,7 +426,7 @@ body[hidden-outline][data-display="grid"] .soundList__item.hidden{display: inlin
 }
 
 @media screen and (min-width: 1350px) {
-   body[data-display="grid"][data-sidebar="hidden"] .stream ul .soundList__item {width: 23%;}
+   body[data-display="grid"][data-sidebar="hidden"] .stream ul.lazyLoadingList__list{grid-template-columns: repeat(4,1fr);}
 }
 
 @media screen and (min-width: 1256px) {
@@ -441,7 +449,7 @@ body[hidden-outline][data-display="grid"] .soundList__item.hidden{display: inlin
 }
 
 @media screen and (max-width: 1120px) {
-   body[data-display="grid"][data-sidebar="show"] .stream ul .soundList__item {width: 48%;}
+   body[data-display="grid"][data-sidebar="show"] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(2,1fr);}
 }
 
 @media screen and (max-width: 1097px) {
@@ -516,7 +524,7 @@ body[hidden-outline][data-display="grid"] .soundList__item.hidden{display: inlin
    body .l-premium .premiumContent__planCell{padding: 5px 10px;}
    body .l-premium .premiumContent__uploadItem{font-size: 16px;}
    body .l-premium .premiumContent__planTable > .premiumContent__planRow:first-child .premiumContent__planCell.m-highlight{padding-top: 32px; margin: 0;}
-   body[data-display="grid"][data-sidebar="hidden"] .stream ul .soundList__item {width: 48%;}
+   body[data-display="grid"][data-sidebar="hidden"] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(2,1fr);}
 }
 
 @media screen and (max-width: 900px) {
@@ -713,7 +721,7 @@ body[hidden-outline][data-display="grid"] .soundList__item.hidden{display: inlin
    body .l-hero-content .systemPlaylistDetails__controls{text-align: center; display: block;}
    body .l-hero-content .systemPlaylistDetails__description{padding-top: 24px; text-align: center;}
    body .sc-button.tileGallery__sliderButton {bottom: 50px;}
-   body[data-display="grid"] .stream ul .soundList__item {width: 100% !important; margin: 0 0 20px !important;}
+   body[data-display="grid"] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(1,1fr) !important; margin: 0 0 20px !important;}
 }
 
 @media screen and (max-width: 550px) {

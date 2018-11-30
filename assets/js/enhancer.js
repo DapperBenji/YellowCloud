@@ -9,19 +9,32 @@
 // Global variables
 // =============================================================
 
-const debugMode = 0,
-manifestData = chrome.runtime.getManifest(),
-globalConfig = {childList: true},
-altConfig = {attributes: true, childList: true, subtree: true},
-body = document.querySelector('body'),
-app = document.querySelector('#app'),
-defaultFilter = {"artists": [], "tracks": []},
-setGlobalSettings = {},
-getGlobalSettings = ["darkMode", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
-let skipPrevious = false,
-oldLocation = location.href;
+const _debugMode = 0,
+      _manifestData = chrome.runtime.getManifest(),
+      _globalConfig = {childList: true},
+      _altConfig = {attributes: true, childList: true, subtree: true},
+      _body = document.querySelector('body'),
+      _app = document.querySelector('#app'),
+      _defaultFilter = {"artists": [], "tracks": []},
+      _setGlobalSettings = {},
+      _getGlobalSettings = ["darkMode", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
+let skipPrevious = false, oldLocation = location.href;
 
-if (debugMode) console.log("-=- SCE DEBUGMODE ACTIVE -=-");
+if (_debugMode) console.log("-=- SCE debugMode ACTIVE -=-");
+
+// =============================================================
+// Functional JS building blocks
+// =============================================================
+
+const matched = x => ({
+   on: () => matched(x),
+   otherwise: () => x,
+});
+
+const match = x => ({
+   on: (pred, fn) => (pred(x) ? matched(fn(x)) : match(x)),
+   otherwise: fn => fn(x),
+});
 
 // =============================================================
 // Helper functions
@@ -35,37 +48,37 @@ const insertAfter = (newNode, referenceNode)=> {
 // Converts a timestamp to a relative time output
 const relativeTime = timestamp => {
    let output = null;
-   const minutes = 60,
-   hours = minutes * 60,
-   days = hours * 24,
-   months = days * 30,
-   years = days * 365,
-   today = Math.floor(Date.now() / 1000),
-   elapsed = today - timestamp;
+   const _minutes = 60,
+         _hours = _minutes * 60,
+         _days = _hours * 24,
+         _months = _days * 30,
+         _years = _days * 365,
+         _today = Math.floor(Date.now() / 1000),
+         _elapsed = _today - timestamp;
 
-   if (elapsed < minutes) output = elapsed + ' sec ago';
-   else if (elapsed < hours) output = Math.round(elapsed / minutes) + ' mins ago';
-   else if (elapsed < days) output = Math.round(elapsed / hours) + ' hrs ago';
-   else if (elapsed < months) output = Math.round(elapsed / days) + ' days ago';
-   else if (elapsed < years) output = Math.round(elapsed / months) + ' months ago';
-   else output = Math.round(elapsed / years) + ' yrs ago';
+   if (_elapsed < _minutes) output = _elapsed + ' sec ago';
+   else if (_elapsed < _hours) output = Math.round(_elapsed / _minutes) + ' mins ago';
+   else if (_elapsed < _days) output = Math.round(_elapsed / _hours) + ' hrs ago';
+   else if (_elapsed < _months) output = Math.round(_elapsed / _days) + ' days ago';
+   else if (_elapsed < _years) output = Math.round(_elapsed / _months) + ' months ago';
+   else output = Math.round(_elapsed / _years) + ' yrs ago';
 
    return output;
 };
 
 // Run an instance of a mutation observer
 const runObserver = (target, callback, sensitive, callbackParam = null)=> {
-   const sensitiveObserver = sensitive || false,
-   useConfig = (sensitiveObserver) ? altConfig : globalConfig;
+   const _sensitiveObserver = sensitive || false,
+         _useConfig = (_sensitiveObserver) ? _altConfig : _globalConfig;
 
    let observer = new MutationObserver(mutations => {
-      if (sensitiveObserver) {
+      if (_sensitiveObserver) {
          if (callbackParam) callback(callbackParam);
          else callback();
       } else {
-         const mutationLength = mutations.length;
+         const _mutationLength = mutations.length;
          let hasUpdated = false, mutation = null;
-         for (let i = 0; i < mutationLength; i++) {
+         for (let i = 0; i < _mutationLength; i++) {
             mutation = mutations[i];
             if (mutation.type === 'childList' && mutation.addedNodes.length) {
                hasUpdated = true;
@@ -79,92 +92,99 @@ const runObserver = (target, callback, sensitive, callbackParam = null)=> {
          }
       }
    });
-   observer.observe(target, useConfig);
+   observer.observe(target, _useConfig);
 };
 
 // Fetches browser cookie data by cookie name
 const getCookie = cname => {
-   const name = cname + "=", ca = document.cookie.split(';');
-   for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
+   const _name = cname + "=",
+         _ca = document.cookie.split(';'),
+         _calength = _ca.length;
+   for (let i = 0; i < _calength; i++) {
+      let c = _ca[i];
       while (c.charAt(0) == ' ') c = c.substring(1);
-      if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+      if (c.indexOf(_name) == 0) return c.substring(_name.length, c.length);
    }
    return "";
 };
-const userID = getCookie('i'), userName = getCookie('p');
+
+const _userID = getCookie('i'),
+      _userName = getCookie('p');
 
 // Fetch local extension files
 const fetchFile = (el, file, callback)=> {
-   const xhr = new XMLHttpRequest();
-   xhr.open("GET", chrome.extension.getURL(file), true);
-   xhr.onload = ()=> {
-      if (xhr.status === 200) {
-         if (debugMode) console.log("function fetchFile: File fetched");
-         el.innerHTML = xhr.responseText;
+   const _xhr = new XMLHttpRequest();
+   _xhr.open("GET", chrome.extension.getURL(file), true);
+   _xhr.onload = ()=> {
+      if (_xhr.status === 200) {
+         if (_debugMode) console.log("function fetchFile: File fetched");
+         el.innerHTML = _xhr.responseText;
          if (callback) return callback();
       }
    };
-   xhr.send();
+   _xhr.send();
 };
 
 // Modal closing animation for the SCE menu
 const disassembleSettings = ()=> {
-   const modal = document.querySelector('#sce-settings');
-   modal.classList.add("invisible");
-   modal.style.overflow = "hidden";
-   app.classList.remove("g-filter-grayscale");
+   const _modal = document.querySelector('#sce-settings');
+   _modal.classList.add("invisible");
+   _modal.style.overflow = "hidden";
+   _app.classList.remove("g-filter-grayscale");
    setTimeout(()=> {
-      modal.classList.remove("showBackground");
+      _modal.classList.remove("showBackground");
       setTimeout(()=> {
-         modal.remove();
-         body.classList.remove("g-overflow-hidden");
+         _modal.remove();
+         _body.classList.remove("g-overflow-hidden");
       }, 100);
    }, 300);
 };
 
 // Generate mass unfollower checkboxes
 const multiFollow = ()=> {
-   const followingUsers = document.querySelectorAll('.userBadgeListItem'), followingUserCount = followingUsers.length;
-   for (let i = 0; i < followingUserCount; i++) {
-      if (followingUsers[i].querySelector(".userBadgeListItem__checkbox") == null) {
-         const checkboxDiv = document.createElement("label"),
-         checkboxElement = document.createElement("input"),
-         checkboxWrap = document.createElement("div");
+   const _followingUsers = document.querySelectorAll('.userBadgeListItem'),
+         _followingUserCount = _followingUsers.length;
+   for (let i = 0; i < _followingUserCount; i++) {
+      if (followingUsers[i].querySelector(".userBadgeListItem__checkbox") === null) {
+         const _checkboxDiv = document.createElement("label"),
+               _checkboxElement = document.createElement("input"),
+               _checkboxWrap = document.createElement("div");
 
-         checkboxDiv.className = "userBadgeListItem__checkbox";
-         checkboxElement.type = "checkbox";
-         checkboxElement.className = "sc-checkbox-input sc-visuallyhidden";
-         checkboxWrap.className = "sc-checkbox-check";
+         _checkboxDiv.className = "userBadgeListItem__checkbox";
+         _checkboxElement.type = "checkbox";
+         _checkboxElement.className = "sc-checkbox-input sc-visuallyhidden";
+         _checkboxWrap.className = "sc-checkbox-check";
 
-         checkboxDiv.appendChild(checkboxElement);
-         checkboxDiv.appendChild(checkboxWrap);
-         followingUsers[i].appendChild(checkboxDiv);
+         _checkboxDiv.appendChild(_checkboxElement);
+         _checkboxDiv.appendChild(_checkboxWrap);
+         followingUsers[i].appendChild(_checkboxDiv);
       }
    }
 };
 
 // Return URL contents after "https://soundcloud.com/"
 const stripLinkDomain = url => {
-   const slug = url.replace('https://soundcloud.com/', '');
-   return slug;
+   const _slug = url.replace('https://soundcloud.com/', '');
+   return _slug;
 };
 
 // Selects and unselects all mass unfollower checkboxes
 const massSelector = bool => {
    const massSelectorLoop = ()=> {
-      const unfollowLoop = document.querySelectorAll('.badgeList__item'), unfollowLoopCount = unfollowLoop.length;
-      for (let i = 0; i < unfollowLoopCount; i++) {
-         const checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
-         checkFollowStatus.checked = bool;
+      const _unfollowLoop = document.querySelectorAll('.badgeList__item'),
+            _unfollowLoopCount = _unfollowLoop.length;
+
+      for (let i = 0; i < _unfollowLoopCount; i++) {
+         const _checkFollowStatus = _unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
+         _checkFollowStatus.checked = bool;
       }
    };
    if (bool == true) {
       let scrollInterval = setInterval(()=> {
-         const detectLoadingBlock = document.querySelector('.collectionSection .badgeList.lazyLoadingList .loading');
-         if (detectLoadingBlock) {
+         const _detectLoadingBlock = document.querySelector('.collectionSection .badgeList.lazyLoadingList .loading');
+         if (_detectLoadingBlock) {
             window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
-            if (debugMode) console.log("Page scroll");
+            if (_debugMode) console.log("Page scroll");
         } else {
             clearInterval(scrollInterval);
             window.scrollTo(0, 0);
@@ -175,69 +195,72 @@ const massSelector = bool => {
 };
 
 // Checks if URL is a playlist URL
+// TODO: find en bedre måde at arbejde med URL
 const isPlaylistURL = url => {
-   const strip = url.split("/"), stripLength = strip.length;
+   const _strip = url.split("/"),
+         _stripLength = _strip.length;
    let output = false;
-   for (let i = 0; i < stripLength; i++) if (strip[i] == "sets") output = true;
+   for (let i = 0; i < _stripLength; i++) if (_strip[i] === "sets") output = true;
    return output;
 };
 
 // ...
 const moreActionParentClassName = element => {
-   const moreActionButtonParent = element.closest('.lazyLoadingList'),
-   parentList = moreActionButtonParent.querySelector('div > ul > li, ul > li').className,
-   parentListClassName = '.' + parentList.split(/\s+/)[0];
-   return parentListClassName;
+   const _moreActionButtonParent = element.closest('.lazyLoadingList'),
+         _parentList = _moreActionButtonParent.querySelector('div > ul > li, ul > li').className,
+         _parentListClassName = '.' + _parentList.split(/\s+/)[0];
+   return _parentListClassName;
 };
 
 // Insert content into more action menus
 const moreActionMenuContent = trackContainer => {
    getLocalStorage(get => {
-      const moreActionMenu = document.querySelector('.moreActions div'),
-      hasPlaylists = trackContainer.querySelector('.playlistTrackCount') || trackContainer.querySelector('.compactTrackList__moreLink'),
-      hasTag = trackContainer.querySelector('.soundTitle__tagContent'),
-      hasArtist = trackContainer.querySelector('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username'),
-      hasTrack = trackContainer.querySelector('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle'),
-      moreActionsGroup = document.querySelector('#sce-moreActions-group'),
-      createMoreActionsGroup = document.createElement("div");
+      const _moreActionMenu = document.querySelector('.moreActions div'),
+            _hasPlaylists = trackContainer.querySelector('.playlistTrackCount') || trackContainer.querySelector('.compactTrackList__moreLink'),
+            _hasTag = trackContainer.querySelector('.soundTitle__tagContent'),
+            _hasArtist = trackContainer.querySelector('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username'),
+            _hasTrack = trackContainer.querySelector('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle'),
+            _moreActionsGroup = document.querySelector('#sce-moreActions-group'),
+            _createMoreActionsGroup = document.createElement("div");
 
-      createMoreActionsGroup.className = "moreActions__group";
-      createMoreActionsGroup.id = "sce-moreActions-group";
+      _createMoreActionsGroup.className = "moreActions__group";
+      _createMoreActionsGroup.id = "sce-moreActions-group";
 
       const relatedLink = ()=> {
-         window.location.href = hasTrack.href + "/recommended";
+         window.location.href = _hasTrack.href + "/recommended";
       };
+
       const renderMoreActionButton = (key, element = null)=> {
-         const hasButton = document.querySelector('#sce-'+ key +'-button');
-         if (!hasButton) {
-            const createButton = document.createElement("button");
-            createButton.type = "button";
-            createButton.id = "sce-"+ key +"-button";
-            createButton.className = "moreActions__button sc-button-medium sce-button-icon sce-button-"+ key +"";
+         const _hasButton = document.querySelector('#sce-'+ key +'-button');
+         if (!_hasButton) {
+            const _createButton = document.createElement("button");
+            _createButton.type = "button";
+            _createButton.id = "sce-"+ key +"-button";
+            _createButton.className = "moreActions__button sc-button-medium sce-button-icon sce-button-"+ key +"";
             if (key == "related") {
-               createButton.title = "Go to related tracks";
-               createButton.innerText = "Related tracks";
+               _createButton.title = "Go to related tracks";
+               _createButton.innerText = "Related tracks";
             } else if (key == "track") {
                if (isPlaylistURL(element.href)) {
-                  createButton.title = "Click to blacklist this playlist";
-                  createButton.innerText = "Blacklist playlist";
+                  _createButton.title = "Click to blacklist this playlist";
+                  _createButton.innerText = "Blacklist playlist";
                } else {
-                  createButton.title = "Click to blacklist this track";
-                  createButton.innerText = "Blacklist track";
+                  _createButton.title = "Click to blacklist this track";
+                  _createButton.innerText = "Blacklist track";
                }
             } else {
-               createButton.title = "Click to blacklist this track's "+ key +"";
-               createButton.innerText = "Blacklist "+ key +"";
+               _createButton.title = "Click to blacklist this track's "+ key +"";
+               _createButton.innerText = "Blacklist "+ key +"";
             }
             if (key != "related") {
                let value;
                if (key == "artist" || key == "track") value = element.href;
                else value = element.innerText;
-               createButton.setAttribute('data-item', value);
+               _createButton.setAttribute('data-item', value);
             }
             if (key == "artist") {
-               if (stripLinkDomain(hasArtist.href) != userName) createMoreActionsGroup.appendChild(createButton);
-            } else createMoreActionsGroup.appendChild(createButton);
+               if (stripLinkDomain(_hasArtist.href) != _userName) _createMoreActionsGroup.appendChild(_createButton);
+            } else _createMoreActionsGroup.appendChild(_createButton);
          }
       };
 
@@ -249,25 +272,25 @@ const moreActionMenuContent = trackContainer => {
          if (get.moreActionMenu.trackActionMenu == "on") disableTrackMenu = true;
       }
 
-      if (!disableRelatedMenu && !hasPlaylists) renderMoreActionButton("related");
-      if (!disableTagMenu && hasTag) renderMoreActionButton("hashtag", hasTag);
-      if (!disableArtistMenu && hasArtist) renderMoreActionButton("artist", hasArtist);
-      if (!disableTrackMenu && hasTrack) renderMoreActionButton("track", hasTrack);
+      if (!disableRelatedMenu && !_hasPlaylists) renderMoreActionButton("related");
+      if (!disableTagMenu && _hasTag) renderMoreActionButton("hashtag", _hasTag);
+      if (!disableArtistMenu && _hasArtist) renderMoreActionButton("artist", _hasArtist);
+      if (!disableTrackMenu && _hasTrack) renderMoreActionButton("track", _hasTrack);
 
-      if (!moreActionsGroup) if (createMoreActionsGroup.hasChildNodes()) moreActionMenu.appendChild(createMoreActionsGroup);
+      if (!_moreActionsGroup) if (_createMoreActionsGroup.hasChildNodes()) _moreActionMenu.appendChild(_createMoreActionsGroup);
 
-      const relatedButton = document.querySelector("#sce-related-button"),
-      hashtagButton = document.querySelector("#sce-hashtag-button"),
-      artistButton = document.querySelector("#sce-artist-button"),
-      trackButton = document.querySelector("#sce-track-button");
+      const _relatedButton = document.querySelector("#sce-related-button"),
+            _hashtagButton = document.querySelector("#sce-hashtag-button"),
+            _artistButton = document.querySelector("#sce-artist-button"),
+            _trackButton = document.querySelector("#sce-track-button");
 
-      if (!disableRelatedMenu && relatedButton) {
-         relatedButton.removeEventListener("click", relatedLink);
-         relatedButton.addEventListener("click", relatedLink);
+      if (!disableRelatedMenu && _relatedButton) {
+         _relatedButton.removeEventListener("click", relatedLink);
+         _relatedButton.addEventListener("click", relatedLink);
       }
-      if (!disableTagMenu && hashtagButton) addTagToFilter(hashtagButton);
-      if (!disableArtistMenu && artistButton) addItemToFilter(artistButton, "artists");
-      if (!disableTrackMenu && trackButton) addItemToFilter(trackButton, "tracks");
+      if (!disableTagMenu && _hashtagButton) addTagToFilter(_hashtagButton);
+      if (!disableArtistMenu && _artistButton) addItemToFilter(_artistButton, "artists");
+      if (!disableTrackMenu && _trackButton) addItemToFilter(_trackButton, "tracks");
    });
 };
 
@@ -276,17 +299,17 @@ const addItemToFilter = (button, key)=> {
    const addItemToFilterCallback = ()=> {
       getLocalStorage(get => {
          let loopElement;
-         const blacklistItem = button.getAttribute('data-item'),
-         blacklistData = stripLinkDomain(blacklistItem),
-         filterStructure = get.filter || defaultFilter,
-         timestamp = Math.floor(Date.now() / 1000),
-         filterItem = {"slug": blacklistData, "time": timestamp};
+         const _blacklistItem = button.getAttribute('data-item'),
+               _blacklistData = stripLinkDomain(_blacklistItem),
+               _filterStructure = get.filter || _defaultFilter,
+               _timestamp = Math.floor(Date.now() / 1000),
+               _filterItem = {"slug": _blacklistData, "time": _timestamp};
 
          if (key == "artists") {
-            filterStructure.artists.push(filterItem);
+            _filterStructure.artists.push(_filterItem);
             loopElement = document.querySelectorAll('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username');
          } else if (key == "tracks") {
-            filterStructure.tracks.push(filterItem);
+            _filterStructure.tracks.push(_filterItem);
             loopElement = document.querySelectorAll('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle');
          }
 
@@ -294,15 +317,15 @@ const addItemToFilter = (button, key)=> {
             if (chrome.runtime.lastError) alert('Error settings:\n\n' + chrome.runtime.lastError);
             else {
                document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
-               const loopElementCount = loopElement.length;
-               for (let i = 0; i < loopElementCount; i++) {
-                  if (loopElement[i].href == blacklistItem) {
-                     const parentClassName = moreActionParentClassName(loopElement[i]);
-                     loopElement[i].closest(parentClassName).remove();
+               const _loopElementCount = loopElement.length;
+               for (let i = 0; i < _loopElementCount; i++) {
+                  if (loopElement[i].href == _blacklistItem) {
+                     const _parentClassName = moreActionParentClassName(loopElement[i]);
+                     loopElement[i].closest(_parentClassName).remove();
                   }
                }
             }
-         }, {filter : filterStructure});
+         }, {filter : _filterStructure});
       });
    };
    button.removeEventListener("click", addItemToFilterCallback);
@@ -313,21 +336,25 @@ const addItemToFilter = (button, key)=> {
 const addTagToFilter = button => {
    const addTagToFilterCallback = ()=> {
       getLocalStorage(get => {
-         const bannedTag = button.getAttribute("data-item"), tagArray = get.tagsArray || [];
-         tagArray.push(bannedTag);
+         const _bannedTag = button.getAttribute("data-item"),
+               _tagArray = get.tagsArray || [];
+
+         _tagArray.push(_bannedTag);
          setLocalStorage(()=> {
-            const tracksWithTags = document.querySelectorAll('.soundTitle__tagContent');
+            const _tracksWithTags = document.querySelectorAll('.soundTitle__tagContent'),
+                  _tracksWithTagsLength = _tracksWithTags.length;
+
             if (chrome.runtime.lastError) alert('Error settings:\n\n'+chrome.runtime.lastError);
             else {
                document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
-               for (let i = 0; i < tracksWithTags.length; i++) {
-                  if (tracksWithTags[i].innerText.toUpperCase() == bannedTag.toUpperCase()){
-                     const parentClassName = moreActionParentClassName(tracksWithTags[i]);
-                     tracksWithTags[i].closest(parentClassName).remove();
+               for (let i = 0; i < _tracksWithTagsLength; i++) {
+                  if (_tracksWithTags[i].innerText.toUpperCase() == _bannedTag.toUpperCase()){
+                     const _parentClassName = moreActionParentClassName(_tracksWithTags[i]);
+                     _tracksWithTags[i].closest(_parentClassName).remove();
                   }
                }
             }
-         }, {tagsArray: tagArray});
+         }, {tagsArray: _tagArray});
       }, ["tagsArray"]);
    };
    button.removeEventListener("click", addTagToFilterCallback);
@@ -335,204 +362,235 @@ const addTagToFilter = button => {
 };
 
 // Sorts an array and eliminates any duplicates
+// TODO: Ersat nogle af let variablerne med const
 const eliminateDuplicates = array => {
-   let i, arrayLength = array.length, out = [], obj = {};
-   for (i = 0; i < arrayLength; i++) obj[array[i]] = 0;
-   for (i in obj) out.push(i);
+   let i, out = [];
+   const _arrayLength = array.length,
+         _obj = {};
+
+   for (i = 0; i < _arrayLength; i++) _obj[array[i]] = 0;
+   for (i in _obj) out.push(i);
    return out;
 };
 
 // Enabling a .json export and import of SCE settings
 const exportimportInit = get => {
-   const importElement = document.querySelector('#sce-import input[type="file"]'),
-   exportElement = document.querySelector('#sce-export a');
+   const _importElement = document.querySelector('#sce-import input[type="file"]'),
+         _exportElement = document.querySelector('#sce-export a');
 
-   exportElement.addEventListener("click", ()=>{
+   _exportElement.addEventListener("click", ()=>{
       getLocalStorage(get => {
-         const exportBlob = new Blob([JSON.stringify(get, null, "\t")], {type: 'application/json'}),
-         exportTemp = document.createElement("a"),
-         exportName = "SCEnhancer.json",
-         exportLink = window.URL.createObjectURL(exportBlob);
-
-         document.body.appendChild(exportTemp);
-         exportTemp.style = "display: none";
-         exportTemp.href = exportLink;
-         exportTemp.download = exportName;
-
-         exportTemp.click();
-         window.URL.revokeObjectURL(exportLink);
+         const _exportBlob = new Blob([JSON.stringify(get, null, "\t")], {type: 'application/json'}),
+               _exportTemp = document.createElement("a"),
+               _exportName = "SCEnhancer.json",
+               _exportLink = window.URL.createObjectURL(_exportBlob);
+         document.body.appendChild(_exportTemp);
+         _exportTemp.style = "display: none";
+         _exportTemp.href = _exportLink;
+         _exportTemp.download = _exportName;
+         _exportTemp.click();
+         window.URL.revokeObjectURL(_exportLink);
       });
    });
 
    const importRead = e => {
-      const files = e.target.files, reader = new FileReader();
-      reader.onload = importPrase;
-      reader.readAsText(files[0]);
+      const _files = e.target.files,
+            _reader = new FileReader();
+      _reader.onload = importPrase;
+      _reader.readAsText(_files[0]);
    };
 
    const importPrase = e => {
-      const prasedImport = JSON.parse(e.target.result),
-      prasedObject = Object.keys(prasedImport),
-      importedSettings = {};
+      const _prasedImport = JSON.parse(e.target.result),
+            _prasedObject = Object.keys(_prasedImport),
+            _prasedObjectLength = _prasedObject.length,
+            _importedSettings = {};
 
-      for (let option = 0; option < prasedObject.length; option++) {
-         switch (prasedObject[option]) {
+      for (let option = 0; option < _prasedObjectLength; option++) {
+         switch (_prasedObject[option]) {
             case "discoverModules":
-               const keyLength = Object.keys(prasedImport.discoverModules).length, tempDiscoverArray = {};
-               for (let key in prasedImport.discoverModules) {
+               const _keyLength = Object.keys(prasedImport.discoverModules).length,
+                     _tempDiscoverArray = {};
+               for (let key in _prasedImport.discoverModules) {
                   if (!isNaN(key)) {
-                     if (prasedImport.discoverModules[key] == "1") tempDiscoverArray[key] = "1";
-                     else tempDiscoverArray[key] = "0";
+                     if (_prasedImport.discoverModules[key] == "1") _tempDiscoverArray[key] = "1";
+                     else _tempDiscoverArray[key] = "0";
                   }
                }
-               importedSettings.discoverModules = tempDiscoverArray;
+               _importedSettings.discoverModules = _tempDiscoverArray;
                break;
             case "displayType":
-               if (prasedImport.displayType == "list" || prasedImport.displayType == "grid") importedSettings.displayType = prasedImport.displayType;
-               else importedSettings.displayType = "default";
+               if (_prasedImport.displayType == "list" || _prasedImport.displayType == "grid") _importedSettings.displayType = _prasedImport.displayType;
+               else _importedSettings.displayType = "default";
                break;
             case "filter":
-               const filters = [prasedImport.filter.artists, prasedImport.filter.tracks], filterCount = filters.length, tempFilterObjectContainer = {};
-               for (let f = 0; f < filterCount; f++) {
-                  const tempFilterArray = [];
-                  for (let key in filters[f]) {
-                     const tempFilterObject = filters[f][key], slug = tempFilterObject.slug, timestamp = tempFilterObject.time;
-                     if (slug) {
-                        if (!timestamp) tempFilterObject.time = Math.floor(Date.now() / 1000);
-                        let tempFilterArrayLength = tempFilterArray.length, tempFilterMatch = 0;
-                        for (let i = 0; i < tempFilterArrayLength; i++)
-                           if (tempFilterArray[i].slug == slug) tempFilterMatch = 1;
-                        if (tempFilterMatch == 0) tempFilterArray.push(tempFilterObject);
+               const _filters = [_prasedImport.filter.artists, _prasedImport.filter.tracks],
+                     _filterCount = _filters.length,
+                     _tempFilterObjectContainer = {};
+               for (let f = 0; f < _filterCount; f++) {
+                  const _tempFilterArray = [];
+                  for (let key in _filters[f]) {
+                     const _tempFilterObject = _filters[f][key],
+                           _slug = _tempFilterObject.slug,
+                           _timestamp = _tempFilterObject.time;
+                     if (_slug) {
+                        if (!_timestamp) _tempFilterObject.time = Math.floor(Date.now() / 1000);
+                        const _tempFilterArrayLength = _tempFilterArray.length;
+                        let tempFilterMatch = 0;
+                        for (let i = 0; i < _tempFilterArrayLength; i++)
+                           if (_tempFilterArray[i].slug == _slug) tempFilterMatch = 1;
+                        if (tempFilterMatch == 0) _tempFilterArray.push(_tempFilterObject);
                      }
                   }
-                  if (f == 0) tempFilterObjectContainer.artists = tempFilterArray;
-                  else tempFilterObjectContainer.tracks = tempFilterArray;
+                  if (f == 0) _tempFilterObjectContainer.artists = _tempFilterArray;
+                  else _tempFilterObjectContainer.tracks = _tempFilterArray;
                }
-               importedSettings.filter = tempFilterObjectContainer;
+               _importedSettings.filter = _tempFilterObjectContainer;
                break;
             case "tagsArray":
-               const tagsArrayLength = prasedImport.tagsArray.length, tempTagArray = [];
-               for (let tag = 0; tag < tagsArrayLength; tag++) tempTagArray.push(prasedImport.tagsArray[tag].toLowerCase());
-               importedSettings.tagsArray = eliminateDuplicates(tempTagArray);
+               const _tagsArrayLength = _prasedImport.tagsArray.length,
+                     _tempTagArray = [];
+               for (let tag = 0; tag < _tagsArrayLength; tag++) _tempTagArray.push(_prasedImport.tagsArray[tag].toLowerCase());
+               _importedSettings.tagsArray = eliminateDuplicates(_tempTagArray);
                break;
             case "moreActionMenu":
-               const tempMoreActionObject = {};
-               for (let key in prasedImport.moreActionMenu) {
-                  if (prasedImport.moreActionMenu[key] == "on") tempMoreActionObject[key] = prasedImport.moreActionMenu[key];
-                  else tempMoreActionObject[key] = "off";
+               const _tempMoreActionObject = {};
+               for (let key in _prasedImport.moreActionMenu) {
+                  if (_prasedImport.moreActionMenu[key] == "on") _tempMoreActionObject[key] = _prasedImport.moreActionMenu[key];
+                  else _tempMoreActionObject[key] = "off";
                }
-               importedSettings.moreActionMenu = tempMoreActionObject;
+               _importedSettings.moreActionMenu = _tempMoreActionObject;
                break;
             default:
-               let setting = prasedImport[prasedObject[option]];
+               let setting = _prasedImport[_prasedObject[option]];
                if (setting != "on") setting = "off";
-               importedSettings[prasedObject[option]] = setting;
+               _importedSettings[_prasedObject[option]] = setting;
          }
       }
       setLocalStorage(()=> {
          if (chrome.runtime.lastError) alert('Error settings:\n\n'+chrome.runtime.lastError);
          else location.reload();
-      }, importedSettings);
+      }, _importedSettings);
    };
-   importElement.addEventListener("change", importRead, false);
+   _importElement.addEventListener("change", importRead, false);
 };
 
 // Initializing the settings in the SCE menu
 const settingsInit = ()=> {
-   if (debugMode) console.log("callback settingsInit: Initializing");
+   if (_debugMode) console.log("callback settingsInit: Initializing");
 
-   const darkModeInput = document.querySelector('#darkMode'),
-   fullwidthModeInput = document.querySelector('#fullwidthMode'),
-   removeSettingsBtnInput = document.querySelector('#removeSettingsBtn'),
-   hideSidebarInput = document.querySelector('#hideSidebar'),
-   hideTheUploadInput = document.querySelector('#hideTheUpload'),
-   hideBrandingInput =  document.querySelector('#hideBranding'),
-   displayTypeInput = document.querySelectorAll('input[name="displayType"]'),
-   removePreviewsInput = document.querySelector('#removePreviews'),
-   removePlaylistsInput = document.querySelector('#removePlaylists'),
-   removeLongTracksInput = document.querySelector('#removeLongTracks'),
-   removeUserActivityInput = document.querySelector('#removeUserActivity'),
-   removeRepostsInput = document.querySelector('#removeReposts'),
-   hiddenOutlineInput = document.querySelector('#hiddenOutline'),
-   profileImagesInput = document.querySelector('#profileImages'),
-   relatedActionMenuInput = document.querySelector('#relatedActionMenu'),
-   tagActionMenuInput = document.querySelector('#tagActionMenu'),
-   artistActionMenuInput = document.querySelector('#artistActionMenu'),
-   trackActionMenuInput = document.querySelector('#trackActionMenu'),
-   disableUnfollowerInput = document.querySelector('#disableUnfollower'),
-   disableDiscoverToggleInput = document.querySelector('#disableDiscoverToggle'),
-   settingsReset = document.querySelector('#sce-settings-reset'),
-   settingsClose = document.querySelectorAll('.sce-close-settings'),
-   settingsCloseCount = settingsClose.length;
+   const _darkModeInput = document.querySelector('#darkMode'),
+         _fullwidthModeInput = document.querySelector('#fullwidthMode'),
+         _removeSettingsBtnInput = document.querySelector('#removeSettingsBtn'),
+         _hideSidebarInput = document.querySelector('#hideSidebar'),
+         _hideTheUploadInput = document.querySelector('#hideTheUpload'),
+         _hideBrandingInput =  document.querySelector('#hideBranding'),
+         _displayTypeInput = document.querySelectorAll('input[name="displayType"]'),
+         _removePreviewsInput = document.querySelector('#removePreviews'),
+         _removePlaylistsInput = document.querySelector('#removePlaylists'),
+         _removeLongTracksInput = document.querySelector('#removeLongTracks'),
+         _removeUserActivityInput = document.querySelector('#removeUserActivity'),
+         _removeRepostsInput = document.querySelector('#removeReposts'),
+         _hiddenOutlineInput = document.querySelector('#hiddenOutline'),
+         _profileImagesInput = document.querySelector('#profileImages'),
+         _relatedActionMenuInput = document.querySelector('#relatedActionMenu'),
+         _tagActionMenuInput = document.querySelector('#tagActionMenu'),
+         _artistActionMenuInput = document.querySelector('#artistActionMenu'),
+         _trackActionMenuInput = document.querySelector('#trackActionMenu'),
+         _disableUnfollowerInput = document.querySelector('#disableUnfollower'),
+         _disableDiscoverToggleInput = document.querySelector('#disableDiscoverToggle'),
+         _settingsReset = document.querySelector('#sce-settings-reset'),
+         _settingsClose = document.querySelectorAll('.sce-close-settings'),
+         _settingsCloseCount = _settingsClose.length,
+         _settingsArray = [
+            _darkModeInput,
+            _fullwidthModeInput,
+            _removeSettingsBtnInput,
+         ];
 
    // Activates all menu-closing buttons
-   for (let i = 0; i < settingsCloseCount; i++) settingsClose[i].addEventListener("click", ()=> {disassembleSettings();});
+   for (let i = 0; i < _settingsCloseCount; i++) _settingsClose[i].addEventListener("click", ()=> disassembleSettings());
 
    // Activates the ability to close the menu by clicking outside of it
-   document.addEventListener("mousedown", e => {
-      const evt = (e == null ? event : e);
-      if (evt.which == 1 || evt.button == 0 || evt.button == 1)
+   document.addEventListener('mousedown', e => {
+      const _evt = (e == null ? event : e);
+      if (_evt.which == 1 || _evt.button == 0 || _evt.button == 1)
          if (e.target.id == 'sce-settings') disassembleSettings();
    });
 
    // Activates the reset button
-   settingsReset.addEventListener("click", ()=> {
-      const warningState = settingsReset.getAttribute("warning");
-      if (warningState == "true") {
-         resetLocalStorage(()=> {
-            location.reload();
-         });
-      } else {
-         settingsReset.setAttribute("warning", true);
-         settingsReset.innerText = "Are you sure you want to reset?";
+   _settingsReset.addEventListener("click", ()=> {
+      const _warningState = _settingsReset.getAttribute("warning");
+
+      if (_warningState == "true") resetLocalStorage(()=> location.reload());
+      else {
+         _settingsReset.setAttribute("warning", true);
+         _settingsReset.innerText = "Are you sure you want to reset?";
          setTimeout(()=> {
-            settingsReset.setAttribute("warning", false);
-            settingsReset.innerText = "Reset all SCEnhancer settings";
+            _settingsReset.setAttribute("warning", false);
+            _settingsReset.innerText = "Reset all SCEnhancer settings";
          }, 5000);
       }
    });
 
+   // Display settings
    getLocalStorage(get => {
-      if (get.darkMode == "on") darkModeInput.checked = true;
-      if (get.fullwidthMode == "on") fullwidthModeInput.checked = true;
-      if (get.removeSettingsBtn == "on") removeSettingsBtnInput.checked = true;
-      if (get.hideSidebar == "on") hideSidebarInput.checked = true;
-      if (get.hideTheUpload == "on") hideTheUploadInput.checked = true;
-      if (get.hideBranding == "on") hideBrandingInput.checked = true;
-      if (get.displayType == "list") displayTypeInput[1].checked = true;
-      else if (get.displayType == "grid") displayTypeInput[2].checked = true;
-      else displayTypeInput[0].checked = true;
-      if (get.removePreviews == "on") removePreviewsInput.checked = true;
-      if (get.removePlaylists == "on") removePlaylistsInput.checked = true;
-      if (get.removeLongTracks == "on") removeLongTracksInput.checked = true;
-      if (get.removeUserActivity == "on") removeUserActivityInput.checked = true;
-      if (get.removeReposts == "on") removeRepostsInput.checked = true;
-      if (get.hiddenOutline == "on") hiddenOutlineInput.checked = true;
-      if (get.profileImages == "on") profileImagesInput.checked = true;
-      if (get.disableUnfollower == "on") disableUnfollowerInput.checked = true;
-      if (get.disableDiscoverToggle == "on") disableDiscoverToggleInput.checked = true;
+      if (get.darkMode == "on") _darkModeInput.checked = true;
+      if (get.fullwidthMode == "on") _fullwidthModeInput.checked = true;
+      if (get.removeSettingsBtn == "on") _removeSettingsBtnInput.checked = true;
+      if (get.hideSidebar == "on") _hideSidebarInput.checked = true;
+      if (get.hideTheUpload == "on") _hideTheUploadInput.checked = true;
+      if (get.hideBranding == "on") _hideBrandingInput.checked = true;
+      if (get.displayType == "list") _displayTypeInput[1].checked = true;
+      else if (get.displayType == "grid") _displayTypeInput[2].checked = true;
+      else _displayTypeInput[0].checked = true;
+      if (get.removePreviews == "on") _removePreviewsInput.checked = true;
+      if (get.removePlaylists == "on") _removePlaylistsInput.checked = true;
+      if (get.removeLongTracks == "on") _removeLongTracksInput.checked = true;
+      if (get.removeUserActivity == "on") _removeUserActivityInput.checked = true;
+      if (get.removeReposts == "on") _removeRepostsInput.checked = true;
+      if (get.hiddenOutline == "on") _hiddenOutlineInput.checked = true;
+      if (get.profileImages == "on") _profileImagesInput.checked = true;
+      if (get.disableUnfollower == "on") _disableUnfollowerInput.checked = true;
+      if (get.disableDiscoverToggle == "on") _disableDiscoverToggleInput.checked = true;
       if (get.moreActionMenu) {
-         if (get.moreActionMenu.relatedActionMenu == "on") relatedActionMenuInput.checked = true;
-         if (get.moreActionMenu.tagActionMenu == "on") tagActionMenuInput.checked = true;
-         if (get.moreActionMenu.artistActionMenu == "on") artistActionMenuInput.checked = true;
-         if (get.moreActionMenu.trackActionMenu == "on") trackActionMenuInput.checked = true;
+         if (get.moreActionMenu.relatedActionMenu == "on") _relatedActionMenuInput.checked = true;
+         if (get.moreActionMenu.tagActionMenu == "on") _tagActionMenuInput.checked = true;
+         if (get.moreActionMenu.artistActionMenu == "on") _artistActionMenuInput.checked = true;
+         if (get.moreActionMenu.trackActionMenu == "on") _trackActionMenuInput.checked = true;
       }
    });
 
+   //const _settingsArray = [_darkModeInput, _fullwidthModeInput];
+   //const _test = _getGlobalSettings.map(setting => eval("_" + setting + "Input"));
+   console.log(_settingsArray);
+   _settingsArray.forEach(setting => {
+      setting.addEventListener("click", ()=> {
+         match(setting)
+         .on(x => _darkModeInput, ()=> {
+            setLocalStorage(()=> {
+               console.log("darkmode lel");
+            }, {darkMode: "on"});
+         });
+      });
+   });
+
    document.querySelector('#sce-settings-save').addEventListener('click', ()=> {
-      const settingsInputs = document.forms['sce-settings-form'].querySelectorAll('input'), settingsInputCount = settingsInputs.length;
+      const _settingsInputs = document.forms['sce-settings-form'].querySelectorAll('input'),
+            _settingsInputCount = _settingsInputs.length;
+
       let data = [];
-      for (let i = 0; i < settingsInputCount; i++) {
-         const inputName = settingsInputs[i].name,
-         inputType = settingsInputs[i].type,
-         inputChecked = settingsInputs[i].checked,
-         inputValue = settingsInputs[i].value;
+      for (let i = 0; i < _settingsInputCount; i++) {
+         const _inputName = _settingsInputs[i].name,
+               _inputType = _settingsInputs[i].type,
+               _inputChecked = _settingsInputs[i].checked,
+               _inputValue = _settingsInputs[i].value;
          let inputOutput = null;
 
-         if (inputType == "checkbox") inputOutput = inputChecked ? "on" : "off";
-         else if (inputType == "radio") inputOutput = inputChecked ? inputValue : "skip";
-         else inputOutput = inputValue;
-         if (inputOutput != "skip") data[inputName] = inputOutput;
+         if (_inputType == "checkbox") inputOutput = _inputChecked ? "on" : "off";
+         else if (_inputType == "radio") inputOutput = _inputChecked ? _inputValue : "skip";
+         else inputOutput = _inputValue;
+         if (inputOutput != "skip") data[_inputName] = inputOutput;
       }
       saveSettings(data);
    });
@@ -540,31 +598,35 @@ const settingsInit = ()=> {
 
 // Initializing the filter lists in the SCE menu
 const filterInit = ()=> {
-   if (debugMode) console.log("callback filterInit: Initializing");
-   const artistBlacklist = document.querySelector('#artist-blacklist'),
-   trackBlacklist = document.querySelector('#track-blacklist'),
-   playlistBlacklist = document.querySelector('#playlist-blacklist'),
-   skipTagsInput = document.querySelector('#skipTags');
+   if (_debugMode) console.log("callback filterInit: Initializing");
+   const _artistBlacklist = document.querySelector('#artist-blacklist'),
+         _trackBlacklist = document.querySelector('#track-blacklist'),
+         _playlistBlacklist = document.querySelector('#playlist-blacklist'),
+         _skipTagsInput = document.querySelector('#skipTags');
 
    getLocalStorage(get => {
-      if (get.tagsArray != null) skipTagsInput.value = get.tagsArray;
-      insignia(skipTags, {delimiter: ',', deletion: true});
+      if (get.tagsArray != null) _skipTagsInput.value = get.tagsArray;
+      insignia(_skipTagsInput, {delimiter: ',', deletion: true});
 
-      const target = document.querySelector('.nsg-tags');
-      runObserver(target, ()=> {
-         const tagElements = document.querySelectorAll('.nsg-tag'), tagElementCount = tagElements.length, tags = [];
-         for (let i = 0; i < tagElementCount; i++) tags.push(tagElements[i].innerText);
+      const _target = document.querySelector('.nsg-tags');
+      runObserver(_target, ()=> {
+         const _tagElements = document.querySelectorAll('.nsg-tag'),
+               _tagElementCount = _tagElements.length,
+               _tags = [];
+
+         for (let i = 0; i < _tagElementCount; i++) _tags.push(_tagElements[i].innerText);
          setLocalStorage(()=> {
             if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-            if (debugMode) console.log("Tag array saved: " + tags);
-         }, {tagsArray: tags});
+            if (_debugMode) console.log("Tag array saved: " + _tags);
+         }, {tagsArray: _tags});
       }, true);
    });
 
    const filterNameFormatter = string => {
-      let strip = string.split("/"), output = strip[0];
-      if (strip[1] == "sets") output = strip[2];
-      else if (strip[1]) output = strip[1];
+      const _strip = string.split("/");
+      let output = _strip[0];
+      if (_strip[1] == "sets") output = _strip[2];
+      else if (_strip[1]) output = _strip[1];
       output = output.replace(/-/g, " ");
       output = output.replace(/_/g, " ");
       return output;
@@ -572,122 +634,135 @@ const filterInit = ()=> {
 
    const renderFilterList = (element, key)=> {
       getLocalStorage(get => {
-         let filterArray = get.filter.tracks, filterArrayLength = filterArray.length, tempFilterArray = [];
+         let filterArray = [], filterArrayLength = 0;
+
          const trackArraySort = bool => {
+            const _tempFilterArray = [];
             for (let i = 0; i < filterArrayLength; i++) {
-               if (bool == true) if (isPlaylistURL(filterArray[i].slug)) tempFilterArray.push(filterArray[i]);
-               if (bool == false) if (!isPlaylistURL(filterArray[i].slug)) tempFilterArray.push(filterArray[i]);
+               if (bool === true) if (isPlaylistURL(filterArray[i].slug)) _tempFilterArray.push(filterArray[i]);
+               if (bool === false) if (!isPlaylistURL(filterArray[i].slug)) _tempFilterArray.push(filterArray[i]);
             }
-            filterArray = tempFilterArray;
+            filterArray = _tempFilterArray;
          };
+
          const removeObjectByAttribute = (array, attribute, value)=> {
             let i = array.length;
             while (i--) if (array[i] && array[i].hasOwnProperty(attribute) && array[i][attribute] === value) array.splice(i, 1);
             return array;
          };
+
          if (get.filter) {
-            if (key == "artists" && get.filter.artists) filterArray = get.filter.artists;
-            else if (key == "tracks" && get.filter.tracks) trackArraySort(false);
-            else if (get.filter.tracks) trackArraySort(true);
+            filterArray = get.filter.tracks;
+            filterArrayLength = filterArray.length;
+            if (key == "artists" && get.filter.artists) {
+               filterArray = get.filter.artists;
+               filterArrayLength = filterArray.length;
+            } else if (key == "tracks" && get.filter.tracks) trackArraySort(false);
+            else trackArraySort(true);
          }
-         const filterArrayCount = filterArray.length;
-         if (filterArrayCount == 0) {
-            const emptyMessage = document.createElement("span");
-            emptyMessage.innerHTML = "No " + key + " has been filtered!";
-            element.appendChild(emptyMessage);
+
+         if (filterArrayLength === 0) {
+            const _emptyMessage = document.createElement("span");
+            _emptyMessage.innerHTML = "No " + key + " has been filtered!";
+            element.appendChild(_emptyMessage);
          } else {
-            for (let i = 0; i < filterArrayCount; i++) {
-               const listItem = document.createElement("li"),
-               listItemOrder = document.createElement("span"),
-               listItemLink = document.createElement("a"),
-               listItemActions = document.createElement("div"),
-               listItemTime = document.createElement("span"),
-               listItemDelete = document.createElement("span"),
-               listItemCount = i + 1;
+            for (let i = 0; i < filterArrayLength; i++) {
+               const _listItem = document.createElement("li"),
+                     _listItemOrder = document.createElement("span"),
+                     _listItemLink = document.createElement("a"),
+                     _listItemActions = document.createElement("div"),
+                     _listItemTime = document.createElement("span"),
+                     _listItemDelete = document.createElement("span"),
+                     _listItemCount = i + 1;
 
-               listItemOrder.className = "sce-filter-item-order";
-               listItemOrder.innerText = "#" + listItemCount;
-               listItemActions.className = "sce-filter-actions";
-               listItemLink.className = "sce-filter-item-name";
-               listItemLink.href = "https://soundcloud.com/" + filterArray[i].slug;
-               listItemLink.innerText = filterNameFormatter(filterArray[i].slug);
-               listItemLink.target = "_blank";
-               listItemTime.innerText = relativeTime(filterArray[i].time);
-               listItemTime.className = "sce-filter-option";
-               listItemDelete.className = "sce-filter-option-remove";
+               _listItemOrder.className = "sce-filter-item-order";
+               _listItemOrder.innerText = "#" + _listItemCount;
+               _listItemActions.className = "sce-filter-actions";
+               _listItemLink.className = "sce-filter-item-name";
+               _listItemLink.href = "https://soundcloud.com/" + filterArray[i].slug;
+               _listItemLink.innerText = filterNameFormatter(filterArray[i].slug);
+               _listItemLink.target = "_blank";
+               _listItemTime.innerText = relativeTime(filterArray[i].time);
+               _listItemTime.className = "sce-filter-option";
+               _listItemDelete.className = "sce-filter-option-remove";
 
-               listItem.appendChild(listItemOrder);
-               listItem.appendChild(listItemLink);
-               listItemActions.appendChild(listItemTime);
-               listItemActions.appendChild(listItemDelete);
-               listItem.appendChild(listItemActions);
-               element.appendChild(listItem);
+               _listItem.appendChild(_listItemOrder);
+               _listItem.appendChild(_listItemLink);
+               _listItemActions.appendChild(_listItemTime);
+               _listItemActions.appendChild(_listItemDelete);
+               _listItem.appendChild(_listItemActions);
+               element.appendChild(_listItem);
 
-               listItemDelete.addEventListener("click", ()=> {
+               _listItemDelete.addEventListener("click", ()=> {
                   getLocalStorage(get => {
-                     let filterObject = get.filter;
-                     if (key == "artists") removeObjectByAttribute(filterObject.artists, "slug", filterArray[i].slug);
-                     else removeObjectByAttribute(filterObject.tracks, "slug", filterArray[i].slug);
+                     const _filterObject = get.filter;
+                     if (key == "artists") removeObjectByAttribute(_filterObject.artists, "slug", filterArray[i].slug);
+                     else removeObjectByAttribute(_filterObject.tracks, "slug", filterArray[i].slug);
 
                      setLocalStorage(()=> {
                         listItemDelete.closest("li").remove();
-                        const filterContainers = document.querySelectorAll('.filter-container'), filterContainerCount = filterContainers.length;
-                        for (let j = 0; j < filterContainerCount; j++) {
-                           if (!filterContainers[i].hasChildNodes()) {
-                              const emptyMessage = document.createElement("span");
-                              emptyMessage.innerHTML = "No " + key + " has been filtered!";
-                              filterContainers[j].appendChild(emptyMessage);
+                        const _filterContainers = document.querySelectorAll('.filter-container'),
+                              _filterContainerCount = _filterContainers.length;
+
+                        for (let j = 0; j < _filterContainerCount; j++) {
+                           if (!_filterContainers[i].hasChildNodes()) {
+                              const _emptyMessage = document.createElement("span");
+                              _emptyMessage.innerHTML = "No " + key + " has been filtered!";
+                              _filterContainers[j].appendChild(_emptyMessage);
                            }
                         }
-                     }, {filter: filterObject});
+                     }, {filter: _filterObject});
                   }, ["filter"]);
                });
             }
          }
       });
    };
-   renderFilterList(artistBlacklist, "artists");
-   renderFilterList(trackBlacklist, "tracks");
-   renderFilterList(playlistBlacklist, "playlists");
+   renderFilterList(_artistBlacklist, "artists");
+   renderFilterList(_trackBlacklist, "tracks");
+   renderFilterList(_playlistBlacklist, "playlists");
 };
 
 // Fetching data from local/online browser storage
 const getLocalStorage = (callback, localSettings = null)=> {
-   const getSettings = localSettings || getGlobalSettings;
-   chrome.storage.sync.get(getSettings, callback);
+   const _getSettings = localSettings || _getGlobalSettings;
+   chrome.storage.sync.get(_getSettings, callback);
 };
 
 // Sending data to local/online browser storage
 const setLocalStorage = (callback, localSettings = null)=> {
-   const setSettings = localSettings || setGlobalSettings;
-   chrome.storage.sync.set(setSettings, callback);
+   const _setSettings = localSettings || _setGlobalSettings;
+   chrome.storage.sync.set(_setSettings, callback);
 };
 
 // Factory resets all SCE created local/online browser storage
 const resetLocalStorage = callback => {
-   chrome.storage.sync.remove(getGlobalSettings, callback);
+   chrome.storage.sync.remove(_getGlobalSettings, callback);
 };
 
 // Run setup after tab/window reload
 const readyStateCheck = ()=> {
-   let timer, bodyObserver = new MutationObserver(mutations => {
+   setAttributes();
+   settingsSetup();
+   injectedJavascript();
+   /*let timer, bodyObserver = new MutationObserver(mutations => {
       clearTimeout(timer);
       timer = setTimeout(()=> {
-         if (debugMode) console.log("readyState: Complete");
+         if (_debugMode) console.log("readyState: Complete");
          bodyObserver.disconnect();
 
          settingsSetup();
          injectedJavascript();
       }, 200);
    });
-   bodyObserver.observe(body, globalConfig);
+   bodyObserver.observe(_body, _globalConfig);*/
 };
 document.addEventListener("readystatechange", readyStateCheck);
 
 // Detect new page load
 setInterval(()=> {
    if (location.href != oldLocation) {
-      if (debugMode) console.log("-=- NEW PAGE LOADED -=-");
+      if (_debugMode) console.log("-=- NEW PAGE LOADED -=-");
       oldLocation = location.href;
       readyStateCheck();
    }
@@ -698,202 +773,210 @@ setInterval(()=> {
 // =============================================================
 
 // Inserts <body> attributes
-const setAttributes = ()=> {
-   if (debugMode) console.log("function setAttributes: Initializing");
+const setAttributes = () => {
+   if (_debugMode) console.log("function setAttributes: Initializing");
 
    getLocalStorage(get => {
-      if (get.darkMode == "on") body.setAttribute("data-theme", "dark");
-      if (get.fullwidthMode == "on") body.setAttribute("fullwidth", "");
-      if (get.removeSettingsBtn != "on") body.setAttribute("settings-button", "");
-      if (get.hideSidebar == "on") body.setAttribute("data-sidebar", "hidden");
-      else body.setAttribute("data-sidebar", "show");
+      if (get.darkMode == "on") _body.setAttribute("data-theme", "dark");
+      if (get.fullwidthMode == "on") _body.setAttribute("fullwidth", "");
+      if (get.removeSettingsBtn != "on") _body.setAttribute("settings-button", "");
+      if (get.hideSidebar == "on") _body.setAttribute("data-sidebar", "hidden");
+      else _body.setAttribute("data-sidebar", "show");
       if (location.href == "https://soundcloud.com/stream") {
-         if (get.displayType == "list") body.setAttribute("data-display", "list");
-         else if (get.displayType == "grid") body.setAttribute("data-display", "grid");
-         else body.setAttribute("data-display", "default");
+         if (get.displayType == "list") _body.setAttribute("data-display", "list");
+         else if (get.displayType == "grid") _body.setAttribute("data-display", "grid");
+         else _body.setAttribute("data-display", "default");
       }
-      if (get.hiddenOutline == "on") body.setAttribute("hidden-outline", "");
-      if (get.profileImages == "on") body.setAttribute("square", "");
+      if (get.hiddenOutline == "on") _body.setAttribute("hidden-outline", "");
+      if (get.profileImages == "on") _body.setAttribute("square", "");
    });
 };
+
 setAttributes();
 
 // Setting up initial functionality
 const settingsSetup = ()=> {
-   if (debugMode) console.log("function settingsSetup: Initializing");
+   if (_debugMode) console.log("function settingsSetup: Initializing");
 
-   const hasStreamController = document.querySelector('#stream-controller'),
-   hasVersionDisplay = document.querySelector('#version-display'),
-   hasEnhancerButton = document.querySelector('#enhancer-btn'),
-   soundPanel = document.querySelector('.playControls'),
-   soundPanelInner = document.querySelector('.playControls__inner'),
-   announcements = document.querySelector('.announcements.g-z-index-fixed-top'),
-   userMenu = document.querySelector('.header__userNavUsernameButton'),
-   logo = document.querySelector('.header__logo.left');
+   const _hasStreamController = document.querySelector('#stream-controller'),
+         _hasVersionDisplay = document.querySelector('#version-display'),
+         _hasEnhancerButton = document.querySelector('#enhancer-btn'),
+         _soundPanel = document.querySelector('.playControls'),
+         _soundPanelInner = document.querySelector('.playControls__inner'),
+         _announcements = document.querySelector('.announcements.g-z-index-fixed-top'),
+         _userMenu = document.querySelector('.header__userNavUsernameButton'),
+         _logo = document.querySelector('.header__logo.left');
 
    // Force-open sound control panel
-   soundPanel.className = "playControls g-z-index-header m-visible";
-   announcements.className = "announcements g-z-index-fixed-top m-offset";
+   _soundPanel.className = "playControls g-z-index-header m-visible";
+   _announcements.className = "announcements g-z-index-fixed-top m-offset";
 
    getLocalStorage(get => {
       // Setup SoundCloud Enhancer branding
       if (get.hideBranding != "on") {
-         logo.id = "sce-logo";
-         if (!hasVersionDisplay) {
-            const versionDisplay = document.createElement("span");
-            versionDisplay.id = "version-display";
-            versionDisplay.innerText = manifestData.version;
-            logo.appendChild(versionDisplay);
+         _logo.id = "sce-logo";
+         if (!_hasVersionDisplay) {
+            if (_debugMode) console.log("-> Branding rendered");
+            const _versionDisplay = document.createElement("span");
+            _versionDisplay.id = "version-display";
+            _versionDisplay.innerText = _manifestData.version;
+            _logo.appendChild(_versionDisplay);
          }
       }
 
       // Setup SoundCloud Enhancer button
       if (get.removeSettingsBtn != "on") {
-         if (!hasEnhancerButton) {
-            const SCEContainer = document.createElement("div"),
-            SCEButton = document.createElement("button");
+         if (!_hasEnhancerButton) {
+            if (_debugMode) console.log("-> SCEbutton hidden");
+            const _SCEContainer = document.createElement("div"),
+                  _SCEButton = document.createElement("button");
 
-            SCEContainer.id = "enhancer-container";
-            SCEButton.className = "sc-enhancer sc-button sc-button-medium sc-button-responsive";
-            SCEButton.id = "enhancer-btn";
-            SCEButton.tabindex = "0";
-            SCEButton.innerText = "SCEnhancer";
+            _SCEContainer.id = "enhancer-container";
+            _SCEButton.className = "sc-enhancer sc-button sc-button-medium sc-button-responsive";
+            _SCEButton.id = "enhancer-btn";
+            _SCEButton.tabindex = "0";
+            _SCEButton.innerText = "SCEnhancer";
 
-            SCEContainer.appendChild(SCEButton);
-            soundPanelInner.appendChild(SCEContainer);
+            _SCEContainer.appendChild(_SCEButton);
+            _soundPanelInner.appendChild(_SCEContainer);
             settingsMenu();
          }
       }
 
       // Add the "The Upload" playlist to the stream explore tab
+      // TODO: Lav dette til en option, sammen med "weekly playlist"
+      /*
       if (location.href == "https://soundcloud.com/stream" || location.href == "https://soundcloud.com/charts/top" || location.href == "https://soundcloud.com/discover") {
          const renderTheUploadShortcut = setInterval(()=> {
-            const hasExploreTab = document.querySelector('.streamExploreTabs ul.g-tabs');
-            if (hasExploreTab.querySelectorAll('li').length == 3) {
+            const _hasExploreTab = document.querySelector('.streamExploreTabs ul.g-tabs');
+            if (_hasExploreTab.querySelectorAll('li').length == 3) {
                clearInterval(renderTheUploadShortcut);
-               const hasUploadTab = hasExploreTab.querySelector('#the-upload-tab');
-               if (!hasUploadTab) {
-                  const tabItem = document.createElement("li"),
-                  tabItemLink = document.createElement("a");
+               const _hasUploadTab = _hasExploreTab.querySelector('#the-upload-tab');
+               if (!_hasUploadTab) {
+                  const _tabItem = document.createElement("li"),
+                        _tabItemLink = document.createElement("a");
 
-                  tabItem.className = "g-tabs-item";
-                  tabItemLink.className = "g-tabs-link";
-                  tabItemLink.id = "the-upload-tab";
-                  tabItemLink.href = "/discover/sets/new-for-you:" + userID;
-                  tabItemLink.innerText = "The Upload";
+                  _tabItem.className = "g-tabs-item";
+                  _tabItemLink.className = "g-tabs-link";
+                  _tabItemLink.id = "the-upload-tab";
+                  _tabItemLink.href = "/discover/sets/new-for-you:" + _userID;
+                  _tabItemLink.innerText = "The Upload";
 
-                  tabItem.appendChild(tabItemLink);
-                  hasExploreTab.appendChild(tabItem);
+                  _tabItem.appendChild(_tabItemLink);
+                  _hasExploreTab.appendChild(_tabItem);
                }
             }
          }, 100);
-      }
+      }*/
 
       // Add a "like" menu point to the profiles
       const renderProfileLikesShortcut = setInterval(()=> {
-         const hasProfileMenu = document.querySelector('ul.profileTabs.g-tabs');
-         if (hasProfileMenu) {
-            const hasProfileLikeButton = document.querySelector('#profile-tab-like');
-            if (!hasProfileLikeButton) {
+         const _hasProfileMenu = document.querySelector('ul.profileTabs.g-tabs');
+         if (_hasProfileMenu) {
+            const _hasProfileLikeButton = document.querySelector('#profile-tab-like');
+            if (!_hasProfileLikeButton) {
+               if (_debugMode) console.log("-> Like shortcut rendered");
                clearInterval(renderProfileLikesShortcut);
-               const getUserSlug = hasProfileMenu.querySelector('.g-tabs-link:first-child').getAttribute('href'),
-               createLikeMenu = document.createElement("li"),
-               createLikeLink = document.createElement("a");
+               const _getUserSlug = _hasProfileMenu.querySelector('.g-tabs-link:first-child').getAttribute('href'),
+                     _createLikeMenu = document.createElement("li"),
+                     _createLikeLink = document.createElement("a");
 
-               createLikeMenu.className = "g-tabs-item";
-               createLikeMenu.id = "profile-tab-like";
-               createLikeLink.className = "g-tabs-link";
-               createLikeLink.href = getUserSlug + "/likes";
-               createLikeLink.innerText = "Likes";
+               _createLikeMenu.className = "g-tabs-item";
+               _createLikeMenu.id = "profile-tab-like";
+               _createLikeLink.className = "g-tabs-link";
+               _createLikeLink.href = _getUserSlug + "/likes";
+               _createLikeLink.innerText = "Likes";
 
-               createLikeMenu.appendChild(createLikeLink);
-               hasProfileMenu.appendChild(createLikeMenu);
+               _createLikeMenu.appendChild(_createLikeLink);
+               _hasProfileMenu.appendChild(_createLikeMenu);
             }
          }
       }, 100);
 
       // Render a SCE button in the user navigation menu
       const renderEnhancerProfileMenu = ()=> {
-         const hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
-         if (!hasEnhancerMenuItems) {
-            userMenu.removeEventListener("click", renderEnhancerProfileMenu);
-            const profileMenu = document.querySelector('.profileMenu'),
-            profileMenuEnhancer = document.createElement('ul'),
-            profileMenuEnhancerItem = document.createElement('li'),
-            profileMenuEnhancerLink = document.createElement('a');
+         const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
+         if (!_hasEnhancerMenuItems) {
+            _userMenu.removeEventListener("click", renderEnhancerProfileMenu);
+            const _profileMenu = document.querySelector('.profileMenu'),
+                  _profileMenuEnhancer = document.createElement('ul'),
+                  _profileMenuEnhancerItem = document.createElement('li'),
+                  _profileMenuEnhancerLink = document.createElement('a');
 
-            profileMenuEnhancer.className = "profileMenu__list profileMenu__enhancer sc-enhancer sc-list-nostyle";
-            profileMenuEnhancerItem.className = "profileMenu__item";
-            profileMenuEnhancerLink.className = "profileMenu__link profileMenu__enhancerMenu";
-            profileMenuEnhancerLink.innerText = "SCEnhancer";
+            _profileMenuEnhancer.className = "profileMenu__list profileMenu__enhancer sc-enhancer sc-list-nostyle";
+            _profileMenuEnhancerItem.className = "profileMenu__item";
+            _profileMenuEnhancerLink.className = "profileMenu__link profileMenu__enhancerMenu";
+            _profileMenuEnhancerLink.innerText = "SCEnhancer";
 
-            profileMenuEnhancerItem.appendChild(profileMenuEnhancerLink);
-            profileMenuEnhancer.appendChild(profileMenuEnhancerItem);
-            profileMenu.appendChild(profileMenuEnhancer);
+            _profileMenuEnhancerItem.appendChild(_profileMenuEnhancerLink);
+            _profileMenuEnhancer.appendChild(_profileMenuEnhancerItem);
+            _profileMenu.appendChild(_profileMenuEnhancer);
 
             settingsMenu();
             let detectProfileMenuFade = setInterval(()=> {
-               const hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
-               if (!hasEnhancerMenuItems) {
+               const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
+               if (!_hasEnhancerMenuItems) {
                   settingsMenu();
                   clearInterval(detectProfileMenuFade);
-                  userMenu.addEventListener("click", renderEnhancerProfileMenu);
+                  _userMenu.addEventListener("click", renderEnhancerProfileMenu);
                }
             }, 100);
          }
       };
-      userMenu.removeEventListener("click", renderEnhancerProfileMenu);
-      userMenu.addEventListener("click", renderEnhancerProfileMenu);
+      _userMenu.removeEventListener("click", renderEnhancerProfileMenu);
+      _userMenu.addEventListener("click", renderEnhancerProfileMenu);
 
       // Render discover module toogle links
       if (get.disableDiscoverToggle != "on") {
          if (location.href == "https://soundcloud.com/discover") {
             let discoverInterval = setInterval(()=> {
-               const hasDiscoverContainer = document.querySelector('div.modularHome.lazyLoadingList ul.lazyLoadingList__list');
-               if (hasDiscoverContainer) {
+               const _hasDiscoverContainer = document.querySelector('div.modularHome.lazyLoadingList ul.lazyLoadingList__list');
+               if (_hasDiscoverContainer) {
                   clearInterval(discoverInterval);
                   const discoverModuleHider = ()=> {
                      getLocalStorage(get => {
-                        if (debugMode) console.log("function discoverModuleHider: Running");
-                        const discoverModule = hasDiscoverContainer.querySelectorAll('.selectionModule'), discoverModuleCount = discoverModule.length;
-                        for (let i = 0; i < discoverModuleCount; i++) {
-                           const moduleArray = get.discoverModules || {},
-                           moduleSectionState = moduleArray[i] == 1 ? "hidden" : "shown",
-                           discoverModuleContainer = discoverModule[i].querySelector('h2.selectionModule__titleText'),
-                           hasModuleSwitch = discoverModuleContainer.querySelector('a.hide-discover-section');
-                           discoverModule[i].setAttribute("state", moduleSectionState);
+                        if (_debugMode) console.log("function discoverModuleHider: Running");
+                        const _discoverModule = _hasDiscoverContainer.querySelectorAll('.selectionModule'),
+                              _discoverModuleCount = _discoverModule.length;
+                        for (let i = 0; i < _discoverModuleCount; i++) {
+                           const _moduleArray = get.discoverModules || {},
+                                 _moduleSectionState = _moduleArray[i] == 1 ? "hidden" : "shown",
+                                 _discoverModuleContainer = _discoverModule[i].querySelector('h2.selectionModule__titleText'),
+                                 _hasModuleSwitch = _discoverModuleContainer.querySelector('a.hide-discover-section');
+                           _discoverModule[i].setAttribute("state", _moduleSectionState);
 
-                           if (!hasModuleSwitch) {
-                              const moduleState = moduleArray[i] == 1 ? 0 : 1,
-                              moduleStateText = moduleArray[i] == 1 ? "Show this section" : "Hide this section",
-                              discoverModuleToogle = document.createElement("a");
+                           if (!_hasModuleSwitch) {
+                              const _moduleState = _moduleArray[i] == 1 ? 0 : 1,
+                                    _moduleStateText = _moduleArray[i] == 1 ? "Show this section" : "Hide this section",
+                                    _discoverModuleToogle = document.createElement("a");
 
-                              discoverModuleToogle.className = "hide-discover-section";
-                              discoverModuleToogle.innerText = moduleStateText;
-                              discoverModuleToogle.setAttribute("section-id", i);
-                              discoverModuleToogle.setAttribute("section-state", moduleState);
-                              discoverModuleContainer.appendChild(discoverModuleToogle);
+                              _discoverModuleToogle.className = "hide-discover-section";
+                              _discoverModuleToogle.innerText = _moduleStateText;
+                              _discoverModuleToogle.setAttribute("section-id", i);
+                              _discoverModuleToogle.setAttribute("section-state", _moduleState);
+                              _discoverModuleContainer.appendChild(_discoverModuleToogle);
 
-                              const moduleSwitch = document.querySelector('.hide-discover-section[section-id="'+ i +'"]');
-                              moduleSwitch.addEventListener("click", ()=> {
+                              const _moduleSwitch = document.querySelector('.hide-discover-section[section-id="'+ i +'"]');
+                              _moduleSwitch.addEventListener("click", ()=> {
                                  getLocalStorage(get => {
-                                    const sectionID = moduleSwitch.getAttribute("section-id"),
-                                    sectionState = moduleSwitch.getAttribute("section-state"),
-                                    moduleArray = get.discoverModules || {};
-                                    moduleArray[sectionID] = sectionState;
+                                    const _sectionID = _moduleSwitch.getAttribute("section-id"),
+                                          _sectionState = _moduleSwitch.getAttribute("section-state"),
+                                          _moduleArray = get.discoverModules || {};
+                                          _moduleArray[_sectionID] = _sectionState;
 
                                     setLocalStorage(()=> {
                                        if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
                                        else {
-                                          const moduleStateText = moduleArray[sectionID] == 1 ? "Show this section" : "Hide this section",
-                                          moduleSectionState = moduleArray[i] == 1 ? "hidden" : "shown",
-                                          moduleState = moduleArray[sectionID] == 1 ? 0 : 1,
-                                          moduleContainer = moduleSwitch.closest('.selectionModule');
-                                          moduleSwitch.innerText = moduleStateText;
-                                          moduleSwitch.setAttribute("section-state", moduleState);
-                                          moduleContainer.setAttribute("state", moduleSectionState);
+                                          const _moduleStateText = _moduleArray[_sectionID] == 1 ? "Show this section" : "Hide this section",
+                                                _moduleSectionState = _moduleArray[i] == 1 ? "hidden" : "shown",
+                                                _moduleState = _moduleArray[_sectionID] == 1 ? 0 : 1,
+                                                _moduleContainer = _moduleSwitch.closest('.selectionModule');
+
+                                          _moduleSwitch.innerText = _moduleStateText;
+                                          _moduleSwitch.setAttribute("section-state", _moduleState);
+                                          _moduleContainer.setAttribute("state", _moduleSectionState);
                                        }
-                                    }, {discoverModules: moduleArray});
+                                    }, {discoverModules: _moduleArray});
                                  });
                               });
                            }
@@ -901,7 +984,7 @@ const settingsSetup = ()=> {
                      });
                   };
                   discoverModuleHider();
-                  runObserver(hasDiscoverContainer, discoverModuleHider);
+                  runObserver(_hasDiscoverContainer, discoverModuleHider);
                }
             }, 100);
          }
@@ -910,71 +993,72 @@ const settingsSetup = ()=> {
       // Render quick display switcher
       if (location.href == "https://soundcloud.com/stream") {
          let renderStreamDisplaySwitch = setInterval(()=> {
-            const streamHeader = document.querySelector('.stream__header');
-            if (streamHeader) {
+            const _streamHeader = document.querySelector('.stream__header');
+            if (_streamHeader) {
                clearInterval(renderStreamDisplaySwitch);
-               if (!hasStreamController) {
-                  const streamController = document.createElement("div"),
-                  textContainer = document.createElement("div"),
-                  textHeader = document.createElement("h3"),
-                  listContainer = document.createElement("ul"),
-                  defaultList = document.createElement("li"),
-                  compactList = document.createElement("li"),
-                  gridList = document.createElement("li");
+               if (!_hasStreamController) {
+                  const _streamController = document.createElement("div"),
+                        _textContainer = document.createElement("div"),
+                        _textHeader = document.createElement("h3"),
+                        _listContainer = document.createElement("ul"),
+                        _defaultList = document.createElement("li"),
+                        _compactList = document.createElement("li"),
+                        _gridList = document.createElement("li");
 
-                  streamController.className = "stream__controls";
-                  streamController.id = "stream-controller";
-                  textContainer.className = "listDisplayToggle g-flex-row-centered";
-                  textHeader.className = "listDisplayToggleTitle sc-text-light sc-type-medium";
-                  textHeader.innerText = "View";
-                  listContainer.className = "listDisplayToggle sc-list-nostyle g-flex-row-centered";
-                  defaultList.className = "listDisplayToggle setting-display-tile default-icon";
-                  defaultList.title = "Default";
-                  defaultList.setAttribute('data-id', "default");
-                  compactList.className = "listDisplayToggle setting-display-tile list-icon";
-                  compactList.title = "Compact";
-                  compactList.setAttribute('data-id', "list");
-                  gridList.className = "listDisplayToggle setting-display-tile grid-icon";
-                  gridList.title = "Grid";
-                  gridList.setAttribute('data-id', "grid");
+                  _streamController.className = "stream__controls";
+                  _streamController.id = "stream-controller";
+                  _textContainer.className = "listDisplayToggle g-flex-row-centered";
+                  _textHeader.className = "listDisplayToggleTitle sc-text-light sc-type-medium";
+                  _textHeader.innerText = "View";
+                  _listContainer.className = "listDisplayToggle sc-list-nostyle g-flex-row-centered";
+                  _defaultList.className = "listDisplayToggle setting-display-tile default-icon";
+                  _defaultList.title = "Default";
+                  _defaultList.setAttribute('data-id', "default");
+                  _compactList.className = "listDisplayToggle setting-display-tile list-icon";
+                  _compactList.title = "Compact";
+                  _compactList.setAttribute('data-id', "list");
+                  _gridList.className = "listDisplayToggle setting-display-tile grid-icon";
+                  _gridList.title = "Grid";
+                  _gridList.setAttribute('data-id', "grid");
 
-                  textContainer.appendChild(textHeader);
-                  listContainer.appendChild(defaultList);
-                  listContainer.appendChild(compactList);
-                  listContainer.appendChild(gridList);
-                  textContainer.appendChild(listContainer);
-                  streamController.appendChild(textContainer);
-                  streamHeader.appendChild(streamController);
+                  _textContainer.appendChild(_textHeader);
+                  _listContainer.appendChild(_defaultList);
+                  _listContainer.appendChild(_compactList);
+                  _listContainer.appendChild(_gridList);
+                  _textContainer.appendChild(_listContainer);
+                  _streamController.appendChild(_textContainer);
+                  _streamHeader.appendChild(_streamController);
 
-                  const getDefaultList = document.querySelector('.listDisplayToggle.setting-display-tile.default-icon'),
-                  getCompactList = document.querySelector('.listDisplayToggle.setting-display-tile.list-icon'),
-                  getGridList = document.querySelector('.listDisplayToggle.setting-display-tile.grid-icon');
+                  const _getDefaultList = document.querySelector('.listDisplayToggle.setting-display-tile.default-icon'),
+                        _getCompactList = document.querySelector('.listDisplayToggle.setting-display-tile.list-icon'),
+                        _getGridList = document.querySelector('.listDisplayToggle.setting-display-tile.grid-icon');
 
-                  if (get.displayType == "list") getCompactList.classList.add("active");
-                  else if (get.displayType == "grid") getGridList.classList.add("active");
-                  else getDefaultList.classList.add("active");
+                  if (get.displayType == "list") _getCompactList.classList.add("active");
+                  else if (get.displayType == "grid") _getGridList.classList.add("active");
+                  else _getDefaultList.classList.add("active");
 
-                  const getLists = document.querySelectorAll('.listDisplayToggle.setting-display-tile'), getListCount = getLists.length;
-                  for (let i = 0; i < getListCount; i++) {
-                     getLists[i].addEventListener('click', ()=> {
-                        let getData = getLists[i].getAttribute("data-id");
-                        for (let i = 0; i < getListCount; i++) getLists[i].classList.remove("active");
+                  const _getLists = document.querySelectorAll('.listDisplayToggle.setting-display-tile'),
+                        _getListCount = _getLists.length;
+                  for (let i = 0; i < _getListCount; i++) {
+                     _getLists[i].addEventListener('click', ()=> {
+                        const _getData = _getLists[i].getAttribute("data-id");
+                        for (let i = 0; i < _getListCount; i++) _getLists[i].classList.remove("active");
 
-                        if (getData == "list") {
-                           body.setAttribute("data-display", "list");
-                           getCompactList.classList.add("active");
-                        } else if (getData == "grid") {
-                           body.setAttribute("data-display", "grid");
-                           getGridList.classList.add("active");
+                        if (_getData === "list") {
+                           _body.setAttribute("data-display", "list");
+                           _getCompactList.classList.add("active");
+                        } else if (_getData === "grid") {
+                           _body.setAttribute("data-display", "grid");
+                           _getGridList.classList.add("active");
                         } else {
-                           body.setAttribute("data-display", "default");
-                           getDefaultList.classList.add("active");
+                           _body.setAttribute("data-display", "default");
+                           _getDefaultList.classList.add("active");
                         }
 
                         setLocalStorage(()=> {
                            if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-                           if (debugMode) console.log("Display mode saved: " + getData);
-                        }, {displayType: getData});
+                           if (_debugMode) console.log("Display mode saved: " + _getData);
+                        }, {displayType: _getData});
                      });
                   }
                }
@@ -986,43 +1070,48 @@ const settingsSetup = ()=> {
       if (location.href == "https://soundcloud.com/you/following") {
          if (get.disableUnfollower != "on") {
             let unfollowerInterval = setInterval(()=> {
-               const hasUnfollowerContainer = document.querySelector('.collectionSection__list .lazyLoadingList.badgeList ul.lazyLoadingList__list');
-               if (hasUnfollowerContainer) {
+               const _hasUnfollowerContainer = document.querySelector('.collectionSection__list .lazyLoadingList.badgeList ul.lazyLoadingList__list');
+               if (_hasUnfollowerContainer) {
                   clearInterval(unfollowerInterval);
-                  const collectionHeader = document.querySelector('.collectionSection__top'),
-                  massUnfollowButton = document.querySelector("#mass-unfollow");
+                  const _collectionHeader = document.querySelector('.collectionSection__top'),
+                        _massUnfollowButton = document.querySelector("#mass-unfollow");
 
-                  if (massUnfollowButton == null) {
-                     const massUnfollowContainer = document.createElement("div"),
-                     textContainer = document.createElement("div"),
-                     textHeader = document.createElement("h3"),
-                     confirmUnfollowButton = document.createElement("button"),
-                     undoUnfollowButton = document.createElement("button"),
-                     allUnfollowButton = document.createElement("button");
+                  if (_massUnfollowButton == null) {
+                     const _massUnfollowContainer = document.createElement("div"),
+                           _textContainer = document.createElement("div"),
+                           _textHeader = document.createElement("h3"),
+                           _confirmUnfollowButton = document.createElement("button"),
+                           _undoUnfollowButton = document.createElement("button"),
+                           _allUnfollowButton = document.createElement("button");
 
-                     massUnfollowContainer.className = "stream__controls";
-                     massUnfollowContainer.id = "mass-unfollow";
-                     textContainer.className = "g-flex-row-centered";
-                     textHeader.className = "sc-text-light sc-type-medium margin-spacing";
-                     textHeader.innerText = "Options:";
-                     confirmUnfollowButton.className = "sc-button margin-spacing";
-                     confirmUnfollowButton.id = "confirm-unfollow-button";
-                     confirmUnfollowButton.innerText = "Mass unfollow";
-                     undoUnfollowButton.className = "sc-button margin-spacing";
-                     undoUnfollowButton.id = "undo-unfollow-button";
-                     undoUnfollowButton.innerText = "Reset selection";
-                     allUnfollowButton.className = "sc-button";
-                     allUnfollowButton.id = "all-unfollow-button";
-                     allUnfollowButton.innerText = "Select all";
+                     _massUnfollowContainer.className = "stream__controls";
+                     _massUnfollowContainer.id = "mass-unfollow";
 
-                     textContainer.appendChild(textHeader);
-                     textContainer.appendChild(confirmUnfollowButton);
-                     textContainer.appendChild(undoUnfollowButton);
-                     textContainer.appendChild(allUnfollowButton);
-                     massUnfollowContainer.appendChild(textContainer);
+                     _textContainer.className = "g-flex-row-centered";
 
-                     insertAfter(massUnfollowContainer, collectionHeader);
-                     collectionHeader.style.margin = "0px";
+                     _textHeader.className = "sc-text-light sc-type-medium margin-spacing";
+                     _textHeader.innerText = "Options:";
+
+                     _confirmUnfollowButton.className = "sc-button margin-spacing";
+                     _confirmUnfollowButton.id = "confirm-unfollow-button";
+                     _confirmUnfollowButton.innerText = "Mass unfollow";
+
+                     _undoUnfollowButton.className = "sc-button margin-spacing";
+                     _undoUnfollowButton.id = "undo-unfollow-button";
+                     _undoUnfollowButton.innerText = "Reset selection";
+
+                     _allUnfollowButton.className = "sc-button";
+                     _allUnfollowButton.id = "all-unfollow-button";
+                     _allUnfollowButton.innerText = "Select all";
+
+                     _textContainer.appendChild(_textHeader);
+                     _textContainer.appendChild(_confirmUnfollowButton);
+                     _textContainer.appendChild(_undoUnfollowButton);
+                     _textContainer.appendChild(_allUnfollowButton);
+                     _massUnfollowContainer.appendChild(_textContainer);
+
+                     insertAfter(_massUnfollowContainer, _collectionHeader);
+                     _collectionHeader.style.margin = "0px";
                   }
 
                   multiFollow();
@@ -1062,154 +1151,163 @@ const settingsSetup = ()=> {
 
 // Rendering SCE menu shell
 const renderSettings = ()=> {
-   if (debugMode) console.log("function renderSettings: Initializing");
+   if (_debugMode) console.log("function renderSettings: Initializing");
 
-   body.className = "g-overflow-hidden";
-   body.style.paddingRight = "0px";
-   app.className = "g-filter-grayscale";
+   _body.className = "g-overflow-hidden";
+   _body.style.paddingRight = "0px";
+   _app.className = "g-filter-grayscale";
 
-   const modal = document.createElement("div"),
-   modalClose = document.createElement("button"),
-   modalContainer = document.createElement("div"),
-   modalContent = document.createElement("div"),
-   modalTitle = document.createElement("h1"),
-   modalCredits = document.createElement("span"),
-   modalTabs = document.createElement("ul"),
-   modalTabListSettings = document.createElement("li"),
-   modalTabListFilter = document.createElement("li"),
-   modalTabListChangelog = document.createElement("li"),
-   modalTabListAbout = document.createElement("li"),
-   modalTabListSideItems = document.createElement("ul"),
-   modalTabListImport = document.createElement("li"),
-   modalImportWrapper = document.createElement("label"),
-   modalImportUpload = document.createElement("input"),
-   modalTabListExport = document.createElement("li"),
-   modalTabSettings = document.createElement("a"),
-   modalTabFilter = document.createElement("a"),
-   modalTabChangelog = document.createElement("a"),
-   modalTabAbout = document.createElement("a"),
-   modalTabImport = document.createElement("a"),
-   modalTabExport = document.createElement("a"),
-   modalPageContainer = document.createElement("div"),
-   modalPageSettings = document.createElement("div"),
-   modalPageFilter = document.createElement("div"),
-   modalPageChangelog = document.createElement("div"),
-   modalPageAbout = document.createElement("div"),
-   modalFooterLine = document.createElement("hr"),
-   modalDonation = document.createElement("span"),
-   modalDonationLink = document.createElement("a");
+   const _modal = document.createElement("div"),
+         _modalClose = document.createElement("button"),
+         _modalContainer = document.createElement("div"),
+         _modalContent = document.createElement("div"),
+         _modalTitle = document.createElement("h1"),
+         _modalCredits = document.createElement("span"),
+         _modalTabs = document.createElement("ul"),
+         _modalTabListSettings = document.createElement("li"),
+         _modalTabListFilter = document.createElement("li"),
+         _modalTabListChangelog = document.createElement("li"),
+         _modalTabListAbout = document.createElement("li"),
+         _modalTabListSideItems = document.createElement("ul"),
+         _modalTabListImport = document.createElement("li"),
+         _modalImportWrapper = document.createElement("label"),
+         _modalImportUpload = document.createElement("input"),
+         _modalTabListExport = document.createElement("li"),
+         _modalTabsettings = document.createElement("a"),
+         _modalTabFilter = document.createElement("a"),
+         _modalTabChangelog = document.createElement("a"),
+         _modalTabAbout = document.createElement("a"),
+         _modalTabImport = document.createElement("a"),
+         _modalTabExport = document.createElement("a"),
+         _modalPageContainer = document.createElement("div"),
+         _modalPageSettings = document.createElement("div"),
+         _modalPageFilter = document.createElement("div"),
+         _modalPageChangelog = document.createElement("div"),
+         _modalPageAbout = document.createElement("div"),
+         _modalFooterLine = document.createElement("hr"),
+         _modalDonation = document.createElement("span"),
+         _modalDonationLink = document.createElement("a");
 
-   modal.id = "sce-settings";
-   modal.className = "modal g-z-index-modal-background g-opacity-transition g-z-index-overlay modalWhiteout showBackground invisible";
-   modal.style.paddingRight = "0px";
-   modal.style.outline = "none";
-   modal.style.overflow = "hidden";
-   modal.tabindex = "-1";
-   modalClose.className = "modal__closeButton sce-close-settings";
-   modalClose.title = "Close";
-   modalClose.type = "button";
-   modalClose.innerText = "Close";
-   modalContainer.className = "modal__modal sc-border-box g-z-index-modal-content";
-   modalContent.className = "modal__content";
-   modalTitle.id = "sce-settings-title";
-   modalTitle.className = "g-modal-title-h1 sc-truncate";
-   modalTitle.innerText = "SoundCloud Enhancer " + manifestData.version;
-   modalCredits.className = "credits";
-   modalCredits.innerHTML = "Made with <span class='heart'>&hearts;</span> in Denmark by <a href='https://twitter.com/DapperBenji' target='_blank'>@DapperBenji</a>.";
-   modalTabs.id = "tab-container";
-   modalTabs.className = "g-tabs g-tabs-small";
-   modalTabListSettings.className = "g-tabs-item";
-   modalTabListFilter.className = "g-tabs-item";
-   modalTabListChangelog.className = "g-tabs-item";
-   modalTabListAbout.className = "g-tabs-item";
-   modalTabListSideItems.className = "g-side-items";
-   modalTabListImport.className = "g-tabs-item";
-   modalTabListImport.id = "sce-import";
-   modalImportUpload.className = "hidden";
-   modalImportUpload.type = "file";
-   modalImportUpload.accept = ".json";
-   modalTabListExport.className = "g-tabs-item";
-   modalTabListExport.id = "sce-export";
-   modalTabSettings.setAttribute("action", "settings");
-   modalTabSettings.className = "tab g-tabs-link active";
-   modalTabSettings.innerText = "Settings";
-   modalTabFilter.setAttribute("action", "filter");
-   modalTabFilter.className = "tab g-tabs-link";
-   modalTabFilter.innerText = "Filter (beta)";
-   modalTabChangelog.setAttribute("action", "changelog");
-   modalTabChangelog.className = "tab g-tabs-link";
-   modalTabChangelog.innerText = "Changelog";
-   modalTabAbout.setAttribute("action", "about");
-   modalTabAbout.className = "tab g-tabs-link";
-   modalTabAbout.innerText = "About";
-   modalTabImport.className = "g-tabs-link";
-   modalTabImport.innerText = "Import";
-   modalTabExport.className = "g-tabs-link";
-   modalTabExport.innerText = "Export";
-   modalPageContainer.id = "sce-settings-content";
-   modalPageSettings.className = "tabPage";
-   modalPageSettings.id = "settings";
-   modalPageSettings.style.display = "block";
-   modalPageFilter.className = "tabPage";
-   modalPageFilter.id = "filter";
-   modalPageChangelog.className = "tabPage";
-   modalPageChangelog.id = "changelog";
-   modalPageAbout.className = "tabPage";
-   modalPageAbout.id = "about";
-   modalDonation.className = "donation";
-   modalDonationLink.href = "https://www.paypal.me/BenjaminBachJensen";
-   modalDonationLink.innerText = "Support the development - Buy me a cup of coffee ;)";
-   modalDonationLink.target = "_blank";
+   _modal.id = "sce-settings";
+   _modal.className = "modal g-z-index-modal-background g-opacity-transition g-z-index-overlay modalWhiteout showBackground invisible";
+   _modal.style.paddingRight = "0px";
+   _modal.style.outline = "none";
+   _modal.style.overflow = "hidden";
+   _modal.tabindex = "-1";
 
-   modalPageContainer.appendChild(modalPageSettings);
-   modalPageContainer.appendChild(modalPageFilter);
-   modalPageContainer.appendChild(modalPageChangelog);
-   modalPageContainer.appendChild(modalPageAbout);
-   modalTabListSettings.appendChild(modalTabSettings);
-   modalTabListFilter.appendChild(modalTabFilter);
-   modalTabListChangelog.appendChild(modalTabChangelog);
-   modalTabListAbout.appendChild(modalTabAbout);
-   modalImportWrapper.appendChild(modalTabImport);
-   modalImportWrapper.appendChild(modalImportUpload);
-   modalTabListImport.appendChild(modalImportWrapper);
-   modalTabListExport.appendChild(modalTabExport);
-   modalTabListSideItems.appendChild(modalTabListImport);
-   modalTabListSideItems.appendChild(modalTabListExport);
-   modalTabs.appendChild(modalTabListSettings);
-   modalTabs.appendChild(modalTabListFilter);
-   modalTabs.appendChild(modalTabListChangelog);
-   modalTabs.appendChild(modalTabListAbout);
-   modalTabs.appendChild(modalTabListSideItems);
-   modalDonation.appendChild(modalDonationLink);
-   modalContent.appendChild(modalTitle);
-   modalContent.appendChild(modalCredits);
-   modalContent.appendChild(modalTabs);
-   modalContent.appendChild(modalPageContainer);
-   modalContent.appendChild(modalFooterLine);
-   modalContent.appendChild(modalDonation);
-   modalContainer.appendChild(modalContent);
-   modal.appendChild(modalClose);
-   modal.appendChild(modalContainer);
-   body.appendChild(modal);
+   _modalClose.className = "modal__closeButton sce-close-settings";
+   _modalClose.title = "Close";
+   _modalClose.type = "button";
+   _modalClose.innerText = "Close";
 
-   setTimeout(()=> {modal.classList.remove("invisible");}, 10);
-   setTimeout(()=> {modal.style.overflow = null;}, 400);
+   _modalContainer.className = "modal__modal sc-border-box g-z-index-modal-content";
+   _modalContent.className = "modal__content";
 
-   fetchFile(modalPageSettings, '/assets/html/settings.html', settingsInit);
-   fetchFile(modalPageFilter, '/assets/html/filter.html', filterInit);
-   fetchFile(modalPageChangelog, '/assets/html/changelog.html');
-   fetchFile(modalPageAbout, '/assets/html/about.html');
+   _modalTitle.id = "sce-settings-title";
+   _modalTitle.className = "g-modal-title-h1 sc-truncate";
+   _modalTitle.innerText = "SoundCloud Enhancer " + _manifestData.version;
+
+   _modalCredits.className = "credits";
+   _modalCredits.innerHTML = "Made with <span class='heart'>&hearts;</span> in Denmark by <a href='https://twitter.com/DapperBenji' target='_blank'>@DapperBenji</a>.";
+
+   _modalTabs.id = "tab-container";
+   _modalTabs.className = "g-tabs g-tabs-small";
+
+   _modalTabListSettings.className = "g-tabs-item";
+   _modalTabListFilter.className = "g-tabs-item";
+   _modalTabListChangelog.className = "g-tabs-item";
+   _modalTabListAbout.className = "g-tabs-item";
+   _modalTabListSideItems.className = "g-side-items";
+   _modalTabListImport.className = "g-tabs-item";
+   _modalTabListImport.id = "sce-import";
+   _modalImportUpload.className = "hidden";
+   _modalImportUpload.type = "file";
+   _modalImportUpload.accept = ".json";
+   _modalTabListExport.className = "g-tabs-item";
+   _modalTabListExport.id = "sce-export";
+   _modalTabsettings.setAttribute("action", "settings");
+   _modalTabsettings.className = "tab g-tabs-link active";
+   _modalTabsettings.innerText = "Settings";
+   _modalTabFilter.setAttribute("action", "filter");
+   _modalTabFilter.className = "tab g-tabs-link";
+   _modalTabFilter.innerText = "Filter (beta)";
+   _modalTabChangelog.setAttribute("action", "changelog");
+   _modalTabChangelog.className = "tab g-tabs-link";
+   _modalTabChangelog.innerText = "Changelog";
+   _modalTabAbout.setAttribute("action", "about");
+   _modalTabAbout.className = "tab g-tabs-link";
+   _modalTabAbout.innerText = "About";
+   _modalTabImport.className = "g-tabs-link";
+   _modalTabImport.innerText = "Import";
+   _modalTabExport.className = "g-tabs-link";
+   _modalTabExport.innerText = "Export";
+   _modalPageContainer.id = "sce-settings-content";
+   _modalPageSettings.className = "tabPage";
+   _modalPageSettings.id = "settings";
+   _modalPageSettings.style.display = "block";
+   _modalPageFilter.className = "tabPage";
+   _modalPageFilter.id = "filter";
+   _modalPageChangelog.className = "tabPage";
+   _modalPageChangelog.id = "changelog";
+   _modalPageAbout.className = "tabPage";
+   _modalPageAbout.id = "about";
+   _modalDonation.className = "donation";
+   _modalDonationLink.href = "https://www.paypal.me/BenjaminBachJensen";
+   _modalDonationLink.innerText = "Support the development - Buy me a cup of coffee ;)";
+   _modalDonationLink.target = "_blank";
+
+   _modalPageContainer.appendChild(_modalPageSettings);
+   _modalPageContainer.appendChild(_modalPageFilter);
+   _modalPageContainer.appendChild(_modalPageChangelog);
+   _modalPageContainer.appendChild(_modalPageAbout);
+   _modalTabListSettings.appendChild(_modalTabsettings);
+   _modalTabListFilter.appendChild(_modalTabFilter);
+   _modalTabListChangelog.appendChild(_modalTabChangelog);
+   _modalTabListAbout.appendChild(_modalTabAbout);
+   _modalImportWrapper.appendChild(_modalTabImport);
+   _modalImportWrapper.appendChild(_modalImportUpload);
+   _modalTabListImport.appendChild(_modalImportWrapper);
+   _modalTabListExport.appendChild(_modalTabExport);
+   _modalTabListSideItems.appendChild(_modalTabListImport);
+   _modalTabListSideItems.appendChild(_modalTabListExport);
+   _modalTabs.appendChild(_modalTabListSettings);
+   _modalTabs.appendChild(_modalTabListFilter);
+   _modalTabs.appendChild(_modalTabListChangelog);
+   _modalTabs.appendChild(_modalTabListAbout);
+   _modalTabs.appendChild(_modalTabListSideItems);
+   _modalDonation.appendChild(_modalDonationLink);
+   _modalContent.appendChild(_modalTitle);
+   _modalContent.appendChild(_modalCredits);
+   _modalContent.appendChild(_modalTabs);
+   _modalContent.appendChild(_modalPageContainer);
+   _modalContent.appendChild(_modalFooterLine);
+   _modalContent.appendChild(_modalDonation);
+   _modalContainer.appendChild(_modalContent);
+   _modal.appendChild(_modalClose);
+   _modal.appendChild(_modalContainer);
+   _body.appendChild(_modal);
+
+   setTimeout(()=> {_modal.classList.remove("invisible");}, 10);
+   setTimeout(()=> {_modal.style.overflow = null;}, 400);
+
+   fetchFile(_modalPageSettings, '/assets/html/settings.html', settingsInit);
+   fetchFile(_modalPageFilter, '/assets/html/filter.html', filterInit);
+   fetchFile(_modalPageChangelog, '/assets/html/changelog.html');
+   fetchFile(_modalPageAbout, '/assets/html/about.html');
 
    // Activates tab logic
-   const tabs = document.querySelectorAll('.tab'), tabCount = tabs.length;
-   for (let i = 0; i < tabCount; i++) {
-      tabs[i].addEventListener('click', ()=> {
-         for (let k = 0; k < tabCount; k++) tabs[k].className = "tab g-tabs-link";
-         tabs[i].className = "tab g-tabs-link active";
-         const pages = document.querySelectorAll('.tabPage'), pageCount = pages.length;
-         for (let j = 0; j < pageCount; j++) pages[j].style.display = "none";
-         const page = tabs[i].getAttribute('action');
-         document.getElementById(page).style.display = "block";
+   const _tabs = document.querySelectorAll('.tab'),
+         _tabCount = _tabs.length;
+
+   for (let i = 0; i < _tabCount; i++) {
+      _tabs[i].addEventListener('click', ()=> {
+         for (let k = 0; k < _tabCount; k++) _tabs[k].className = "tab g-tabs-link";
+         _tabs[i].className = "tab g-tabs-link active";
+         const _pages = document.querySelectorAll('.tabPage'),
+               _pageCount = _pages.length;
+         for (let j = 0; j < _pageCount; j++) _pages[j].style.display = "none";
+         const _page = _tabs[i].getAttribute('action');
+         document.getElementById(_page).style.display = "block";
       });
    }
 
@@ -1218,7 +1316,7 @@ const renderSettings = ()=> {
 
 // Storing saved SCE settings
 const saveSettings = data => {
-   const moreActionMenuObject = {};
+   const _moreActionMenuObject = {};
    if (data.darkMode != "on") data.darkMode = "off";
    if (data.fullwidthMode != "on") data.fullwidthMode = "off";
    if (data.removeSettingsBtn != "on") data.removeSettingsBtn = "off";
@@ -1236,31 +1334,31 @@ const saveSettings = data => {
    if (data.disableDiscoverToggle != "on") data.disableDiscoverToggle = "off";
 
    // More action menu
-   if (data.relatedActionMenu != "on") moreActionMenuObject.relatedActionMenu = "off";
-   else moreActionMenuObject.relatedActionMenu = "on";
-   if (data.tagActionMenu != "on") moreActionMenuObject.tagActionMenu = "off";
-   else moreActionMenuObject.tagActionMenu = "on";
-   if (data.artistActionMenu != "on") moreActionMenuObject.artistActionMenu = "off";
-   else moreActionMenuObject.artistActionMenu = "on";
-   if (data.trackActionMenu != "on") moreActionMenuObject.trackActionMenu = "off";
-   else moreActionMenuObject.trackActionMenu = "on";
+   if (data.relatedActionMenu != "on") _moreActionMenuObject.relatedActionMenu = "off";
+   else _moreActionMenuObject.relatedActionMenu = "on";
+   if (data.tagActionMenu != "on") _moreActionMenuObject.tagActionMenu = "off";
+   else _moreActionMenuObject.tagActionMenu = "on";
+   if (data.artistActionMenu != "on") _moreActionMenuObject.artistActionMenu = "off";
+   else _moreActionMenuObject.artistActionMenu = "on";
+   if (data.trackActionMenu != "on") _moreActionMenuObject.trackActionMenu = "off";
+   else _moreActionMenuObject.trackActionMenu = "on";
 
-   setGlobalSettings.darkMode = data.darkMode;
-   setGlobalSettings.fullwidthMode = data.fullwidthMode;
-   setGlobalSettings.removeSettingsBtn = data.removeSettingsBtn;
-   setGlobalSettings.hideSidebar = data.hideSidebar;
-   setGlobalSettings.hideBranding = data.hideBranding;
-   setGlobalSettings.displayType = data.displayType;
-   setGlobalSettings.removePreviews = data.removePreviews;
-   setGlobalSettings.removePlaylists = data.removePlaylists;
-   setGlobalSettings.removeLongTracks = data.removeLongTracks;
-   setGlobalSettings.removeUserActivity = data.removeUserActivity;
-   setGlobalSettings.removeReposts = data.removeReposts;
-   setGlobalSettings.hiddenOutline = data.hiddenOutline;
-   setGlobalSettings.profileImages = data.profileImages;
-   setGlobalSettings.disableUnfollower = data.disableUnfollower;
-   setGlobalSettings.disableDiscoverToggle = data.disableDiscoverToggle;
-   setGlobalSettings.moreActionMenu = moreActionMenuObject;
+   _setGlobalSettings.darkMode = data.darkMode;
+   _setGlobalSettings.fullwidthMode = data.fullwidthMode;
+   _setGlobalSettings.removeSettingsBtn = data.removeSettingsBtn;
+   _setGlobalSettings.hideSidebar = data.hideSidebar;
+   _setGlobalSettings.hideBranding = data.hideBranding;
+   _setGlobalSettings.displayType = data.displayType;
+   _setGlobalSettings.removePreviews = data.removePreviews;
+   _setGlobalSettings.removePlaylists = data.removePlaylists;
+   _setGlobalSettings.removeLongTracks = data.removeLongTracks;
+   _setGlobalSettings.removeUserActivity = data.removeUserActivity;
+   _setGlobalSettings.removeReposts = data.removeReposts;
+   _setGlobalSettings.hiddenOutline = data.hiddenOutline;
+   _setGlobalSettings.profileImages = data.profileImages;
+   _setGlobalSettings.disableUnfollower = data.disableUnfollower;
+   _setGlobalSettings.disableDiscoverToggle = data.disableDiscoverToggle;
+   _setGlobalSettings.moreActionMenu = _moreActionMenuObject;
 
    setLocalStorage(()=> {
       if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
@@ -1270,24 +1368,26 @@ const saveSettings = data => {
 
 // Assigning SCE menus to SCE buttons
 const settingsMenu = ()=> {
-   if (debugMode) console.log("function settingsMenu: Initializing");
-   const settingsButtons = document.querySelectorAll('.sc-enhancer'), settingsButtonCount = settingsButtons.length;
-   for (let i = 0; i < settingsButtonCount; i++) {
-      settingsButtons[i].removeEventListener("click", renderSettings);
-      settingsButtons[i].addEventListener("click", renderSettings);
+   if (_debugMode) console.log("function settingsMenu: Initializing");
+   const _settingsButtons = document.querySelectorAll('.sc-enhancer'),
+         _settingsButtonCount = _settingsButtons.length;
+
+   for (let i = 0; i < _settingsButtonCount; i++) {
+      _settingsButtons[i].removeEventListener("click", renderSettings);
+      _settingsButtons[i].addEventListener("click", renderSettings);
    }
 };
 
 // Run music-stream manipulating functions
 const injectedJavascript = ()=> {
-   if (debugMode) console.log("function injectedJavascript: Initializing");
-   const content = document.querySelector('#content'),
-   soundBadge = document.querySelector('.playbackSoundBadge'),
-   streamHeader = document.querySelector('.stream__header'),
-   getUsername = document.querySelector('.header__userNavUsernameButton'),
-   getUsernameHref = getUsername.getAttribute("href"),
-   nextControl = document.querySelector('.skipControl__next'),
-   previousControl = document.querySelector('.skipControl__previous');
+   if (_debugMode) console.log("function injectedJavascript: Initializing");
+   const _soundBadge = document.querySelector('.playbackSoundBadge'),
+         //_content = document.querySelector('#content'),
+         //_streamHeader = document.querySelector('.stream__header'),
+         _getUsername = document.querySelector('.header__userNavUsernameButton'),
+         _getUsernameHref = _getUsername.getAttribute("href"),
+         _nextControl = document.querySelector('.skipControl__next'),
+         _previousControl = document.querySelector('.skipControl__previous');
 
    // =============================================================
    // Music-stream manipulation functions
@@ -1296,14 +1396,16 @@ const injectedJavascript = ()=> {
    // Filter user inputed tags, artists and tracks
    const runFilters = ()=> {
       getLocalStorage(get => {
-         const filters = ["tag", "artist", "track"], filtersLength = filters.length;
-         for (let filter = 0; filter < filtersLength; filter++) {
+         const _filters = ["tag", "artist", "track"],
+               _filtersLength = _filters.length;
+
+         for (let filter = 0; filter < _filtersLength; filter++) {
             let element = null, data = null,
             filterFunction = (callback, element, data) => {
                if (stripLinkDomain(element.href) == data.slug) callback();
             };
 
-            switch (filters[filter]) {
+            switch (_filters[filter]) {
                case "tag":
                   element = document.querySelectorAll('.soundTitle__tagContent');
                   if (get.tagsArray) data = get.tagsArray;
@@ -1322,15 +1424,18 @@ const injectedJavascript = ()=> {
             }
 
             if (element && data) {
-               const elementLength = element.length, dataLength = data.length;
-               for (let el = 0; el < elementLength; el++) {
-                  for (let i = 0; i < dataLength; i++) {
-                     const parentClassName = moreActionParentClassName(element[el]), parentElement = element[el].closest(parentClassName);
+               const _elementLength = element.length,
+                     _dataLength = data.length;
+               for (let el = 0; el < _elementLength; el++) {
+                  for (let i = 0; i < _dataLength; i++) {
+                     const _parentClassName = moreActionParentClassName(element[el]),
+                           _parentElement = element[el].closest(_parentClassName);
+
                      filterFunction((value = null) => {
-                        parentElement.setAttribute("data-skip", "true");
-                        if (value) parentElement.setAttribute("banned-"+ filters[filter] +"", value);
-                        else parentElement.setAttribute("banned-"+ filters[filter] +"", "");
-                        parentElement.className += " hidden";
+                        _parentElement.setAttribute("data-skip", "true");
+                        if (value) _parentElement.setAttribute("banned-"+ _filters[filter] +"", value);
+                        else _parentElement.setAttribute("banned-"+ _filters[filter] +"", "");
+                        _parentElement.className += " hidden";
                      }, element[el], data[i]);
                   }
                }
@@ -1340,117 +1445,138 @@ const injectedJavascript = ()=> {
    };
 
    const markPlaylists = ()=> {
-      if (debugMode) console.log("function markPlaylists: Running");
-      const getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'), getPlaylistCount = getPlaylists.length;
-      for (let i = 0; i < getPlaylistCount; i++) {
-         let getPlaylist = getPlaylists[i].className;
-         if (getPlaylist.includes("playlist") == true) {
-            let getTrackCountNum, getTrackCount = getPlaylists[i].querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
+      if (_debugMode) console.log("function markPlaylists: Running");
+      const _getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'),
+            _getPlaylistCount = _getPlaylists.length;
+
+      for (let i = 0; i < _getPlaylistCount; i++) {
+         const _getPlaylist = _getPlaylists[i].className;
+         if (_getPlaylist.includes("playlist") == true) {
+            let getTrackCountNum, getTrackCount = _getPlaylists[i].querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
             if (getTrackCount.length < 5) getTrackCountNum = getTrackCount.length;
             else {
-               let checkMoreLink = getPlaylists[i].querySelector('.compactTrackList__moreLink');
-               if (checkMoreLink) getTrackCountNum = checkMoreLink.innerText.replace(/\D/g,'');
+               const _checkMoreLink = _getPlaylists[i].querySelector('.compactTrackList__moreLink');
+               if (_checkMoreLink) getTrackCountNum = _checkMoreLink.innerText.replace(/\D/g,'');
                else getTrackCountNum = getTrackCount.length;
             }
-            let playlistClosest = getPlaylists[i].closest('.soundList__item');
-            playlistClosest.setAttribute("data-playlist", "true");
-            playlistClosest.setAttribute("data-count", getTrackCountNum);
+            const _playlistClosest = _getPlaylists[i].closest('.soundList__item');
+            _playlistClosest.setAttribute("data-playlist", "true");
+            _playlistClosest.setAttribute("data-count", getTrackCountNum);
          }
       }
    };
 
    const hidePreviews = ()=> {
-      if (debugMode) console.log("function hidePreviews: Running");
-      let previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'), previewCount = previews.length;
-      for (let i = 0; i < previewCount; i++) {
-         if (previews[i].innerHTML) {
-            let previewsClosest = previews[i].closest('.soundList__item');
-            previewsClosest.setAttribute("data-skip", "true");
-            previewsClosest.setAttribute("data-type", "preview");
-            previewsClosest.className = "soundList__item hidden";
+      if (_debugMode) console.log("function hidePreviews: Running");
+      const _previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'),
+            _previewCount = _previews.length;
+
+      for (let i = 0; i < _previewCount; i++) {
+         if (_previews[i].innerHTML) {
+            const _previewsClosest = _previews[i].closest('.soundList__item');
+            _previewsClosest.setAttribute("data-skip", "true");
+            _previewsClosest.setAttribute("data-type", "preview");
+            _previewsClosest.className = "soundList__item hidden";
          }
       }
    };
 
    const hidePlaylists = ()=> {
-      if (debugMode) console.log("function hidePlaylists: Running");
-      let playlists = document.querySelectorAll('.soundList__item'), playlistCount = playlists.length;
-      for (let i = 0; i < playlistCount; i++) {
-         let getPlaylistAttribute = playlists[i].getAttribute("data-playlist");
-         if (getPlaylistAttribute == "true") {
-            playlists[i].setAttribute("data-skip", "true");
-            playlists[i].className = "soundList__item hidden";
+      if (_debugMode) console.log("function hidePlaylists: Running");
+      const _playlists = document.querySelectorAll('.soundList__item'),
+            _playlistCount = _playlists.length;
+
+      for (let i = 0; i < _playlistCount; i++) {
+         const _getPlaylistAttribute = _playlists[i].getAttribute("data-playlist");
+         if (_getPlaylistAttribute == "true") {
+            _playlists[i].setAttribute("data-skip", "true");
+            _playlists[i].className = "soundList__item hidden";
          }
       }
    };
 
    const hideReposts = ()=> {
-      if (debugMode) console.log("function hideReposts: Running");
-      let reposts = document.querySelectorAll('.soundContext__repost'), repostCount = reposts.length;
-      for (let i = 0; i < repostCount; i++) {
-         let repostClosest = reposts[i].closest('.soundList__item');
-         repostClosest.setAttribute("data-skip", "true");
-         repostClosest.setAttribute("data-type", "repost");
-         repostClosest.className = "soundList__item hidden";
+      if (_debugMode) console.log("function hideReposts: Running");
+      const _reposts = document.querySelectorAll('.soundContext__repost'),
+            _repostCount = _reposts.length;
+
+      for (let i = 0; i < _repostCount; i++) {
+         const _repostClosest = _reposts[i].closest('.soundList__item');
+         _repostClosest.setAttribute("data-skip", "true");
+         _repostClosest.setAttribute("data-type", "repost");
+         _repostClosest.className = "soundList__item hidden";
       }
    };
 
    const checkCanvas = ()=> {
-      if (debugMode) console.log("function checkCanvas: Running");
-      let canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene');
-      for (let i = 0; i < canvas.length; i++) {
-         let canvasCount = canvas[i].querySelectorAll('canvas.g-box-full.sceneLayer');
-         for (let j = 0; j < canvasCount.length; j++) {
-            let lastElement = canvasCount[canvasCount.length-1],
-               getCanvas = lastElement.getContext("2d"),
-               lengthCalc = lastElement.width - 27,
-               pixelData = getCanvas.getImageData(lengthCalc,27,1,1).data;
-            if (pixelData[0] == 0 && pixelData[1] == 0 && pixelData[2] == 0 && pixelData[3] == 255) {
-               let canvasClosest = canvas[i].closest('.soundList__item');
-               canvasClosest.setAttribute("data-skip", "true");
-               canvasClosest.setAttribute("data-type", "long");
-               canvasClosest.className = "soundList__item hidden";
+      if (_debugMode) console.log("function checkCanvas: Running");
+      const _canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene'),
+            _canvasLength = _canvas.length;
+
+      for (let i = 0; i < _canvasLength; i++) {
+         const _canvasCount = _canvas[i].querySelectorAll('canvas.g-box-full.sceneLayer'),
+               _canvasCountLength = _canvasCount.length;
+
+         for (let j = 0; j < _canvasCountLength; j++) {
+            const _lastElement = _canvasCount[_canvasCount.length-1],
+                  _getCanvas = _lastElement.getContext("2d"),
+                  _lengthCalc = _lastElement.width - 27,
+                  _pixelData = _getCanvas.getImageData(_lengthCalc, 27, 1, 1).data;
+
+            if (_pixelData[0] === 0 && _pixelData[1] === 0 && _pixelData[2] === 0 && _pixelData[3] === 255) {
+               const _canvasClosest = _canvas[i].closest('.soundList__item');
+               _canvasClosest.setAttribute("data-skip", "true");
+               _canvasClosest.setAttribute("data-type", "long");
+               _canvasClosest.className = "soundList__item hidden";
             }
          }
       }
    };
 
    const checkUserActivity = ()=> {
-      if (debugMode) console.log("function checkUserActivity: Running");
-      let yourTracks = document.querySelectorAll('.soundContext__usernameLink'), yourTrackCount = yourTracks.length;
-      for (let i = 0; i < yourTrackCount; i++) {
-         let yourTrackHref = yourTracks[i].getAttribute("href");
-         if (getUsernameHref == yourTrackHref) {
-            let trackClosest = yourTracks[i].closest('.soundList__item');
-            trackClosest.setAttribute("data-skip", "true");
-            trackClosest.setAttribute("data-type", "yours");
-            trackClosest.className = "soundList__item hidden";
+      if (_debugMode) console.log("function checkUserActivity: Running");
+      const _yourTracks = document.querySelectorAll('.soundContext__usernameLink'),
+            _yourTrackLength = _yourTracks.length;
+
+      for (let i = 0; i < _yourTrackLength; i++) {
+         const _yourTrackHref = _yourTracks[i].getAttribute("href");
+         if (_getUsernameHref == _yourTrackHref) {
+            const _trackClosest = _yourTracks[i].closest('.soundList__item');
+            _trackClosest.setAttribute("data-skip", "true");
+            _trackClosest.setAttribute("data-type", "yours");
+            _trackClosest.className = "soundList__item hidden";
          }
       }
    };
 
    const renderMoreActionCallback = e => {
-      const checkMoreActionMenu = document.querySelector('.moreActions #sce-moreActions-group');
-      if (!checkMoreActionMenu) {
-         const parentClassName = moreActionParentClassName(e.target), trackContainer = e.target.closest(parentClassName);
-         moreActionMenuContent(trackContainer);
+      const _checkMoreActionMenu = document.querySelector('.moreActions #sce-moreActions-group');
+      if (!_checkMoreActionMenu) {
+         const _parentClassName = moreActionParentClassName(e.target),
+               _trackContainer = e.target.closest(_parentClassName);
+
+         moreActionMenuContent(_trackContainer);
       }
    };
 
    const renderMoreAction = ()=> {
-      const moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small'), moreActionButtonCount = moreActionButtons.length;
-      for (let i = 0; i < moreActionButtonCount; i++) {
-         moreActionButtons[i].removeEventListener('click', renderMoreActionCallback);
-         moreActionButtons[i].addEventListener('click', renderMoreActionCallback);
+      const _moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small'),
+            _moreActionButtonCount = _moreActionButtons.length;
+
+      for (let i = 0; i < _moreActionButtonCount; i++) {
+         _moreActionButtons[i].removeEventListener('click', renderMoreActionCallback);
+         _moreActionButtons[i].addEventListener('click', renderMoreActionCallback);
       }
    };
 
    // Main initializing function
    const initStreamManipulator = setInterval(()=> {
-      const mainStream = document.querySelector('.l-fluid-fixed > .l-main .lazyLoadingList ul, .l-fixed-fluid > .l-main .lazyLoadingList > ul, .l-hero-fluid-fixed .l-main .lazyLoadingList, .l-collection .l-main .lazyLoadingList');
-      if (mainStream) {
-         const stream = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul'), steamCount = stream.length;
-         if (debugMode) console.log(stream);
+      const _mainStream = document.querySelector('.l-fluid-fixed > .l-main .lazyLoadingList ul, .l-fixed-fluid > .l-main .lazyLoadingList > ul, .l-hero-fluid-fixed .l-main .lazyLoadingList, .l-collection .l-main .lazyLoadingList');
+      if (_mainStream) {
+         const _stream = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul'),
+               _steamLength = _stream.length;
+
+         if (_debugMode) console.log(_stream);
 
          clearInterval(initStreamManipulator);
          getLocalStorage(get => {
@@ -1463,41 +1589,42 @@ const injectedJavascript = ()=> {
             if (get.removeLongTracks == "on") checkCanvas();
             if (get.removeUserActivity == "on") checkUserActivity();
 
-            for (let i = 0; i < steamCount; i++) {
-               runObserver(stream[i], renderMoreAction);
-               runObserver(stream[i], markPlaylists);
-               runObserver(stream[i], runFilters);
-               if (get.removePreviews == "on") runObserver(stream[i], hidePreviews);
-               if (get.removePlaylists == "on") runObserver(stream[i], hidePlaylists);
-               if (get.removeReposts == "on") runObserver(stream[i], hideReposts);
-               if (get.removeLongTracks == "on") runObserver(stream[i], checkCanvas);
-               if (get.removeUserActivity == "on") runObserver(stream[i], checkUserActivity);
+            for (let i = 0; i < _steamLength; i++) {
+               runObserver(_stream[i], renderMoreAction);
+               runObserver(_stream[i], markPlaylists);
+               runObserver(_stream[i], runFilters);
+               if (get.removePreviews == "on") runObserver(_stream[i], hidePreviews);
+               if (get.removePlaylists == "on") runObserver(_stream[i], hidePlaylists);
+               if (get.removeReposts == "on") runObserver(_stream[i], hideReposts);
+               if (get.removeLongTracks == "on") runObserver(_stream[i], checkCanvas);
+               if (get.removeUserActivity == "on") runObserver(_stream[i], checkUserActivity);
             }
          });
 
          // Next song manager
-         runObserver(soundBadge, ()=> {
+         runObserver(_soundBadge, ()=> {
             getLocalStorage(get => {
-               const getStreamItems = document.querySelectorAll('.soundList__item'), getStreamItemCount = getStreamItems.length;
-               for (let i = 0; i < getStreamItemCount; i++) {
-                  let getSkipStatus = getStreamItems[i].getAttribute("data-skip"),
-                  getPlaylistType = getStreamItems[i].getAttribute("data-playlist"),
-                  getTitle = getStreamItems[i].querySelector('.soundTitle__title span'),
-                  getPlaying = getStreamItems[i].querySelector('.activity div.sound.streamContext').className;
+               const _getStreamItems = document.querySelectorAll('.soundList__item'),
+                     _getStreamItemLength = _getStreamItems.length;
+               for (let i = 0; i < _getStreamItemLength; i++) {
+                  const _getSkipStatus = _getStreamItems[i].getAttribute("data-skip"),
+                        _getPlaylistType = _getStreamItems[i].getAttribute("data-playlist"),
+                        _getTitle = _getStreamItems[i].querySelector('.soundTitle__title span'),
+                        _getPlaying = _getStreamItems[i].querySelector('.activity div.sound.streamContext').className;
 
-                  if (getPlaying.includes("playing") == true) {
-                     if (debugMode) console.log("Skip song?: " + getSkipStatus);
-                     if (getSkipStatus == "true") {
-                        previousControl.addEventListener("click", ()=> {
+                  if (_getPlaying.includes("playing") == true) {
+                     if (_debugMode) console.log("Skip song?: " + _getSkipStatus);
+                     if (_getSkipStatus == "true") {
+                        _previousControl.addEventListener("click", ()=> {
                            skipPrevious = true;
                         });
-                        if (getPlaylistType == true) {
-                           let skipCount = getStreamItems[i].getAttribute("data-count");
-                           if (skipPrevious == true) for (let t = 0; t < skipCount; t++) previousControl.click();
-                           else for (let t = 0; t < skipCount; t++) nextControl.click();
+                        if (_getPlaylistType == true) {
+                           const _skipCount = _getStreamItems[i].getAttribute("data-count");
+                           if (skipPrevious == true) for (let t = 0; t < _skipCount; t++) _previousControl.click();
+                           else for (let t = 0; t < _skipCount; t++) _nextControl.click();
                         } else {
-                           if (skipPrevious == true) previousControl.click();
-                           else nextControl.click();
+                           if (skipPrevious == true) _previousControl.click();
+                           else _nextControl.click();
                         }
                      } else skipPrevious = false;
                   }

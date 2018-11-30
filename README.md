@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v3.2 #
+# SoundCloud Enhancer v3.3 #
 
 ## Description: ##
 ----------------------------------------
@@ -136,4 +136,9 @@ Code slowly being rewritten. Leading up to the huge 3.0 update!
 - Fixed darkmode padding issue.
 - Optimized files with minified versions.
 - Optimized initializing load time for changes. This should fix some of the track wave scaling issues.
-- Made a [https://dapperbenji.com/scenhancer][dedicated website] for SCE.
+- Made a [https://dapperbenji.com/scenhancer](dedicated website) for SCE.
+
+### Version 3.3 ###
+- Minor changes to the grid view mode
+- Updated darkmode chromecast icon
+- Hotfix to patch filter bugs
