@@ -8,7 +8,6 @@
 // =============================================================
 // Global variables
 // =============================================================
-
 const _debugMode = 0,
       _manifestData = chrome.runtime.getManifest(),
       _globalConfig = {childList: true},
@@ -16,8 +15,9 @@ const _debugMode = 0,
       _body = document.querySelector('body'),
       _app = document.querySelector('#app'),
       _defaultFilter = {"artists": [], "tracks": []},
+      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"},
       _setGlobalSettings = {},
-      _getGlobalSettings = ["darkMode", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
+      _getGlobalSettings = ["darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
 let skipPrevious = false, oldLocation = location.href;
 
 if (_debugMode) console.log("-=- SCE debugMode ACTIVE -=-");
@@ -67,15 +67,13 @@ const relativeTime = timestamp => {
 };
 
 // Run an instance of a mutation observer
-const runObserver = (target, callback, sensitive, callbackParam = null)=> {
+const runObserver = (target, callback, sensitive)=> {
    const _sensitiveObserver = sensitive || false,
          _useConfig = (_sensitiveObserver) ? _altConfig : _globalConfig;
 
-   let observer = new MutationObserver(mutations => {
-      if (_sensitiveObserver) {
-         if (callbackParam) callback(callbackParam);
-         else callback();
-      } else {
+   window.observer = new MutationObserver(mutations => {
+      if (_sensitiveObserver) callback();
+      else {
          const _mutationLength = mutations.length;
          let hasUpdated = false, mutation = null;
          for (let i = 0; i < _mutationLength; i++) {
@@ -86,10 +84,7 @@ const runObserver = (target, callback, sensitive, callbackParam = null)=> {
             }
          }
 
-         if (hasUpdated) {
-            if (callbackParam) callback(callbackParam);
-            else callback();
-         }
+         if (hasUpdated) callback();
       }
    });
    observer.observe(target, _useConfig);
@@ -144,8 +139,9 @@ const disassembleSettings = ()=> {
 const multiFollow = ()=> {
    const _followingUsers = document.querySelectorAll('.userBadgeListItem'),
          _followingUserCount = _followingUsers.length;
+
    for (let i = 0; i < _followingUserCount; i++) {
-      if (followingUsers[i].querySelector(".userBadgeListItem__checkbox") === null) {
+      if (_followingUsers[i].querySelector(".userBadgeListItem__checkbox") === null) {
          const _checkboxDiv = document.createElement("label"),
                _checkboxElement = document.createElement("input"),
                _checkboxWrap = document.createElement("div");
@@ -157,7 +153,7 @@ const multiFollow = ()=> {
 
          _checkboxDiv.appendChild(_checkboxElement);
          _checkboxDiv.appendChild(_checkboxWrap);
-         followingUsers[i].appendChild(_checkboxDiv);
+         _followingUsers[i].appendChild(_checkboxDiv);
       }
    }
 };
@@ -227,7 +223,11 @@ const moreActionMenuContent = trackContainer => {
       _createMoreActionsGroup.id = "sce-moreActions-group";
 
       const relatedLink = ()=> {
-         window.location.href = _hasTrack.href + "/recommended";
+         const _url =  _hasTrack.href + "/recommended";
+         //var stateObj = { foo: "bar" };
+         //window.history.replaceState(stateObj, "test", _url);
+         window.location.href = _url;
+         //Backbone.history.navigate(_url, {trigger:true});
       };
 
       const renderMoreActionButton = (key, element = null)=> {
@@ -237,10 +237,11 @@ const moreActionMenuContent = trackContainer => {
             _createButton.type = "button";
             _createButton.id = "sce-"+ key +"-button";
             _createButton.className = "moreActions__button sc-button-medium sce-button-icon sce-button-"+ key +"";
-            if (key == "related") {
+
+            if (key === "related") {
                _createButton.title = "Go to related tracks";
                _createButton.innerText = "Related tracks";
-            } else if (key == "track") {
+            } else if (key === "track") {
                if (isPlaylistURL(element.href)) {
                   _createButton.title = "Click to blacklist this playlist";
                   _createButton.innerText = "Blacklist playlist";
@@ -252,13 +253,13 @@ const moreActionMenuContent = trackContainer => {
                _createButton.title = "Click to blacklist this track's "+ key +"";
                _createButton.innerText = "Blacklist "+ key +"";
             }
-            if (key != "related") {
+            if (key !== "related") {
                let value;
-               if (key == "artist" || key == "track") value = element.href;
+               if (key === "artist" || key === "track") value = element.href;
                else value = element.innerText;
                _createButton.setAttribute('data-item', value);
             }
-            if (key == "artist") {
+            if (key === "artist") {
                if (stripLinkDomain(_hasArtist.href) != _userName) _createMoreActionsGroup.appendChild(_createButton);
             } else _createMoreActionsGroup.appendChild(_createButton);
          }
@@ -266,10 +267,10 @@ const moreActionMenuContent = trackContainer => {
 
       let disableRelatedMenu = false, disableTagMenu = false, disableArtistMenu = false, disableTrackMenu = false;
       if (get.moreActionMenu) {
-         if (get.moreActionMenu.relatedActionMenu == "on") disableRelatedMenu = true;
-         if (get.moreActionMenu.tagActionMenu == "on") disableTagMenu = true;
-         if (get.moreActionMenu.artistActionMenu == "on") disableArtistMenu = true;
-         if (get.moreActionMenu.trackActionMenu == "on") disableTrackMenu = true;
+         if (get.moreActionMenu.relatedActionMenu === "on") disableRelatedMenu = true;
+         if (get.moreActionMenu.tagActionMenu === "on") disableTagMenu = true;
+         if (get.moreActionMenu.artistActionMenu === "on") disableArtistMenu = true;
+         if (get.moreActionMenu.trackActionMenu === "on") disableTrackMenu = true;
       }
 
       if (!disableRelatedMenu && !_hasPlaylists) renderMoreActionButton("related");
@@ -305,10 +306,10 @@ const addItemToFilter = (button, key)=> {
                _timestamp = Math.floor(Date.now() / 1000),
                _filterItem = {"slug": _blacklistData, "time": _timestamp};
 
-         if (key == "artists") {
+         if (key === "artists") {
             _filterStructure.artists.push(_filterItem);
             loopElement = document.querySelectorAll('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username');
-         } else if (key == "tracks") {
+         } else if (key === "tracks") {
             _filterStructure.tracks.push(_filterItem);
             loopElement = document.querySelectorAll('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle');
          }
@@ -319,7 +320,7 @@ const addItemToFilter = (button, key)=> {
                document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
                const _loopElementCount = loopElement.length;
                for (let i = 0; i < _loopElementCount; i++) {
-                  if (loopElement[i].href == _blacklistItem) {
+                  if (loopElement[i].href === _blacklistItem) {
                      const _parentClassName = moreActionParentClassName(loopElement[i]);
                      loopElement[i].closest(_parentClassName).remove();
                   }
@@ -348,7 +349,7 @@ const addTagToFilter = button => {
             else {
                document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
                for (let i = 0; i < _tracksWithTagsLength; i++) {
-                  if (_tracksWithTags[i].innerText.toUpperCase() == _bannedTag.toUpperCase()){
+                  if (_tracksWithTags[i].innerText.toUpperCase() === _bannedTag.toUpperCase()){
                      const _parentClassName = moreActionParentClassName(_tracksWithTags[i]);
                      _tracksWithTags[i].closest(_parentClassName).remove();
                   }
@@ -384,6 +385,7 @@ const exportimportInit = get => {
                _exportTemp = document.createElement("a"),
                _exportName = "SCEnhancer.json",
                _exportLink = window.URL.createObjectURL(_exportBlob);
+
          document.body.appendChild(_exportTemp);
          _exportTemp.style = "display: none";
          _exportTemp.href = _exportLink;
@@ -396,6 +398,7 @@ const exportimportInit = get => {
    const importRead = e => {
       const _files = e.target.files,
             _reader = new FileReader();
+
       _reader.onload = importPrase;
       _reader.readAsText(_files[0]);
    };
@@ -409,7 +412,7 @@ const exportimportInit = get => {
       for (let option = 0; option < _prasedObjectLength; option++) {
          switch (_prasedObject[option]) {
             case "discoverModules":
-               const _keyLength = Object.keys(prasedImport.discoverModules).length,
+               const _keyLength = Object.keys(_prasedImport.discoverModules).length,
                      _tempDiscoverArray = {};
                for (let key in _prasedImport.discoverModules) {
                   if (!isNaN(key)) {
@@ -420,7 +423,7 @@ const exportimportInit = get => {
                _importedSettings.discoverModules = _tempDiscoverArray;
                break;
             case "displayType":
-               if (_prasedImport.displayType == "list" || _prasedImport.displayType == "grid") _importedSettings.displayType = _prasedImport.displayType;
+               if (_prasedImport.displayType === "list" || _prasedImport.displayType === "grid") _importedSettings.displayType = _prasedImport.displayType;
                else _importedSettings.displayType = "default";
                break;
             case "filter":
@@ -438,7 +441,7 @@ const exportimportInit = get => {
                         const _tempFilterArrayLength = _tempFilterArray.length;
                         let tempFilterMatch = 0;
                         for (let i = 0; i < _tempFilterArrayLength; i++)
-                           if (_tempFilterArray[i].slug == _slug) tempFilterMatch = 1;
+                           if (_tempFilterArray[i].slug === _slug) tempFilterMatch = 1;
                         if (tempFilterMatch == 0) _tempFilterArray.push(_tempFilterObject);
                      }
                   }
@@ -475,28 +478,103 @@ const exportimportInit = get => {
    _importElement.addEventListener("change", importRead, false);
 };
 
+const manageFooterEnhancerButton = (destruct = false)=> {
+   const _hasEnhancerButton = document.querySelector('#enhancer-btn'),
+         _soundPanelInner = document.querySelector('.playControls__inner');
+
+   if (destruct === true) {
+      if (_hasEnhancerButton) {
+         _hasEnhancerButton.remove();
+         _body.removeAttribute("settings-button");
+         settingsMenu();
+      }
+   } else {
+      if (!_hasEnhancerButton) {
+         if (_debugMode) console.log("-> SCEbutton (Bottom) rendered");
+         _body.setAttribute("settings-button", "");
+         const _SCEContainer = document.createElement("div"),
+               _SCEButton = document.createElement("button");
+
+         _SCEContainer.id = "enhancer-container";
+         _SCEButton.className = "sc-enhancer sc-button sc-button-medium sc-button-responsive";
+         _SCEButton.id = "enhancer-btn";
+         _SCEButton.tabindex = "0";
+         _SCEButton.innerText = "SCEnhancer";
+
+         _SCEContainer.appendChild(_SCEButton);
+         _soundPanelInner.appendChild(_SCEContainer);
+         settingsMenu();
+      }
+   }
+};
+
+// Render a SCE button in the user navigation menu
+const manageHeaderEnhancerButton = (destruct = false)=> {
+   const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle'),
+         _userMenu = document.querySelector('.header__userNavUsernameButton');
+
+   if (destruct === true) {
+      _userMenu.removeEventListener("click", manageHeaderEnhancerButton);
+      if (_hasEnhancerMenuItems) _hasEnhancerMenuItems.remove();
+      settingsMenu();
+   } else {
+      if (!_hasEnhancerMenuItems) {
+         _userMenu.removeEventListener("click", manageHeaderEnhancerButton);
+
+         const _isMenuActive = document.querySelector('.dropdownMenu.g-z-index-header-menu');
+         if (_isMenuActive) {
+            if (_debugMode) console.log("-> SCEbutton (Top) rendered");
+            const _profileMenu = document.querySelector('.profileMenu'),
+                  _profileMenuEnhancer = document.createElement('ul'),
+                  _profileMenuEnhancerItem = document.createElement('li'),
+                  _profileMenuEnhancerLink = document.createElement('a');
+
+            _profileMenuEnhancer.className = "profileMenu__list profileMenu__enhancer sc-enhancer sc-list-nostyle";
+            _profileMenuEnhancerItem.className = "profileMenu__item";
+            _profileMenuEnhancerLink.className = "profileMenu__link profileMenu__enhancerMenu";
+            _profileMenuEnhancerLink.innerText = "SCEnhancer";
+
+            _profileMenuEnhancerItem.appendChild(_profileMenuEnhancerLink);
+            _profileMenuEnhancer.appendChild(_profileMenuEnhancerItem);
+            _profileMenu.appendChild(_profileMenuEnhancer);
+         }
+
+         settingsMenu();
+         const detectProfileMenuFade = setInterval(()=> {
+            const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
+            if (!_hasEnhancerMenuItems) {
+               settingsMenu();
+               clearInterval(detectProfileMenuFade);
+               _userMenu.addEventListener("click", manageHeaderEnhancerButton);
+            }
+         }, 100);
+      }
+   }
+};
+
 // Initializing the settings in the SCE menu
 const settingsInit = ()=> {
    if (_debugMode) console.log("callback settingsInit: Initializing");
 
    const _darkModeInput = document.querySelector('#darkMode'),
+         _listenerModeInput = document.querySelector('#listenerMode'),
          _fullwidthModeInput = document.querySelector('#fullwidthMode'),
-         _removeSettingsBtnInput = document.querySelector('#removeSettingsBtn'),
+         _profileImagesInput = document.querySelector('#profileImages'),
          _hideSidebarInput = document.querySelector('#hideSidebar'),
-         _hideTheUploadInput = document.querySelector('#hideTheUpload'),
-         _hideBrandingInput =  document.querySelector('#hideBranding'),
+         _hideBrandingInput = document.querySelector('#hideBranding'),
+         _hideHeaderMenuInput = document.querySelector('#hideHeaderMenu'),
+         _hideFooterMenuInput = document.querySelector('#hideFooterMenu'),
          _displayTypeInput = document.querySelectorAll('input[name="displayType"]'),
          _removePreviewsInput = document.querySelector('#removePreviews'),
          _removePlaylistsInput = document.querySelector('#removePlaylists'),
          _removeLongTracksInput = document.querySelector('#removeLongTracks'),
          _removeUserActivityInput = document.querySelector('#removeUserActivity'),
          _removeRepostsInput = document.querySelector('#removeReposts'),
-         _hiddenOutlineInput = document.querySelector('#hiddenOutline'),
-         _profileImagesInput = document.querySelector('#profileImages'),
          _relatedActionMenuInput = document.querySelector('#relatedActionMenu'),
          _tagActionMenuInput = document.querySelector('#tagActionMenu'),
          _artistActionMenuInput = document.querySelector('#artistActionMenu'),
          _trackActionMenuInput = document.querySelector('#trackActionMenu'),
+         _hiddenOutlineInput = document.querySelector('#hiddenOutline'),
          _disableUnfollowerInput = document.querySelector('#disableUnfollower'),
          _disableDiscoverToggleInput = document.querySelector('#disableDiscoverToggle'),
          _settingsReset = document.querySelector('#sce-settings-reset'),
@@ -504,8 +582,28 @@ const settingsInit = ()=> {
          _settingsCloseCount = _settingsClose.length,
          _settingsArray = [
             _darkModeInput,
+            _listenerModeInput,
             _fullwidthModeInput,
-            _removeSettingsBtnInput,
+            _profileImagesInput,
+            _hideSidebarInput,
+            _hideBrandingInput,
+            _hideHeaderMenuInput,
+            _hideFooterMenuInput,
+            _displayTypeInput[0],
+            _displayTypeInput[1],
+            _displayTypeInput[2],
+            _removePreviewsInput,
+            _removePlaylistsInput,
+            _removeLongTracksInput,
+            _removeUserActivityInput,
+            _removeRepostsInput,
+            _relatedActionMenuInput,
+            _tagActionMenuInput,
+            _artistActionMenuInput,
+            _trackActionMenuInput,
+            _hiddenOutlineInput,
+            _disableUnfollowerInput,
+            _disableDiscoverToggleInput
          ];
 
    // Activates all menu-closing buttons
@@ -513,16 +611,15 @@ const settingsInit = ()=> {
 
    // Activates the ability to close the menu by clicking outside of it
    document.addEventListener('mousedown', e => {
-      const _evt = (e == null ? event : e);
-      if (_evt.which == 1 || _evt.button == 0 || _evt.button == 1)
-         if (e.target.id == 'sce-settings') disassembleSettings();
+      const _evt = (e === null ? event : e);
+      if (_evt.which === 1 || _evt.button === 0 || _evt.button === 1)
+         if (e.target.id === "sce-settings") disassembleSettings();
    });
 
    // Activates the reset button
    _settingsReset.addEventListener("click", ()=> {
       const _warningState = _settingsReset.getAttribute("warning");
-
-      if (_warningState == "true") resetLocalStorage(()=> location.reload());
+      if (_warningState === "true") resetLocalStorage(()=> location.reload());
       else {
          _settingsReset.setAttribute("warning", true);
          _settingsReset.innerText = "Are you sure you want to reset?";
@@ -535,64 +632,126 @@ const settingsInit = ()=> {
 
    // Display settings
    getLocalStorage(get => {
-      if (get.darkMode == "on") _darkModeInput.checked = true;
-      if (get.fullwidthMode == "on") _fullwidthModeInput.checked = true;
-      if (get.removeSettingsBtn == "on") _removeSettingsBtnInput.checked = true;
-      if (get.hideSidebar == "on") _hideSidebarInput.checked = true;
-      if (get.hideTheUpload == "on") _hideTheUploadInput.checked = true;
-      if (get.hideBranding == "on") _hideBrandingInput.checked = true;
-      if (get.displayType == "list") _displayTypeInput[1].checked = true;
-      else if (get.displayType == "grid") _displayTypeInput[2].checked = true;
+      // Design & layout
+      if (get.darkMode === "on") _darkModeInput.checked = true;
+      if (get.listenerMode === "on") _listenerModeInput.checked = true;
+      if (get.fullwidthMode === "on") _fullwidthModeInput.checked = true;
+      if (get.profileImages === "on") _profileImagesInput.checked = true;
+      if (get.hideSidebar === "on") _hideSidebarInput.checked = true;
+      if (get.hideBranding === "on") _hideBrandingInput.checked = true;
+      if (get.settingsMenus) {
+         if (get.settingsMenus.hideHeaderMenu === "on") _hideHeaderMenuInput.checked = true;
+         if (get.settingsMenus.hideFooterMenu === "on") _hideFooterMenuInput.checked = true;
+      } else setLocalStorage(()=> {
+         if (_debugMode) console.log("-> Setting updated: settingsMenus (Default)");
+      }, {settingsMenus: _defaultMenus});
+      if (get.displayType === "list") _displayTypeInput[1].checked = true;
+      else if (get.displayType === "grid") _displayTypeInput[2].checked = true;
       else _displayTypeInput[0].checked = true;
-      if (get.removePreviews == "on") _removePreviewsInput.checked = true;
-      if (get.removePlaylists == "on") _removePlaylistsInput.checked = true;
-      if (get.removeLongTracks == "on") _removeLongTracksInput.checked = true;
-      if (get.removeUserActivity == "on") _removeUserActivityInput.checked = true;
-      if (get.removeReposts == "on") _removeRepostsInput.checked = true;
-      if (get.hiddenOutline == "on") _hiddenOutlineInput.checked = true;
-      if (get.profileImages == "on") _profileImagesInput.checked = true;
-      if (get.disableUnfollower == "on") _disableUnfollowerInput.checked = true;
-      if (get.disableDiscoverToggle == "on") _disableDiscoverToggleInput.checked = true;
+
+      // Filtering
+      if (get.removePreviews === "on") _removePreviewsInput.checked = true;
+      if (get.removePlaylists === "on") _removePlaylistsInput.checked = true;
+      if (get.removeLongTracks === "on") _removeLongTracksInput.checked = true;
+      if (get.removeUserActivity === "on") _removeUserActivityInput.checked = true;
+      if (get.removeReposts === "on") _removeRepostsInput.checked = true;
+
+      // More action menu
       if (get.moreActionMenu) {
-         if (get.moreActionMenu.relatedActionMenu == "on") _relatedActionMenuInput.checked = true;
-         if (get.moreActionMenu.tagActionMenu == "on") _tagActionMenuInput.checked = true;
-         if (get.moreActionMenu.artistActionMenu == "on") _artistActionMenuInput.checked = true;
-         if (get.moreActionMenu.trackActionMenu == "on") _trackActionMenuInput.checked = true;
+         if (get.moreActionMenu.relatedActionMenu === "on") _relatedActionMenuInput.checked = true;
+         if (get.moreActionMenu.tagActionMenu === "on") _tagActionMenuInput.checked = true;
+         if (get.moreActionMenu.artistActionMenu === "on") _artistActionMenuInput.checked = true;
+         if (get.moreActionMenu.trackActionMenu === "on") _trackActionMenuInput.checked = true;
       }
+
+      // Miscellaneous
+      if (get.hiddenOutline === "on") _hiddenOutlineInput.checked = true;
+      if (get.disableUnfollower === "on") _disableUnfollowerInput.checked = true;
+      if (get.disableDiscoverToggle === "on") _disableDiscoverToggleInput.checked = true;
    });
 
-   //const _settingsArray = [_darkModeInput, _fullwidthModeInput];
-   //const _test = _getGlobalSettings.map(setting => eval("_" + setting + "Input"));
-   console.log(_settingsArray);
-   _settingsArray.forEach(setting => {
-      setting.addEventListener("click", ()=> {
-         match(setting)
-         .on(x => _darkModeInput, ()=> {
-            setLocalStorage(()=> {
-               console.log("darkmode lel");
-            }, {darkMode: "on"});
+   const updateStream = (state, type) => {
+      if (state !== "on") {
+         const _streamItems = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul');
+         _streamItems.forEach(list => {
+            const _listItem = list.childNodes;
+            _listItem.forEach(el => {
+               const _itemType = el.getAttribute("data-type");
+               if (_itemType) if (_itemType === type) {
+                  el.classList.remove("hidden");
+                  el.removeAttribute("data-type");
+                  el.removeAttribute("data-skip");
+               }
+            });
          });
-      });
-   });
-
-   document.querySelector('#sce-settings-save').addEventListener('click', ()=> {
-      const _settingsInputs = document.forms['sce-settings-form'].querySelectorAll('input'),
-            _settingsInputCount = _settingsInputs.length;
-
-      let data = [];
-      for (let i = 0; i < _settingsInputCount; i++) {
-         const _inputName = _settingsInputs[i].name,
-               _inputType = _settingsInputs[i].type,
-               _inputChecked = _settingsInputs[i].checked,
-               _inputValue = _settingsInputs[i].value;
-         let inputOutput = null;
-
-         if (_inputType == "checkbox") inputOutput = _inputChecked ? "on" : "off";
-         else if (_inputType == "radio") inputOutput = _inputChecked ? _inputValue : "skip";
-         else inputOutput = _inputValue;
-         if (inputOutput != "skip") data[_inputName] = inputOutput;
       }
-      saveSettings(data);
+      frontEndStreamManipulation(true);
+   };
+
+   const updateSetting = (element, key, callback = null, param = null)=> {
+      getLocalStorage(get => {
+         const _newSetting = {}, _keySplit = key.split(".");
+         let newState = "on", oldState = get[key], type = null;
+
+         if (key.match(/[.]/)) oldState = get[_keySplit[0]][_keySplit[1]];
+         if (oldState === "on") newState = "off";
+         if (key.match(/[.]/)) {
+            _newSetting[_keySplit[0]] = get[_keySplit[0]];
+            if (_keySplit[0] === "settingsMenus") {
+               if (_keySplit[1] === "hideHeaderMenu") _newSetting[_keySplit[0]].hideHeaderMenu = newState;
+               else if (_keySplit[1] === "hideFooterMenu") _newSetting[_keySplit[0]].hideFooterMenu = newState;
+            } else if (_keySplit[0] === "moreActionMenu") {
+               if (_keySplit[1] === "relatedActionMenu") _newSetting[_keySplit[0]].relatedActionMenu = newState;
+               else if (_keySplit[1] === "tagActionMenu") _newSetting[_keySplit[0]].tagActionMenu = newState;
+               else if (_keySplit[1] === "artistActionMenu") _newSetting[_keySplit[0]].artistActionMenu = newState;
+               else if (_keySplit[1] === "trackActionMenu") _newSetting[_keySplit[0]].trackActionMenu = newState;
+            }
+         } else if (key === "displayType") _newSetting[key] = element.value;
+         else _newSetting[key] = newState;
+
+         setLocalStorage(()=> {
+            if (_debugMode) console.log(_newSetting);
+            if (key === "displayType") _body.setAttribute("displaytype", element.value);
+            else if (_keySplit[1] === "hideHeaderMenu" || _keySplit[1] === "hideFooterMenu") {
+               if (newState === "on") callback(true);
+               else callback();
+            } else if (param) callback(newState, param);
+            else {
+               const _attributeName = key.toLowerCase();
+               if (newState === "on") _body.setAttribute(_attributeName, "");
+               else _body.removeAttribute(_attributeName);
+            }
+         }, _newSetting);
+      });
+   };
+
+   _settingsArray.forEach(setting => {
+      setting.addEventListener("change", ()=> {
+         match(setting)
+         .on(x => x === _darkModeInput, x => updateSetting(x, "darkMode"))
+         .on(x => x === _listenerModeInput, x => updateSetting(x, "listenerMode"))
+         .on(x => x === _fullwidthModeInput, x => updateSetting(x, "fullwidthMode"))
+         .on(x => x === _profileImagesInput, x => updateSetting(x, "profileImages"))
+         .on(x => x === _hideSidebarInput, x => updateSetting(x, "hideSidebar"))
+         .on(x => x === _hideBrandingInput, x => updateSetting(x, "hideBranding"))
+         .on(x => x === _hideHeaderMenuInput, x => updateSetting(x, "settingsMenus.hideHeaderMenu", manageHeaderEnhancerButton))
+         .on(x => x === _hideFooterMenuInput, x => updateSetting(x, "settingsMenus.hideFooterMenu", manageFooterEnhancerButton))
+         .on(x => x === _displayTypeInput[0], x => updateSetting(x, "displayType"))
+         .on(x => x === _displayTypeInput[1], x => updateSetting(x, "displayType"))
+         .on(x => x === _displayTypeInput[2], x => updateSetting(x, "displayType"))
+         .on(x => x === _removePreviewsInput, x => updateSetting(x, "removePreviews", updateStream, "preview"))
+         .on(x => x === _removePlaylistsInput, x => updateSetting(x, "removePlaylists", updateStream, "preview"))
+         .on(x => x === _removeLongTracksInput, x => updateSetting(x, "removeLongTracks", updateStream, "long"))
+         .on(x => x === _removeUserActivityInput, x => updateSetting(x, "removeUserActivity", updateStream, "yours"))
+         .on(x => x === _removeRepostsInput, x => updateSetting(x, "removeReposts", updateStream, "repost"))
+         .on(x => x === _relatedActionMenuInput, x => updateSetting(x, "moreActionMenu.relatedActionMenu"))
+         .on(x => x === _tagActionMenuInput, x => updateSetting(x, "moreActionMenu.tagActionMenu"))
+         .on(x => x === _artistActionMenuInput, x => updateSetting(x, "moreActionMenu.artistActionMenu"))
+         .on(x => x === _trackActionMenuInput, x => updateSetting(x, "moreActionMenu.trackActionMenu"))
+         .on(x => x === _hiddenOutlineInput, x => updateSetting(x, "hiddenOutline"))
+         .on(x => x === _disableUnfollowerInput, x => updateSetting(x, "disableUnfollower"))
+         .on(x => x === _disableDiscoverToggleInput, x => updateSetting(x, "disableDiscoverToggle"));
+      });
    });
 };
 
@@ -696,11 +855,11 @@ const filterInit = ()=> {
                _listItemDelete.addEventListener("click", ()=> {
                   getLocalStorage(get => {
                      const _filterObject = get.filter;
-                     if (key == "artists") removeObjectByAttribute(_filterObject.artists, "slug", filterArray[i].slug);
+                     if (key === "artists") removeObjectByAttribute(_filterObject.artists, "slug", filterArray[i].slug);
                      else removeObjectByAttribute(_filterObject.tracks, "slug", filterArray[i].slug);
 
                      setLocalStorage(()=> {
-                        listItemDelete.closest("li").remove();
+                        _listItemDelete.closest("li").remove();
                         const _filterContainers = document.querySelectorAll('.filter-container'),
                               _filterContainerCount = _filterContainers.length;
 
@@ -745,17 +904,6 @@ const readyStateCheck = ()=> {
    setAttributes();
    settingsSetup();
    injectedJavascript();
-   /*let timer, bodyObserver = new MutationObserver(mutations => {
-      clearTimeout(timer);
-      timer = setTimeout(()=> {
-         if (_debugMode) console.log("readyState: Complete");
-         bodyObserver.disconnect();
-
-         settingsSetup();
-         injectedJavascript();
-      }, 200);
-   });
-   bodyObserver.observe(_body, _globalConfig);*/
 };
 document.addEventListener("readystatechange", readyStateCheck);
 
@@ -777,21 +925,19 @@ const setAttributes = () => {
    if (_debugMode) console.log("function setAttributes: Initializing");
 
    getLocalStorage(get => {
-      if (get.darkMode == "on") _body.setAttribute("data-theme", "dark");
-      if (get.fullwidthMode == "on") _body.setAttribute("fullwidth", "");
-      if (get.removeSettingsBtn != "on") _body.setAttribute("settings-button", "");
-      if (get.hideSidebar == "on") _body.setAttribute("data-sidebar", "hidden");
-      else _body.setAttribute("data-sidebar", "show");
-      if (location.href == "https://soundcloud.com/stream") {
-         if (get.displayType == "list") _body.setAttribute("data-display", "list");
-         else if (get.displayType == "grid") _body.setAttribute("data-display", "grid");
-         else _body.setAttribute("data-display", "default");
-      }
-      if (get.hiddenOutline == "on") _body.setAttribute("hidden-outline", "");
-      if (get.profileImages == "on") _body.setAttribute("square", "");
+      if (get.darkMode === "on") _body.setAttribute("darkmode", "");
+      if (get.listenerMode === "on") _body.setAttribute("listenermode", "");
+      if (get.fullwidthMode === "on") _body.setAttribute("fullwidthmode", "");
+      if (get.profileImages === "on") _body.setAttribute("profileimages", "");
+      if (get.hideSidebar === "on") _body.setAttribute("hidesidebar", "");
+      if (get.hideBranding === "on") _body.setAttribute("hidebranding", "");
+      if (get.displayType === "list") _body.setAttribute("displaytype", "list");
+      else if (get.displayType === "grid") _body.setAttribute("displaytype", "grid");
+      else _body.setAttribute("displaytype", "default");
+      if (get.hiddenOutline === "on") _body.setAttribute("hiddenoutline", "");
+
    });
 };
-
 setAttributes();
 
 // Setting up initial functionality
@@ -800,7 +946,6 @@ const settingsSetup = ()=> {
 
    const _hasStreamController = document.querySelector('#stream-controller'),
          _hasVersionDisplay = document.querySelector('#version-display'),
-         _hasEnhancerButton = document.querySelector('#enhancer-btn'),
          _soundPanel = document.querySelector('.playControls'),
          _soundPanelInner = document.querySelector('.playControls__inner'),
          _announcements = document.querySelector('.announcements.g-z-index-fixed-top'),
@@ -811,37 +956,20 @@ const settingsSetup = ()=> {
    _soundPanel.className = "playControls g-z-index-header m-visible";
    _announcements.className = "announcements g-z-index-fixed-top m-offset";
 
+   // Setup SoundCloud Enhancer branding
+   _logo.id = "sce-logo";
+   if (!_hasVersionDisplay) {
+      if (_debugMode) console.log("-> Branding rendered");
+      const _versionDisplay = document.createElement("span");
+      _versionDisplay.id = "version-display";
+      _versionDisplay.innerText = _manifestData.version;
+      _logo.appendChild(_versionDisplay);
+   }
+
    getLocalStorage(get => {
-      // Setup SoundCloud Enhancer branding
-      if (get.hideBranding != "on") {
-         _logo.id = "sce-logo";
-         if (!_hasVersionDisplay) {
-            if (_debugMode) console.log("-> Branding rendered");
-            const _versionDisplay = document.createElement("span");
-            _versionDisplay.id = "version-display";
-            _versionDisplay.innerText = _manifestData.version;
-            _logo.appendChild(_versionDisplay);
-         }
-      }
-
-      // Setup SoundCloud Enhancer button
-      if (get.removeSettingsBtn != "on") {
-         if (!_hasEnhancerButton) {
-            if (_debugMode) console.log("-> SCEbutton hidden");
-            const _SCEContainer = document.createElement("div"),
-                  _SCEButton = document.createElement("button");
-
-            _SCEContainer.id = "enhancer-container";
-            _SCEButton.className = "sc-enhancer sc-button sc-button-medium sc-button-responsive";
-            _SCEButton.id = "enhancer-btn";
-            _SCEButton.tabindex = "0";
-            _SCEButton.innerText = "SCEnhancer";
-
-            _SCEContainer.appendChild(_SCEButton);
-            _soundPanelInner.appendChild(_SCEContainer);
-            settingsMenu();
-         }
-      }
+      // Setup SoundCloud Enhancer buttons
+      if (get.settingsMenus.hideFooterMenu !== "on") manageFooterEnhancerButton();
+      if (get.settingsMenus.hideHeaderMenu !== "on") _userMenu.addEventListener("click", manageHeaderEnhancerButton);
 
       // Add the "The Upload" playlist to the stream explore tab
       // TODO: Lav dette til en option, sammen med "weekly playlist"
@@ -892,39 +1020,6 @@ const settingsSetup = ()=> {
             }
          }
       }, 100);
-
-      // Render a SCE button in the user navigation menu
-      const renderEnhancerProfileMenu = ()=> {
-         const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
-         if (!_hasEnhancerMenuItems) {
-            _userMenu.removeEventListener("click", renderEnhancerProfileMenu);
-            const _profileMenu = document.querySelector('.profileMenu'),
-                  _profileMenuEnhancer = document.createElement('ul'),
-                  _profileMenuEnhancerItem = document.createElement('li'),
-                  _profileMenuEnhancerLink = document.createElement('a');
-
-            _profileMenuEnhancer.className = "profileMenu__list profileMenu__enhancer sc-enhancer sc-list-nostyle";
-            _profileMenuEnhancerItem.className = "profileMenu__item";
-            _profileMenuEnhancerLink.className = "profileMenu__link profileMenu__enhancerMenu";
-            _profileMenuEnhancerLink.innerText = "SCEnhancer";
-
-            _profileMenuEnhancerItem.appendChild(_profileMenuEnhancerLink);
-            _profileMenuEnhancer.appendChild(_profileMenuEnhancerItem);
-            _profileMenu.appendChild(_profileMenuEnhancer);
-
-            settingsMenu();
-            let detectProfileMenuFade = setInterval(()=> {
-               const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle');
-               if (!_hasEnhancerMenuItems) {
-                  settingsMenu();
-                  clearInterval(detectProfileMenuFade);
-                  _userMenu.addEventListener("click", renderEnhancerProfileMenu);
-               }
-            }, 100);
-         }
-      };
-      _userMenu.removeEventListener("click", renderEnhancerProfileMenu);
-      _userMenu.addEventListener("click", renderEnhancerProfileMenu);
 
       // Render discover module toogle links
       if (get.disableDiscoverToggle != "on") {
@@ -1033,31 +1128,32 @@ const settingsSetup = ()=> {
                         _getCompactList = document.querySelector('.listDisplayToggle.setting-display-tile.list-icon'),
                         _getGridList = document.querySelector('.listDisplayToggle.setting-display-tile.grid-icon');
 
-                  if (get.displayType == "list") _getCompactList.classList.add("active");
-                  else if (get.displayType == "grid") _getGridList.classList.add("active");
+                  if (get.displayType === "list") _getCompactList.classList.add("active");
+                  else if (get.displayType === "grid") _getGridList.classList.add("active");
                   else _getDefaultList.classList.add("active");
 
                   const _getLists = document.querySelectorAll('.listDisplayToggle.setting-display-tile'),
                         _getListCount = _getLists.length;
+
                   for (let i = 0; i < _getListCount; i++) {
                      _getLists[i].addEventListener('click', ()=> {
                         const _getData = _getLists[i].getAttribute("data-id");
                         for (let i = 0; i < _getListCount; i++) _getLists[i].classList.remove("active");
 
                         if (_getData === "list") {
-                           _body.setAttribute("data-display", "list");
+                           _body.setAttribute("displaytype", "list");
                            _getCompactList.classList.add("active");
                         } else if (_getData === "grid") {
-                           _body.setAttribute("data-display", "grid");
+                           _body.setAttribute("displaytype", "grid");
                            _getGridList.classList.add("active");
                         } else {
-                           _body.setAttribute("data-display", "default");
+                           _body.setAttribute("displaytype", "default");
                            _getDefaultList.classList.add("active");
                         }
 
                         setLocalStorage(()=> {
                            if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-                           if (_debugMode) console.log("Display mode saved: " + _getData);
+                           if (_debugMode) console.log("-> Display mode saved: " + _getData);
                         }, {displayType: _getData});
                      });
                   }
@@ -1068,7 +1164,7 @@ const settingsSetup = ()=> {
 
       // Render mass unfollower on the "following" page
       if (location.href == "https://soundcloud.com/you/following") {
-         if (get.disableUnfollower != "on") {
+         if (get.disableUnfollower !== "on") {
             let unfollowerInterval = setInterval(()=> {
                const _hasUnfollowerContainer = document.querySelector('.collectionSection__list .lazyLoadingList.badgeList ul.lazyLoadingList__list');
                if (_hasUnfollowerContainer) {
@@ -1115,33 +1211,31 @@ const settingsSetup = ()=> {
                   }
 
                   multiFollow();
-                  runObserver(hasUnfollowerContainer, multiFollow);
+                  runObserver(_hasUnfollowerContainer, multiFollow);
 
-                  const confirmSection = document.querySelector('#confirm-unfollow-button'),
-                  undoSection = document.querySelector('#undo-unfollow-button'),
-                  selectAll = document.querySelector('#all-unfollow-button');
+                  const _confirmSection = document.querySelector('#confirm-unfollow-button'),
+                        _undoSection = document.querySelector('#undo-unfollow-button'),
+                        _selectAll = document.querySelector('#all-unfollow-button');
 
-                  confirmSection.addEventListener('click', ()=> {
-                     const unfollowLoop = document.querySelectorAll('.badgeList__item'), unfollowLoopCount = unfollowLoop.length;
+                  _confirmSection.addEventListener('click', ()=> {
                      let newFollowCount = 0;
-                     for (let i = 0; i < unfollowLoopCount; i++) {
-                        const checkFollowStatus = unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
-                        if (checkFollowStatus.checked == true) {
-                           const closestUnfollowButton = unfollowLoop[i].querySelector('.userBadgeListItem .userBadgeListItem__action button.sc-button-follow');
-                           closestUnfollowButton.click();
+                     const _unfollowLoop = document.querySelectorAll('.badgeList__item'),
+                           _unfollowLoopLength = _unfollowLoop.length;
+
+                     for (let i = 0; i < _unfollowLoopLength; i++) {
+                        const _checkFollowStatus = _unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
+                        if (_checkFollowStatus.checked == true) {
+                           const _closestUnfollowButton = _unfollowLoop[i].querySelector('.userBadgeListItem .userBadgeListItem__action button.sc-button-follow');
+                           _closestUnfollowButton.click();
                            newFollowCount++;
                         }
                      }
-                     if (newFollowCount == 1) confirmSection.innerText = "1 account got unfollowed!";
-                     else confirmSection.innerText = newFollowCount + " accounts got unfollowed!";
-                     setTimeout(()=> {confirmSection.innerText = "Mass unfollow";}, 3000);
+                     if (newFollowCount === 1) _confirmSection.innerText = "1 account got unfollowed!";
+                     else _confirmSection.innerText = newFollowCount + " accounts got unfollowed!";
+                     setTimeout(()=> _confirmSection.innerText = "Mass unfollow", 3000);
                   });
-                  undoSection.addEventListener('click', ()=> {
-                     massSelector(false);
-                  });
-                  selectAll.addEventListener('click', ()=> {
-                     massSelector(true);
-                  });
+                  _undoSection.addEventListener('click', ()=> massSelector(false));
+                  _selectAll.addEventListener('click', ()=> massSelector(true));
                }
             }, 100);
          }
@@ -1314,58 +1408,6 @@ const renderSettings = ()=> {
    getLocalStorage(exportimportInit);
 };
 
-// Storing saved SCE settings
-const saveSettings = data => {
-   const _moreActionMenuObject = {};
-   if (data.darkMode != "on") data.darkMode = "off";
-   if (data.fullwidthMode != "on") data.fullwidthMode = "off";
-   if (data.removeSettingsBtn != "on") data.removeSettingsBtn = "off";
-   if (data.hideSidebar != "on") data.hideSidebar = "off";
-   if (data.hideBranding != "on") data.hideBranding = "off";
-   if (data.displayType == "default") data.displayType = "";
-   if (data.removePreviews != "on") data.removePreviews = "off";
-   if (data.removePlaylists != "on") data.removePlaylists = "off";
-   if (data.removeLongTracks != "on") data.removeLongTracks = "off";
-   if (data.removeUserActivity != "on") data.removeUserActivity = "off";
-   if (data.removeReposts != "on") data.removeReposts = "off";
-   if (data.hiddenOutline != "on") data.hiddenOutline = "off";
-   if (data.profileImages != "on") data.profileImages = "off";
-   if (data.disableUnfollower != "on") data.disableUnfollower = "off";
-   if (data.disableDiscoverToggle != "on") data.disableDiscoverToggle = "off";
-
-   // More action menu
-   if (data.relatedActionMenu != "on") _moreActionMenuObject.relatedActionMenu = "off";
-   else _moreActionMenuObject.relatedActionMenu = "on";
-   if (data.tagActionMenu != "on") _moreActionMenuObject.tagActionMenu = "off";
-   else _moreActionMenuObject.tagActionMenu = "on";
-   if (data.artistActionMenu != "on") _moreActionMenuObject.artistActionMenu = "off";
-   else _moreActionMenuObject.artistActionMenu = "on";
-   if (data.trackActionMenu != "on") _moreActionMenuObject.trackActionMenu = "off";
-   else _moreActionMenuObject.trackActionMenu = "on";
-
-   _setGlobalSettings.darkMode = data.darkMode;
-   _setGlobalSettings.fullwidthMode = data.fullwidthMode;
-   _setGlobalSettings.removeSettingsBtn = data.removeSettingsBtn;
-   _setGlobalSettings.hideSidebar = data.hideSidebar;
-   _setGlobalSettings.hideBranding = data.hideBranding;
-   _setGlobalSettings.displayType = data.displayType;
-   _setGlobalSettings.removePreviews = data.removePreviews;
-   _setGlobalSettings.removePlaylists = data.removePlaylists;
-   _setGlobalSettings.removeLongTracks = data.removeLongTracks;
-   _setGlobalSettings.removeUserActivity = data.removeUserActivity;
-   _setGlobalSettings.removeReposts = data.removeReposts;
-   _setGlobalSettings.hiddenOutline = data.hiddenOutline;
-   _setGlobalSettings.profileImages = data.profileImages;
-   _setGlobalSettings.disableUnfollower = data.disableUnfollower;
-   _setGlobalSettings.disableDiscoverToggle = data.disableDiscoverToggle;
-   _setGlobalSettings.moreActionMenu = _moreActionMenuObject;
-
-   setLocalStorage(()=> {
-      if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-      else location.reload();
-   });
-};
-
 // Assigning SCE menus to SCE buttons
 const settingsMenu = ()=> {
    if (_debugMode) console.log("function settingsMenu: Initializing");
@@ -1378,14 +1420,207 @@ const settingsMenu = ()=> {
    }
 };
 
+// Filter user inputed tags, artists and tracks
+const runFilters = ()=> {
+   getLocalStorage(get => {
+      const _filters = ["tag", "artist", "track"],
+            _filtersLength = _filters.length;
+
+      for (let filter = 0; filter < _filtersLength; filter++) {
+         let element = null, data = null,
+         filterFunction = (callback, element, data) => {
+            if (stripLinkDomain(element.href) === data.slug) callback();
+         };
+
+         switch (_filters[filter]) {
+            case "tag":
+               element = document.querySelectorAll('.soundTitle__tagContent');
+               if (get.tagsArray) data = get.tagsArray;
+               filterFunction = (callback, element, data) => {
+                  if (element.innerText.toUpperCase() == data.toUpperCase()) callback(data);
+               };
+               break;
+            case "artist":
+               element = document.querySelectorAll('.soundTitle__username');
+               if (get.filter) if (get.filter.artists) data = get.filter.artists;
+               break;
+            case "track":
+               element = document.querySelectorAll('.soundTitle__title');
+               if (get.filter) if (get.filter.tracks) data = get.filter.tracks;
+               break;
+         }
+
+         if (element && data) {
+            const _elementLength = element.length,
+                  _dataLength = data.length;
+            for (let el = 0; el < _elementLength; el++) {
+               for (let i = 0; i < _dataLength; i++) {
+                  const _parentClassName = moreActionParentClassName(element[el]),
+                        _parentElement = element[el].closest(_parentClassName);
+
+                  filterFunction((value = null) => {
+                     _parentElement.setAttribute("data-skip", "true");
+                     _parentElement.setAttribute("data-type", "custom_filter");
+                     if (value) _parentElement.setAttribute("banned-"+ _filters[filter] +"", value);
+                     else _parentElement.setAttribute("banned-"+ _filters[filter] +"", "");
+                     _parentElement.classList.add("hidden");
+                  }, element[el], data[i]);
+               }
+            }
+         }
+      }
+   }, ["filter", "tagsArray"]);
+};
+
+const hidePlaylists = ()=> {
+   if (_debugMode) console.log("function markPlaylists: Running");
+   const _getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'),
+         _getPlaylistCount = _getPlaylists.length;
+
+   for (let i = 0; i < _getPlaylistCount; i++) {
+      const _getPlaylist = _getPlaylists[i].className;
+      if (_getPlaylist.includes("playlist") == true) {
+         let getTrackCountNum, getTrackCount = _getPlaylists[i].querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
+         if (getTrackCount.length < 5) getTrackCountNum = getTrackCount.length;
+         else {
+            const _checkMoreLink = _getPlaylists[i].querySelector('.compactTrackList__moreLink');
+            if (_checkMoreLink) getTrackCountNum = _checkMoreLink.innerText.replace(/\D/g,'');
+            else getTrackCountNum = getTrackCount.length;
+         }
+         const _playlistClosest = _getPlaylists[i].closest('.soundList__item');
+         //_playlistClosest.setAttribute("data-playlist", "true");
+         _playlistClosest.setAttribute("data-skip", "true");
+         _playlistClosest.setAttribute("data-type", "playlist");
+         _playlistClosest.setAttribute("data-count", getTrackCountNum);
+         _playlistClosest.classList.add("hidden");
+      }
+   }
+};
+
+const hidePreviews = ()=> {
+   if (_debugMode) console.log("function hidePreviews: Running");
+   const _previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'),
+         _previewCount = _previews.length;
+
+   for (let i = 0; i < _previewCount; i++) {
+      if (_previews[i].innerHTML) {
+         const _previewsClosest = _previews[i].closest('.soundList__item');
+         _previewsClosest.setAttribute("data-skip", "true");
+         _previewsClosest.setAttribute("data-type", "preview");
+         _previewsClosest.classList.add("hidden");
+      }
+   }
+};
+
+const hideReposts = ()=> {
+   if (_debugMode) console.log("function hideReposts: Running");
+   const _reposts = document.querySelectorAll('.soundContext__repost'),
+         _repostCount = _reposts.length;
+
+   for (let i = 0; i < _repostCount; i++) {
+      const _repostClosest = _reposts[i].closest('.soundList__item');
+      _repostClosest.setAttribute("data-skip", "true");
+      _repostClosest.setAttribute("data-type", "repost");
+      _repostClosest.classList.add("hidden");
+   }
+};
+
+const checkCanvas = ()=> {
+   if (_debugMode) console.log("function checkCanvas: Running");
+   const _canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene'),
+         _canvasLength = _canvas.length;
+
+   for (let i = 0; i < _canvasLength; i++) {
+      const _canvasCount = _canvas[i].querySelectorAll('canvas.g-box-full.sceneLayer'),
+            _canvasCountLength = _canvasCount.length;
+
+      for (let j = 0; j < _canvasCountLength; j++) {
+         const _lastElement = _canvasCount[_canvasCount.length-1],
+               _getCanvas = _lastElement.getContext("2d"),
+               _lengthCalc = _lastElement.width - 27,
+               _pixelData = _getCanvas.getImageData(_lengthCalc, 27, 1, 1).data;
+
+         if (_pixelData[0] === 0 && _pixelData[1] === 0 && _pixelData[2] === 0 && _pixelData[3] === 255) {
+            const _canvasClosest = _canvas[i].closest('.soundList__item');
+            _canvasClosest.setAttribute("data-skip", "true");
+            _canvasClosest.setAttribute("data-type", "long");
+            _canvasClosest.classList.add("hidden");
+         }
+      }
+   }
+};
+
+const checkUserActivity = ()=> {
+   if (_debugMode) console.log("function checkUserActivity: Running");
+   const _yourTracks = document.querySelectorAll('.soundContext__usernameLink'),
+         _yourTrackLength = _yourTracks.length,
+         _getUsername = document.querySelector('.header__userNavUsernameButton'),
+         _getUsernameHref = _getUsername.getAttribute("href");
+
+   for (let i = 0; i < _yourTrackLength; i++) {
+      const _yourTrackHref = _yourTracks[i].getAttribute("href");
+      if (_getUsernameHref == _yourTrackHref) {
+         const _trackClosest = _yourTracks[i].closest('.soundList__item');
+         _trackClosest.setAttribute("data-skip", "true");
+         _trackClosest.setAttribute("data-type", "yours");
+         _trackClosest.classList.add("hidden");
+      }
+   }
+};
+
+const renderMoreActionCallback = e => {
+   const _checkMoreActionMenu = document.querySelector('.moreActions #sce-moreActions-group');
+   if (!_checkMoreActionMenu) {
+      const _parentClassName = moreActionParentClassName(e.target),
+            _trackContainer = e.target.closest(_parentClassName);
+
+      moreActionMenuContent(_trackContainer);
+   }
+};
+
+const renderMoreAction = ()=> {
+   const _moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small'),
+         _moreActionButtonCount = _moreActionButtons.length;
+
+   for (let i = 0; i < _moreActionButtonCount; i++) {
+      _moreActionButtons[i].removeEventListener('click', renderMoreActionCallback);
+      _moreActionButtons[i].addEventListener('click', renderMoreActionCallback);
+   }
+};
+
+const frontEndStreamManipulation = (reset = false)=> {
+   if (reset === true) observer.disconnect();
+   getLocalStorage(get => {
+      const _stream = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul'),
+            _steamLength = _stream.length;
+
+      if (_debugMode) console.log(_stream);
+      renderMoreAction();
+      //markPlaylists();
+      runFilters();
+      if (get.removePreviews === "on") hidePreviews();
+      if (get.removePlaylists === "on") hidePlaylists();
+      if (get.removeReposts === "on") hideReposts();
+      if (get.removeLongTracks === "on") checkCanvas();
+      if (get.removeUserActivity === "on") checkUserActivity();
+
+      for (let i = 0; i < _steamLength; i++) {
+         runObserver(_stream[i], renderMoreAction);
+         //runObserver(_stream[i], markPlaylists);
+         runObserver(_stream[i], runFilters);
+         if (get.removePreviews === "on") runObserver(_stream[i], hidePreviews);
+         if (get.removePlaylists === "on") runObserver(_stream[i], hidePlaylists);
+         if (get.removeReposts === "on") runObserver(_stream[i], hideReposts);
+         if (get.removeLongTracks === "on") runObserver(_stream[i], checkCanvas);
+         if (get.removeUserActivity === "on") runObserver(_stream[i], checkUserActivity);
+      }
+   });
+};
+
 // Run music-stream manipulating functions
 const injectedJavascript = ()=> {
    if (_debugMode) console.log("function injectedJavascript: Initializing");
    const _soundBadge = document.querySelector('.playbackSoundBadge'),
-         //_content = document.querySelector('#content'),
-         //_streamHeader = document.querySelector('.stream__header'),
-         _getUsername = document.querySelector('.header__userNavUsernameButton'),
-         _getUsernameHref = _getUsername.getAttribute("href"),
          _nextControl = document.querySelector('.skipControl__next'),
          _previousControl = document.querySelector('.skipControl__previous');
 
@@ -1393,219 +1628,20 @@ const injectedJavascript = ()=> {
    // Music-stream manipulation functions
    // =============================================================
 
-   // Filter user inputed tags, artists and tracks
-   const runFilters = ()=> {
-      getLocalStorage(get => {
-         const _filters = ["tag", "artist", "track"],
-               _filtersLength = _filters.length;
-
-         for (let filter = 0; filter < _filtersLength; filter++) {
-            let element = null, data = null,
-            filterFunction = (callback, element, data) => {
-               if (stripLinkDomain(element.href) == data.slug) callback();
-            };
-
-            switch (_filters[filter]) {
-               case "tag":
-                  element = document.querySelectorAll('.soundTitle__tagContent');
-                  if (get.tagsArray) data = get.tagsArray;
-                  filterFunction = (callback, element, data) => {
-                     if (element.innerText.toUpperCase() == data.toUpperCase()) callback(data);
-                  };
-                  break;
-               case "artist":
-                  element = document.querySelectorAll('.soundTitle__username');
-                  if (get.filter) if (get.filter.artists) data = get.filter.artists;
-                  break;
-               case "track":
-                  element = document.querySelectorAll('.soundTitle__title');
-                  if (get.filter) if (get.filter.tracks) data = get.filter.tracks;
-                  break;
-            }
-
-            if (element && data) {
-               const _elementLength = element.length,
-                     _dataLength = data.length;
-               for (let el = 0; el < _elementLength; el++) {
-                  for (let i = 0; i < _dataLength; i++) {
-                     const _parentClassName = moreActionParentClassName(element[el]),
-                           _parentElement = element[el].closest(_parentClassName);
-
-                     filterFunction((value = null) => {
-                        _parentElement.setAttribute("data-skip", "true");
-                        if (value) _parentElement.setAttribute("banned-"+ _filters[filter] +"", value);
-                        else _parentElement.setAttribute("banned-"+ _filters[filter] +"", "");
-                        _parentElement.className += " hidden";
-                     }, element[el], data[i]);
-                  }
-               }
-            }
-         }
-      }, ["filter", "tagsArray"]);
-   };
-
-   const markPlaylists = ()=> {
-      if (_debugMode) console.log("function markPlaylists: Running");
-      const _getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'),
-            _getPlaylistCount = _getPlaylists.length;
-
-      for (let i = 0; i < _getPlaylistCount; i++) {
-         const _getPlaylist = _getPlaylists[i].className;
-         if (_getPlaylist.includes("playlist") == true) {
-            let getTrackCountNum, getTrackCount = _getPlaylists[i].querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
-            if (getTrackCount.length < 5) getTrackCountNum = getTrackCount.length;
-            else {
-               const _checkMoreLink = _getPlaylists[i].querySelector('.compactTrackList__moreLink');
-               if (_checkMoreLink) getTrackCountNum = _checkMoreLink.innerText.replace(/\D/g,'');
-               else getTrackCountNum = getTrackCount.length;
-            }
-            const _playlistClosest = _getPlaylists[i].closest('.soundList__item');
-            _playlistClosest.setAttribute("data-playlist", "true");
-            _playlistClosest.setAttribute("data-count", getTrackCountNum);
-         }
-      }
-   };
-
-   const hidePreviews = ()=> {
-      if (_debugMode) console.log("function hidePreviews: Running");
-      const _previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'),
-            _previewCount = _previews.length;
-
-      for (let i = 0; i < _previewCount; i++) {
-         if (_previews[i].innerHTML) {
-            const _previewsClosest = _previews[i].closest('.soundList__item');
-            _previewsClosest.setAttribute("data-skip", "true");
-            _previewsClosest.setAttribute("data-type", "preview");
-            _previewsClosest.className = "soundList__item hidden";
-         }
-      }
-   };
-
-   const hidePlaylists = ()=> {
-      if (_debugMode) console.log("function hidePlaylists: Running");
-      const _playlists = document.querySelectorAll('.soundList__item'),
-            _playlistCount = _playlists.length;
-
-      for (let i = 0; i < _playlistCount; i++) {
-         const _getPlaylistAttribute = _playlists[i].getAttribute("data-playlist");
-         if (_getPlaylistAttribute == "true") {
-            _playlists[i].setAttribute("data-skip", "true");
-            _playlists[i].className = "soundList__item hidden";
-         }
-      }
-   };
-
-   const hideReposts = ()=> {
-      if (_debugMode) console.log("function hideReposts: Running");
-      const _reposts = document.querySelectorAll('.soundContext__repost'),
-            _repostCount = _reposts.length;
-
-      for (let i = 0; i < _repostCount; i++) {
-         const _repostClosest = _reposts[i].closest('.soundList__item');
-         _repostClosest.setAttribute("data-skip", "true");
-         _repostClosest.setAttribute("data-type", "repost");
-         _repostClosest.className = "soundList__item hidden";
-      }
-   };
-
-   const checkCanvas = ()=> {
-      if (_debugMode) console.log("function checkCanvas: Running");
-      const _canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene'),
-            _canvasLength = _canvas.length;
-
-      for (let i = 0; i < _canvasLength; i++) {
-         const _canvasCount = _canvas[i].querySelectorAll('canvas.g-box-full.sceneLayer'),
-               _canvasCountLength = _canvasCount.length;
-
-         for (let j = 0; j < _canvasCountLength; j++) {
-            const _lastElement = _canvasCount[_canvasCount.length-1],
-                  _getCanvas = _lastElement.getContext("2d"),
-                  _lengthCalc = _lastElement.width - 27,
-                  _pixelData = _getCanvas.getImageData(_lengthCalc, 27, 1, 1).data;
-
-            if (_pixelData[0] === 0 && _pixelData[1] === 0 && _pixelData[2] === 0 && _pixelData[3] === 255) {
-               const _canvasClosest = _canvas[i].closest('.soundList__item');
-               _canvasClosest.setAttribute("data-skip", "true");
-               _canvasClosest.setAttribute("data-type", "long");
-               _canvasClosest.className = "soundList__item hidden";
-            }
-         }
-      }
-   };
-
-   const checkUserActivity = ()=> {
-      if (_debugMode) console.log("function checkUserActivity: Running");
-      const _yourTracks = document.querySelectorAll('.soundContext__usernameLink'),
-            _yourTrackLength = _yourTracks.length;
-
-      for (let i = 0; i < _yourTrackLength; i++) {
-         const _yourTrackHref = _yourTracks[i].getAttribute("href");
-         if (_getUsernameHref == _yourTrackHref) {
-            const _trackClosest = _yourTracks[i].closest('.soundList__item');
-            _trackClosest.setAttribute("data-skip", "true");
-            _trackClosest.setAttribute("data-type", "yours");
-            _trackClosest.className = "soundList__item hidden";
-         }
-      }
-   };
-
-   const renderMoreActionCallback = e => {
-      const _checkMoreActionMenu = document.querySelector('.moreActions #sce-moreActions-group');
-      if (!_checkMoreActionMenu) {
-         const _parentClassName = moreActionParentClassName(e.target),
-               _trackContainer = e.target.closest(_parentClassName);
-
-         moreActionMenuContent(_trackContainer);
-      }
-   };
-
-   const renderMoreAction = ()=> {
-      const _moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small'),
-            _moreActionButtonCount = _moreActionButtons.length;
-
-      for (let i = 0; i < _moreActionButtonCount; i++) {
-         _moreActionButtons[i].removeEventListener('click', renderMoreActionCallback);
-         _moreActionButtons[i].addEventListener('click', renderMoreActionCallback);
-      }
-   };
-
    // Main initializing function
    const initStreamManipulator = setInterval(()=> {
       const _mainStream = document.querySelector('.l-fluid-fixed > .l-main .lazyLoadingList ul, .l-fixed-fluid > .l-main .lazyLoadingList > ul, .l-hero-fluid-fixed .l-main .lazyLoadingList, .l-collection .l-main .lazyLoadingList');
       if (_mainStream) {
-         const _stream = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul'),
-               _steamLength = _stream.length;
-
-         if (_debugMode) console.log(_stream);
-
          clearInterval(initStreamManipulator);
-         getLocalStorage(get => {
-            renderMoreAction();
-            markPlaylists();
-            runFilters();
-            if (get.removePreviews == "on") hidePreviews();
-            if (get.removePlaylists == "on") hidePlaylists();
-            if (get.removeReposts == "on") hideReposts();
-            if (get.removeLongTracks == "on") checkCanvas();
-            if (get.removeUserActivity == "on") checkUserActivity();
 
-            for (let i = 0; i < _steamLength; i++) {
-               runObserver(_stream[i], renderMoreAction);
-               runObserver(_stream[i], markPlaylists);
-               runObserver(_stream[i], runFilters);
-               if (get.removePreviews == "on") runObserver(_stream[i], hidePreviews);
-               if (get.removePlaylists == "on") runObserver(_stream[i], hidePlaylists);
-               if (get.removeReposts == "on") runObserver(_stream[i], hideReposts);
-               if (get.removeLongTracks == "on") runObserver(_stream[i], checkCanvas);
-               if (get.removeUserActivity == "on") runObserver(_stream[i], checkUserActivity);
-            }
-         });
+         frontEndStreamManipulation();
 
          // Next song manager
          runObserver(_soundBadge, ()=> {
             getLocalStorage(get => {
                const _getStreamItems = document.querySelectorAll('.soundList__item'),
                      _getStreamItemLength = _getStreamItems.length;
+
                for (let i = 0; i < _getStreamItemLength; i++) {
                   const _getSkipStatus = _getStreamItems[i].getAttribute("data-skip"),
                         _getPlaylistType = _getStreamItems[i].getAttribute("data-playlist"),
@@ -1615,9 +1651,7 @@ const injectedJavascript = ()=> {
                   if (_getPlaying.includes("playing") == true) {
                      if (_debugMode) console.log("Skip song?: " + _getSkipStatus);
                      if (_getSkipStatus == "true") {
-                        _previousControl.addEventListener("click", ()=> {
-                           skipPrevious = true;
-                        });
+                        _previousControl.addEventListener("click", ()=> skipPrevious = true);
                         if (_getPlaylistType == true) {
                            const _skipCount = _getStreamItems[i].getAttribute("data-count");
                            if (skipPrevious == true) for (let t = 0; t < _skipCount; t++) _previousControl.click();

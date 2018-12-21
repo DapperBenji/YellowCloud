@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v3.3 #
+# SoundCloud Enhancer v3.4 #
 
 ## Description: ##
 ----------------------------------------
@@ -139,6 +139,15 @@ Code slowly being rewritten. Leading up to the huge 3.0 update!
 - Made a [https://dapperbenji.com/scenhancer](dedicated website) for SCE.
 
 ### Version 3.3 ###
-- Minor changes to the grid view mode
-- Updated darkmode chromecast icon
-- Hotfix to patch filter bugs
+- Minor changes to the grid view mode.
+- Updated darkmode chromecast icon.
+- Hotfix to patch filter bugs.
+
+### Version 3.4 ###
+- Updated the SCE setting menu to apply changes in real-time, without page refreshes.
+- Added option to hide both SCE buttons.
+- Fixed import feature from last update.
+- Fixed grid mode comment bug.
+- Fixed mass unfollower feature from last update.
+- Various responsive fixes.
+- Various darkmode improvements.
