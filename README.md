@@ -1,4 +1,4 @@
-# SoundCloud Enhancer v3.4 #
+# SoundCloud Enhancer v3.5 #
 
 ## Description: ##
 ----------------------------------------
@@ -151,3 +151,8 @@ Code slowly being rewritten. Leading up to the huge 3.0 update!
 - Fixed mass unfollower feature from last update.
 - Various responsive fixes.
 - Various darkmode improvements.
+
+### Version 3.5 ###
+- Hotfix. Fixed the rendering of SCE menu buttons.
+- Updated popup icon.
+- Updated popup menu.

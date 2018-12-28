@@ -5,9 +5,32 @@
 /* global chrome */
 
 "use strict";
+
+const _setGlobalSettings = {},
+      _getGlobalSettings = ["darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
+
+// Fetching data from local/online browser storage
+const getLocalStorage = (callback, localSettings = null)=> {
+   const _getSettings = localSettings || _getGlobalSettings;
+   chrome.storage.sync.get(_getSettings, callback);
+};
+
+// Sending data to local/online browser storage
+const setLocalStorage = (callback, localSettings = null)=> {
+   const _setSettings = localSettings || _setGlobalSettings;
+   chrome.storage.sync.set(_setSettings, callback);
+};
+
+// Factory resets all SCE created local/online browser storage
+const resetLocalStorage = callback => {
+   chrome.storage.sync.remove(_getGlobalSettings, callback);
+};
+
 // =============================================================
 // Global variables
 // =============================================================
+//console.log(getLocalStorage(()=>{}, ["debug"]));
+
 const _debugMode = 0,
       _manifestData = chrome.runtime.getManifest(),
       _globalConfig = {childList: true},
@@ -15,9 +38,7 @@ const _debugMode = 0,
       _body = document.querySelector('body'),
       _app = document.querySelector('#app'),
       _defaultFilter = {"artists": [], "tracks": []},
-      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"},
-      _setGlobalSettings = {},
-      _getGlobalSettings = ["darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
+      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"};
 let skipPrevious = false, oldLocation = location.href;
 
 if (_debugMode) console.log("-=- SCE debugMode ACTIVE -=-");
@@ -259,9 +280,8 @@ const moreActionMenuContent = trackContainer => {
                else value = element.innerText;
                _createButton.setAttribute('data-item', value);
             }
-            if (key === "artist") {
-               if (stripLinkDomain(_hasArtist.href) != _userName) _createMoreActionsGroup.appendChild(_createButton);
-            } else _createMoreActionsGroup.appendChild(_createButton);
+            if (key === "artist") if (stripLinkDomain(_hasArtist.href) != _userName) _createMoreActionsGroup.appendChild(_createButton);
+            else _createMoreActionsGroup.appendChild(_createButton);
          }
       };
 
@@ -882,23 +902,6 @@ const filterInit = ()=> {
    renderFilterList(_playlistBlacklist, "playlists");
 };
 
-// Fetching data from local/online browser storage
-const getLocalStorage = (callback, localSettings = null)=> {
-   const _getSettings = localSettings || _getGlobalSettings;
-   chrome.storage.sync.get(_getSettings, callback);
-};
-
-// Sending data to local/online browser storage
-const setLocalStorage = (callback, localSettings = null)=> {
-   const _setSettings = localSettings || _setGlobalSettings;
-   chrome.storage.sync.set(_setSettings, callback);
-};
-
-// Factory resets all SCE created local/online browser storage
-const resetLocalStorage = callback => {
-   chrome.storage.sync.remove(_getGlobalSettings, callback);
-};
-
 // Run setup after tab/window reload
 const readyStateCheck = ()=> {
    setAttributes();
@@ -968,8 +971,8 @@ const settingsSetup = ()=> {
 
    getLocalStorage(get => {
       // Setup SoundCloud Enhancer buttons
-      if (get.settingsMenus.hideFooterMenu !== "on") manageFooterEnhancerButton();
-      if (get.settingsMenus.hideHeaderMenu !== "on") _userMenu.addEventListener("click", manageHeaderEnhancerButton);
+      if (typeof get.settingsMenus === "undefined" || get.settingsMenus.hideFooterMenu !== "on") manageFooterEnhancerButton();
+      if (typeof get.settingsMenus === "undefined" || get.settingsMenus.hideHeaderMenu !== "on") _userMenu.addEventListener("click", manageHeaderEnhancerButton);
 
       // Add the "The Upload" playlist to the stream explore tab
       // TODO: Lav dette til en option, sammen med "weekly playlist"
