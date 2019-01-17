@@ -6,8 +6,9 @@
 
 "use strict";
 
+// Browser storage variables
 const _setGlobalSettings = {},
-      _getGlobalSettings = ["darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
+      _getGlobalSettings = ["debug", "darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
 
 // Fetching data from local/online browser storage
 const getLocalStorage = (callback, localSettings = null)=> {
@@ -21,27 +22,51 @@ const setLocalStorage = (callback, localSettings = null)=> {
    chrome.storage.sync.set(_setSettings, callback);
 };
 
-// Factory resets all SCE created local/online browser storage
+// Factory resets all YellowCloud created local/online browser storage
 const resetLocalStorage = callback => {
    chrome.storage.sync.remove(_getGlobalSettings, callback);
+};
+
+// Fetches browser cookie data by cookie name
+const getCookie = cname => {
+   const _name = cname + "=",
+         _ca = document.cookie.split(';'),
+         _calength = _ca.length;
+
+   for (let i = 0; i < _calength; i++) {
+      let c = _ca[i];
+      while (c.charAt(0) == ' ') c = c.substring(1);
+      if (c.indexOf(_name) == 0) return c.substring(_name.length, c.length);
+   }
+   return "";
 };
 
 // =============================================================
 // Global variables
 // =============================================================
-//console.log(getLocalStorage(()=>{}, ["debug"]));
 
-const _debugMode = 0,
-      _manifestData = chrome.runtime.getManifest(),
+const _manifestData = chrome.runtime.getManifest(),
       _globalConfig = {childList: true},
       _altConfig = {attributes: true, childList: true, subtree: true},
       _body = document.querySelector('body'),
       _app = document.querySelector('#app'),
+      _userID = getCookie('i'),
+      _userName = getCookie('p'),
       _defaultFilter = {"artists": [], "tracks": []},
-      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"};
-let skipPrevious = false, oldLocation = location.href;
+      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"},
+      _authorQuery = ".soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username",
+      _trackQuery = ".soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle",
+      _tagQuery = ".soundTitle__tagContent";
 
-if (_debugMode) console.log("-=- SCE debugMode ACTIVE -=-");
+let skipPrevious = false, oldLocation = location.href, debugMode = null;
+
+// Get developer status
+getLocalStorage(get => {
+   if (get.debug === "on") {
+      debugMode = true;
+      console.log("-=- YellowCloud developer -=-");
+   }
+}, ["debug"]);
 
 // =============================================================
 // Functional JS building blocks
@@ -111,29 +136,13 @@ const runObserver = (target, callback, sensitive)=> {
    observer.observe(target, _useConfig);
 };
 
-// Fetches browser cookie data by cookie name
-const getCookie = cname => {
-   const _name = cname + "=",
-         _ca = document.cookie.split(';'),
-         _calength = _ca.length;
-   for (let i = 0; i < _calength; i++) {
-      let c = _ca[i];
-      while (c.charAt(0) == ' ') c = c.substring(1);
-      if (c.indexOf(_name) == 0) return c.substring(_name.length, c.length);
-   }
-   return "";
-};
-
-const _userID = getCookie('i'),
-      _userName = getCookie('p');
-
 // Fetch local extension files
 const fetchFile = (el, file, callback)=> {
    const _xhr = new XMLHttpRequest();
    _xhr.open("GET", chrome.extension.getURL(file), true);
    _xhr.onload = ()=> {
       if (_xhr.status === 200) {
-         if (_debugMode) console.log("function fetchFile: File fetched");
+         if (debugMode) console.log("function fetchFile: File fetched");
          el.innerHTML = _xhr.responseText;
          if (callback) return callback();
       }
@@ -141,9 +150,9 @@ const fetchFile = (el, file, callback)=> {
    _xhr.send();
 };
 
-// Modal closing animation for the SCE menu
+// Modal closing animation for the YC menu
 const disassembleSettings = ()=> {
-   const _modal = document.querySelector('#sce-settings');
+   const _modal = document.querySelector('#yellowcloud');
    _modal.classList.add("invisible");
    _modal.style.overflow = "hidden";
    _app.classList.remove("g-filter-grayscale");
@@ -201,7 +210,7 @@ const massSelector = bool => {
          const _detectLoadingBlock = document.querySelector('.collectionSection .badgeList.lazyLoadingList .loading');
          if (_detectLoadingBlock) {
             window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
-            if (_debugMode) console.log("Page scroll");
+            if (debugMode) console.log("Page scroll");
         } else {
             clearInterval(scrollInterval);
             window.scrollTo(0, 0);
@@ -234,14 +243,14 @@ const moreActionMenuContent = trackContainer => {
    getLocalStorage(get => {
       const _moreActionMenu = document.querySelector('.moreActions div'),
             _hasPlaylists = trackContainer.querySelector('.playlistTrackCount') || trackContainer.querySelector('.compactTrackList__moreLink'),
-            _hasTag = trackContainer.querySelector('.soundTitle__tagContent'),
-            _hasArtist = trackContainer.querySelector('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username'),
-            _hasTrack = trackContainer.querySelector('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle'),
-            _moreActionsGroup = document.querySelector('#sce-moreActions-group'),
+            _hasTag = trackContainer.querySelector(_tagQuery),
+            _hasArtist = trackContainer.querySelector(_authorQuery),
+            _hasTrack = trackContainer.querySelector(_trackQuery),
+            _moreActionsGroup = document.querySelector('#yellowcloud-moreActions-group'),
             _createMoreActionsGroup = document.createElement("div");
 
       _createMoreActionsGroup.className = "moreActions__group";
-      _createMoreActionsGroup.id = "sce-moreActions-group";
+      _createMoreActionsGroup.id = "yellowcloud-moreActions-group";
 
       const relatedLink = ()=> {
          const _url =  _hasTrack.href + "/recommended";
@@ -252,12 +261,12 @@ const moreActionMenuContent = trackContainer => {
       };
 
       const renderMoreActionButton = (key, element = null)=> {
-         const _hasButton = document.querySelector('#sce-'+ key +'-button');
+         const _hasButton = document.querySelector("#yellowcloud-" + key + "-button");
          if (!_hasButton) {
             const _createButton = document.createElement("button");
-            _createButton.type = "button";
-            _createButton.id = "sce-"+ key +"-button";
-            _createButton.className = "moreActions__button sc-button-medium sce-button-icon sce-button-"+ key +"";
+                  _createButton.type = "button";
+                  _createButton.id = "yellowcloud-" + key + "-button";
+                  _createButton.className = "moreActions__button sc-button-medium yellowcloud-button-icon yellowcloud-button-"+ key +"";
 
             if (key === "related") {
                _createButton.title = "Go to related tracks";
@@ -271,17 +280,20 @@ const moreActionMenuContent = trackContainer => {
                   _createButton.innerText = "Blacklist track";
                }
             } else {
-               _createButton.title = "Click to blacklist this track's "+ key +"";
-               _createButton.innerText = "Blacklist "+ key +"";
+               _createButton.title = "Click to blacklist this track's " + key + "";
+               _createButton.innerText = "Blacklist " + key + "";
             }
+
             if (key !== "related") {
                let value;
                if (key === "artist" || key === "track") value = element.href;
                else value = element.innerText;
                _createButton.setAttribute('data-item', value);
             }
-            if (key === "artist") if (stripLinkDomain(_hasArtist.href) != _userName) _createMoreActionsGroup.appendChild(_createButton);
-            else _createMoreActionsGroup.appendChild(_createButton);
+
+            if (key === "artist") {
+               if (stripLinkDomain(_hasArtist.href) !== _userName) _createMoreActionsGroup.appendChild(_createButton);
+            } else _createMoreActionsGroup.appendChild(_createButton);
          }
       };
 
@@ -300,10 +312,10 @@ const moreActionMenuContent = trackContainer => {
 
       if (!_moreActionsGroup) if (_createMoreActionsGroup.hasChildNodes()) _moreActionMenu.appendChild(_createMoreActionsGroup);
 
-      const _relatedButton = document.querySelector("#sce-related-button"),
-            _hashtagButton = document.querySelector("#sce-hashtag-button"),
-            _artistButton = document.querySelector("#sce-artist-button"),
-            _trackButton = document.querySelector("#sce-track-button");
+      const _relatedButton = document.querySelector("#yellowcloud-related-button"),
+            _hashtagButton = document.querySelector("#yellowcloud-hashtag-button"),
+            _artistButton = document.querySelector("#yellowcloud-artist-button"),
+            _trackButton = document.querySelector("#yellowcloud-track-button");
 
       if (!disableRelatedMenu && _relatedButton) {
          _relatedButton.removeEventListener("click", relatedLink);
@@ -394,16 +406,16 @@ const eliminateDuplicates = array => {
    return out;
 };
 
-// Enabling a .json export and import of SCE settings
+// Enabling a .json export and import of YellowCloud settings
 const exportimportInit = get => {
-   const _importElement = document.querySelector('#sce-import input[type="file"]'),
-         _exportElement = document.querySelector('#sce-export a');
+   const _importElement = document.querySelector('#yellowcloud-import input[type="file"]'),
+         _exportElement = document.querySelector('#yellowcloud-export a');
 
    _exportElement.addEventListener("click", ()=>{
       getLocalStorage(get => {
          const _exportBlob = new Blob([JSON.stringify(get, null, "\t")], {type: 'application/json'}),
                _exportTemp = document.createElement("a"),
-               _exportName = "SCEnhancer.json",
+               _exportName = "YellowCloud.json",
                _exportLink = window.URL.createObjectURL(_exportBlob);
 
          document.body.appendChild(_exportTemp);
@@ -499,7 +511,7 @@ const exportimportInit = get => {
 };
 
 const manageFooterEnhancerButton = (destruct = false)=> {
-   const _hasEnhancerButton = document.querySelector('#enhancer-btn'),
+   const _hasEnhancerButton = document.querySelector('#yellowcloud-button'),
          _soundPanelInner = document.querySelector('.playControls__inner');
 
    if (destruct === true) {
@@ -510,25 +522,25 @@ const manageFooterEnhancerButton = (destruct = false)=> {
       }
    } else {
       if (!_hasEnhancerButton) {
-         if (_debugMode) console.log("-> SCEbutton (Bottom) rendered");
+         if (debugMode) console.log("-> YellowCloud button (Bottom) rendered");
          _body.setAttribute("settings-button", "");
-         const _SCEContainer = document.createElement("div"),
-               _SCEButton = document.createElement("button");
+         const _yellowCloudContainer = document.createElement("div"),
+               _yellowCloudButton = document.createElement("button");
 
-         _SCEContainer.id = "enhancer-container";
-         _SCEButton.className = "sc-enhancer sc-button sc-button-medium sc-button-responsive";
-         _SCEButton.id = "enhancer-btn";
-         _SCEButton.tabindex = "0";
-         _SCEButton.innerText = "SCEnhancer";
+         _yellowCloudContainer.id = "yellowcloud-container";
+         _yellowCloudButton.className = "yellowcloud-settings-button sc-button sc-button-medium sc-button-responsive";
+         _yellowCloudButton.id = "yellowcloud-button";
+         _yellowCloudButton.tabindex = "0";
+         _yellowCloudButton.innerText = "YellowCloud";
 
-         _SCEContainer.appendChild(_SCEButton);
-         _soundPanelInner.appendChild(_SCEContainer);
+         _yellowCloudContainer.appendChild(_yellowCloudButton);
+         _soundPanelInner.appendChild(_yellowCloudContainer);
          settingsMenu();
       }
    }
 };
 
-// Render a SCE button in the user navigation menu
+// Render a YellowCloud button in the user navigation menu
 const manageHeaderEnhancerButton = (destruct = false)=> {
    const _hasEnhancerMenuItems = document.querySelector('.profileMenu__list.profileMenu__enhancer.sc-list-nostyle'),
          _userMenu = document.querySelector('.header__userNavUsernameButton');
@@ -543,16 +555,16 @@ const manageHeaderEnhancerButton = (destruct = false)=> {
 
          const _isMenuActive = document.querySelector('.dropdownMenu.g-z-index-header-menu');
          if (_isMenuActive) {
-            if (_debugMode) console.log("-> SCEbutton (Top) rendered");
+            if (debugMode) console.log("-> YellowCloud button (Top) rendered");
             const _profileMenu = document.querySelector('.profileMenu'),
                   _profileMenuEnhancer = document.createElement('ul'),
                   _profileMenuEnhancerItem = document.createElement('li'),
                   _profileMenuEnhancerLink = document.createElement('a');
 
-            _profileMenuEnhancer.className = "profileMenu__list profileMenu__enhancer sc-enhancer sc-list-nostyle";
+            _profileMenuEnhancer.className = "profileMenu__list profileMenu__enhancer yellowcloud-settings-button sc-list-nostyle";
             _profileMenuEnhancerItem.className = "profileMenu__item";
             _profileMenuEnhancerLink.className = "profileMenu__link profileMenu__enhancerMenu";
-            _profileMenuEnhancerLink.innerText = "SCEnhancer";
+            _profileMenuEnhancerLink.innerText = "YellowCloud";
 
             _profileMenuEnhancerItem.appendChild(_profileMenuEnhancerLink);
             _profileMenuEnhancer.appendChild(_profileMenuEnhancerItem);
@@ -572,9 +584,9 @@ const manageHeaderEnhancerButton = (destruct = false)=> {
    }
 };
 
-// Initializing the settings in the SCE menu
+// Initializing the settings in the YellowCloud menu
 const settingsInit = ()=> {
-   if (_debugMode) console.log("callback settingsInit: Initializing");
+   if (debugMode) console.log("callback settingsInit: Initializing");
 
    const _darkModeInput = document.querySelector('#darkMode'),
          _listenerModeInput = document.querySelector('#listenerMode'),
@@ -597,8 +609,8 @@ const settingsInit = ()=> {
          _hiddenOutlineInput = document.querySelector('#hiddenOutline'),
          _disableUnfollowerInput = document.querySelector('#disableUnfollower'),
          _disableDiscoverToggleInput = document.querySelector('#disableDiscoverToggle'),
-         _settingsReset = document.querySelector('#sce-settings-reset'),
-         _settingsClose = document.querySelectorAll('.sce-close-settings'),
+         _settingsReset = document.querySelector('#yellowcloud-reset'),
+         _settingsClose = document.querySelectorAll('.yellowcloud-close-settings'),
          _settingsCloseCount = _settingsClose.length,
          _settingsArray = [
             _darkModeInput,
@@ -633,7 +645,7 @@ const settingsInit = ()=> {
    document.addEventListener('mousedown', e => {
       const _evt = (e === null ? event : e);
       if (_evt.which === 1 || _evt.button === 0 || _evt.button === 1)
-         if (e.target.id === "sce-settings") disassembleSettings();
+         if (e.target.id === "yellowcloud") disassembleSettings();
    });
 
    // Activates the reset button
@@ -645,7 +657,7 @@ const settingsInit = ()=> {
          _settingsReset.innerText = "Are you sure you want to reset?";
          setTimeout(()=> {
             _settingsReset.setAttribute("warning", false);
-            _settingsReset.innerText = "Reset all SCEnhancer settings";
+            _settingsReset.innerText = "Reset all YellowCloud settings";
          }, 5000);
       }
    });
@@ -663,7 +675,7 @@ const settingsInit = ()=> {
          if (get.settingsMenus.hideHeaderMenu === "on") _hideHeaderMenuInput.checked = true;
          if (get.settingsMenus.hideFooterMenu === "on") _hideFooterMenuInput.checked = true;
       } else setLocalStorage(()=> {
-         if (_debugMode) console.log("-> Setting updated: settingsMenus (Default)");
+         if (debugMode) console.log("-> Setting updated: settingsMenus (Default)");
       }, {settingsMenus: _defaultMenus});
       if (get.displayType === "list") _displayTypeInput[1].checked = true;
       else if (get.displayType === "grid") _displayTypeInput[2].checked = true;
@@ -730,7 +742,7 @@ const settingsInit = ()=> {
          else _newSetting[key] = newState;
 
          setLocalStorage(()=> {
-            if (_debugMode) console.log(_newSetting);
+            if (debugMode) console.log(_newSetting);
             if (key === "displayType") _body.setAttribute("displaytype", element.value);
             else if (_keySplit[1] === "hideHeaderMenu" || _keySplit[1] === "hideFooterMenu") {
                if (newState === "on") callback(true);
@@ -775,9 +787,9 @@ const settingsInit = ()=> {
    });
 };
 
-// Initializing the filter lists in the SCE menu
+// Initializing the filter lists in the YellowCloud menu
 const filterInit = ()=> {
-   if (_debugMode) console.log("callback filterInit: Initializing");
+   if (debugMode) console.log("callback filterInit: Initializing");
    const _artistBlacklist = document.querySelector('#artist-blacklist'),
          _trackBlacklist = document.querySelector('#track-blacklist'),
          _playlistBlacklist = document.querySelector('#playlist-blacklist'),
@@ -796,7 +808,7 @@ const filterInit = ()=> {
          for (let i = 0; i < _tagElementCount; i++) _tags.push(_tagElements[i].innerText);
          setLocalStorage(()=> {
             if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-            if (_debugMode) console.log("Tag array saved: " + _tags);
+            if (debugMode) console.log("Tag array saved: " + _tags);
          }, {tagsArray: _tags});
       }, true);
    });
@@ -854,16 +866,16 @@ const filterInit = ()=> {
                      _listItemDelete = document.createElement("span"),
                      _listItemCount = i + 1;
 
-               _listItemOrder.className = "sce-filter-item-order";
+               _listItemOrder.className = "yellowcloud-filter-item-order";
                _listItemOrder.innerText = "#" + _listItemCount;
-               _listItemActions.className = "sce-filter-actions";
-               _listItemLink.className = "sce-filter-item-name";
+               _listItemActions.className = "yellowcloud-filter-actions";
+               _listItemLink.className = "yellowcloud-filter-item-name";
                _listItemLink.href = "https://soundcloud.com/" + filterArray[i].slug;
                _listItemLink.innerText = filterNameFormatter(filterArray[i].slug);
                _listItemLink.target = "_blank";
                _listItemTime.innerText = relativeTime(filterArray[i].time);
-               _listItemTime.className = "sce-filter-option";
-               _listItemDelete.className = "sce-filter-option-remove";
+               _listItemTime.className = "yellowcloud-filter-option";
+               _listItemDelete.className = "yellowcloud-filter-option-remove";
 
                _listItem.appendChild(_listItemOrder);
                _listItem.appendChild(_listItemLink);
@@ -913,7 +925,7 @@ document.addEventListener("readystatechange", readyStateCheck);
 // Detect new page load
 setInterval(()=> {
    if (location.href != oldLocation) {
-      if (_debugMode) console.log("-=- NEW PAGE LOADED -=-");
+      if (debugMode) console.log("-=- NEW PAGE LOADED -=-");
       oldLocation = location.href;
       readyStateCheck();
    }
@@ -925,7 +937,7 @@ setInterval(()=> {
 
 // Inserts <body> attributes
 const setAttributes = () => {
-   if (_debugMode) console.log("function setAttributes: Initializing");
+   if (debugMode) console.log("function setAttributes: Initializing");
 
    getLocalStorage(get => {
       if (get.darkMode === "on") _body.setAttribute("darkmode", "");
@@ -945,7 +957,7 @@ setAttributes();
 
 // Setting up initial functionality
 const settingsSetup = ()=> {
-   if (_debugMode) console.log("function settingsSetup: Initializing");
+   if (debugMode) console.log("function settingsSetup: Initializing");
 
    const _hasStreamController = document.querySelector('#stream-controller'),
          _hasVersionDisplay = document.querySelector('#version-display'),
@@ -959,10 +971,10 @@ const settingsSetup = ()=> {
    _soundPanel.className = "playControls g-z-index-header m-visible";
    _announcements.className = "announcements g-z-index-fixed-top m-offset";
 
-   // Setup SoundCloud Enhancer branding
-   _logo.id = "sce-logo";
+   // Setup YellowCloud branding
+   _logo.id = "yellowcloud-logo";
    if (!_hasVersionDisplay) {
-      if (_debugMode) console.log("-> Branding rendered");
+      if (debugMode) console.log("-> Branding rendered");
       const _versionDisplay = document.createElement("span");
       _versionDisplay.id = "version-display";
       _versionDisplay.innerText = _manifestData.version;
@@ -970,7 +982,7 @@ const settingsSetup = ()=> {
    }
 
    getLocalStorage(get => {
-      // Setup SoundCloud Enhancer buttons
+      // Setup YellowCloud buttons
       if (typeof get.settingsMenus === "undefined" || get.settingsMenus.hideFooterMenu !== "on") manageFooterEnhancerButton();
       if (typeof get.settingsMenus === "undefined" || get.settingsMenus.hideHeaderMenu !== "on") _userMenu.addEventListener("click", manageHeaderEnhancerButton);
 
@@ -1006,7 +1018,7 @@ const settingsSetup = ()=> {
          if (_hasProfileMenu) {
             const _hasProfileLikeButton = document.querySelector('#profile-tab-like');
             if (!_hasProfileLikeButton) {
-               if (_debugMode) console.log("-> Like shortcut rendered");
+               if (debugMode) console.log("-> Like shortcut rendered");
                clearInterval(renderProfileLikesShortcut);
                const _getUserSlug = _hasProfileMenu.querySelector('.g-tabs-link:first-child').getAttribute('href'),
                      _createLikeMenu = document.createElement("li"),
@@ -1033,7 +1045,7 @@ const settingsSetup = ()=> {
                   clearInterval(discoverInterval);
                   const discoverModuleHider = ()=> {
                      getLocalStorage(get => {
-                        if (_debugMode) console.log("function discoverModuleHider: Running");
+                        if (debugMode) console.log("function discoverModuleHider: Running");
                         const _discoverModule = _hasDiscoverContainer.querySelectorAll('.selectionModule'),
                               _discoverModuleCount = _discoverModule.length;
                         for (let i = 0; i < _discoverModuleCount; i++) {
@@ -1156,7 +1168,7 @@ const settingsSetup = ()=> {
 
                         setLocalStorage(()=> {
                            if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-                           if (_debugMode) console.log("-> Display mode saved: " + _getData);
+                           if (debugMode) console.log("-> Display mode saved: " + _getData);
                         }, {displayType: _getData});
                      });
                   }
@@ -1246,9 +1258,9 @@ const settingsSetup = ()=> {
    });
 };
 
-// Rendering SCE menu shell
+// Rendering YellowCloud menu shell
 const renderSettings = ()=> {
-   if (_debugMode) console.log("function renderSettings: Initializing");
+   if (debugMode) console.log("function renderSettings: Initializing");
 
    _body.className = "g-overflow-hidden";
    _body.style.paddingRight = "0px";
@@ -1285,14 +1297,14 @@ const renderSettings = ()=> {
          _modalDonation = document.createElement("span"),
          _modalDonationLink = document.createElement("a");
 
-   _modal.id = "sce-settings";
+   _modal.id = "yellowcloud";
    _modal.className = "modal g-z-index-modal-background g-opacity-transition g-z-index-overlay modalWhiteout showBackground invisible";
    _modal.style.paddingRight = "0px";
    _modal.style.outline = "none";
    _modal.style.overflow = "hidden";
    _modal.tabindex = "-1";
 
-   _modalClose.className = "modal__closeButton sce-close-settings";
+   _modalClose.className = "modal__closeButton yellowcloud-close-settings";
    _modalClose.title = "Close";
    _modalClose.type = "button";
    _modalClose.innerText = "Close";
@@ -1300,9 +1312,9 @@ const renderSettings = ()=> {
    _modalContainer.className = "modal__modal sc-border-box g-z-index-modal-content";
    _modalContent.className = "modal__content";
 
-   _modalTitle.id = "sce-settings-title";
+   _modalTitle.id = "yellowcloud-title";
    _modalTitle.className = "g-modal-title-h1 sc-truncate";
-   _modalTitle.innerText = "SoundCloud Enhancer " + _manifestData.version;
+   _modalTitle.innerText = "YellowCloud Settings " + _manifestData.version;
 
    _modalCredits.className = "credits";
    _modalCredits.innerHTML = "Made with <span class='heart'>&hearts;</span> in Denmark by <a href='https://twitter.com/DapperBenji' target='_blank'>@DapperBenji</a>.";
@@ -1316,12 +1328,12 @@ const renderSettings = ()=> {
    _modalTabListAbout.className = "g-tabs-item";
    _modalTabListSideItems.className = "g-side-items";
    _modalTabListImport.className = "g-tabs-item";
-   _modalTabListImport.id = "sce-import";
+   _modalTabListImport.id = "yellowcloud-import";
    _modalImportUpload.className = "hidden";
    _modalImportUpload.type = "file";
    _modalImportUpload.accept = ".json";
    _modalTabListExport.className = "g-tabs-item";
-   _modalTabListExport.id = "sce-export";
+   _modalTabListExport.id = "yellowcloud-export";
    _modalTabsettings.setAttribute("action", "settings");
    _modalTabsettings.className = "tab g-tabs-link active";
    _modalTabsettings.innerText = "Settings";
@@ -1338,7 +1350,7 @@ const renderSettings = ()=> {
    _modalTabImport.innerText = "Import";
    _modalTabExport.className = "g-tabs-link";
    _modalTabExport.innerText = "Export";
-   _modalPageContainer.id = "sce-settings-content";
+   _modalPageContainer.id = "yellowcloud-settings-content";
    _modalPageSettings.className = "tabPage";
    _modalPageSettings.id = "settings";
    _modalPageSettings.style.display = "block";
@@ -1350,7 +1362,7 @@ const renderSettings = ()=> {
    _modalPageAbout.id = "about";
    _modalDonation.className = "donation";
    _modalDonationLink.href = "https://www.paypal.me/BenjaminBachJensen";
-   _modalDonationLink.innerText = "Support the development - Buy me a cup of coffee ;)";
+   _modalDonationLink.innerText = "Buy me a cup of coffee ;)";
    _modalDonationLink.target = "_blank";
 
    _modalPageContainer.appendChild(_modalPageSettings);
@@ -1411,10 +1423,10 @@ const renderSettings = ()=> {
    getLocalStorage(exportimportInit);
 };
 
-// Assigning SCE menus to SCE buttons
+// Assigning YC menus to YC buttons
 const settingsMenu = ()=> {
-   if (_debugMode) console.log("function settingsMenu: Initializing");
-   const _settingsButtons = document.querySelectorAll('.sc-enhancer'),
+   if (debugMode) console.log("function settingsMenu: Initializing");
+   const _settingsButtons = document.querySelectorAll('.yellowcloud-settings-button'),
          _settingsButtonCount = _settingsButtons.length;
 
    for (let i = 0; i < _settingsButtonCount; i++) {
@@ -1476,7 +1488,7 @@ const runFilters = ()=> {
 };
 
 const hidePlaylists = ()=> {
-   if (_debugMode) console.log("function markPlaylists: Running");
+   if (debugMode) console.log("function markPlaylists: Running");
    const _getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'),
          _getPlaylistCount = _getPlaylists.length;
 
@@ -1491,7 +1503,6 @@ const hidePlaylists = ()=> {
             else getTrackCountNum = getTrackCount.length;
          }
          const _playlistClosest = _getPlaylists[i].closest('.soundList__item');
-         //_playlistClosest.setAttribute("data-playlist", "true");
          _playlistClosest.setAttribute("data-skip", "true");
          _playlistClosest.setAttribute("data-type", "playlist");
          _playlistClosest.setAttribute("data-count", getTrackCountNum);
@@ -1501,7 +1512,7 @@ const hidePlaylists = ()=> {
 };
 
 const hidePreviews = ()=> {
-   if (_debugMode) console.log("function hidePreviews: Running");
+   if (debugMode) console.log("function hidePreviews: Running");
    const _previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'),
          _previewCount = _previews.length;
 
@@ -1516,7 +1527,7 @@ const hidePreviews = ()=> {
 };
 
 const hideReposts = ()=> {
-   if (_debugMode) console.log("function hideReposts: Running");
+   if (debugMode) console.log("function hideReposts: Running");
    const _reposts = document.querySelectorAll('.soundContext__repost'),
          _repostCount = _reposts.length;
 
@@ -1529,7 +1540,7 @@ const hideReposts = ()=> {
 };
 
 const checkCanvas = ()=> {
-   if (_debugMode) console.log("function checkCanvas: Running");
+   if (debugMode) console.log("function checkCanvas: Running");
    const _canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene'),
          _canvasLength = _canvas.length;
 
@@ -1554,7 +1565,7 @@ const checkCanvas = ()=> {
 };
 
 const checkUserActivity = ()=> {
-   if (_debugMode) console.log("function checkUserActivity: Running");
+   if (debugMode) console.log("function checkUserActivity: Running");
    const _yourTracks = document.querySelectorAll('.soundContext__usernameLink'),
          _yourTrackLength = _yourTracks.length,
          _getUsername = document.querySelector('.header__userNavUsernameButton'),
@@ -1572,7 +1583,7 @@ const checkUserActivity = ()=> {
 };
 
 const renderMoreActionCallback = e => {
-   const _checkMoreActionMenu = document.querySelector('.moreActions #sce-moreActions-group');
+   const _checkMoreActionMenu = document.querySelector('.moreActions #yellowcloud-moreActions-group');
    if (!_checkMoreActionMenu) {
       const _parentClassName = moreActionParentClassName(e.target),
             _trackContainer = e.target.closest(_parentClassName);
@@ -1597,9 +1608,8 @@ const frontEndStreamManipulation = (reset = false)=> {
       const _stream = document.querySelectorAll('.lazyLoadingList > ul, .lazyLoadingList > div > ul'),
             _steamLength = _stream.length;
 
-      if (_debugMode) console.log(_stream);
+      if (debugMode) console.log(_stream);
       renderMoreAction();
-      //markPlaylists();
       runFilters();
       if (get.removePreviews === "on") hidePreviews();
       if (get.removePlaylists === "on") hidePlaylists();
@@ -1622,7 +1632,7 @@ const frontEndStreamManipulation = (reset = false)=> {
 
 // Run music-stream manipulating functions
 const injectedJavascript = ()=> {
-   if (_debugMode) console.log("function injectedJavascript: Initializing");
+   if (debugMode) console.log("function injectedJavascript: Initializing");
    const _soundBadge = document.querySelector('.playbackSoundBadge'),
          _nextControl = document.querySelector('.skipControl__next'),
          _previousControl = document.querySelector('.skipControl__previous');
@@ -1652,7 +1662,7 @@ const injectedJavascript = ()=> {
                         _getPlaying = _getStreamItems[i].querySelector('.activity div.sound.streamContext').className;
 
                   if (_getPlaying.includes("playing") == true) {
-                     if (_debugMode) console.log("Skip song?: " + _getSkipStatus);
+                     if (debugMode) console.log("Skip song?: " + _getSkipStatus);
                      if (_getSkipStatus == "true") {
                         _previousControl.addEventListener("click", ()=> skipPrevious = true);
                         if (_getPlaylistType == true) {

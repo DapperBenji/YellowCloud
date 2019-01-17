@@ -1,31 +1,27 @@
 {
    "manifest_version": 2,
-   "version": "3.5",
-   "name": "SoundCloud Enhancer - Dark mode and more",
-   "short_name": "SCE",
-   "description": "SoundCloud Enhancer offers loads of customizations enhancing the SoundCloud experience.",
-   "homepage_url": "https://dapperbenji.com/scenhancer",
+   "version": "3.6",
+   "name": "YellowCloud for SoundCloud®",
+   "short_name": "YC",
+   "description": "YellowCloud offers loads of customizations enhancing the SoundCloud® experience.",
+   "homepage_url": "https://dapperbenji.com/yellowcloud",
    "icons": {
       "16": "assets/img/icons/icon-16.png",
       "48": "assets/img/icons/icon-48.png",
       "128": "assets/img/icons/icon-128.png"
    },
    "content_scripts": [ {
-      "js": ["assets/js/insignia.min.js", "assets/js/enhancer.min.js"],
+      "js": ["assets/js/insignia.min.js", "assets/js/main.min.js"],
       "css" : ["assets/css/style.min.css"],
       "matches": ["https://soundcloud.com/*"],
       "run_at": "document_idle"
    } ],
-   "background": {
-      "scripts": ["assets/js/background.min.js"],
-      "persistent": false
-   },
    "browser_action": {
       "default_icon": {
          "19": "assets/img/browser_action/icon-19.png",
          "38": "assets/img/browser_action/icon-38.png"
       },
-      "default_title": "SoundCloud Enhancer",
+      "default_title": "YellowCloud for SoundCloud®",
       "default_popup": "assets/html/popup.html"
    },
    "permissions": ["storage", "activeTab", "https://soundcloud.com/"],
