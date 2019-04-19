@@ -1,7 +1,7 @@
 {
    "manifest_version": 2,
-   "version": "3.6",
-   "name": "YellowCloud for SoundCloud®",
+   "version": "3.7",
+   "name": "YellowCloud | Darkmode and more for SoundCloud®",
    "short_name": "YC",
    "description": "YellowCloud offers loads of customizations enhancing the SoundCloud® experience.",
    "homepage_url": "https://dapperbenji.com/yellowcloud",
@@ -11,8 +11,8 @@
       "128": "assets/img/icons/icon-128.png"
    },
    "content_scripts": [ {
-      "js": ["assets/js/insignia.min.js", "assets/js/main.min.js"],
-      "css" : ["assets/css/style.min.css"],
+      "js": ["assets/js/insignia.min.js", "assets/js/main.js"],
+      "css" : ["assets/css/style.css"],
       "matches": ["https://soundcloud.com/*"],
       "run_at": "document_idle"
    } ],

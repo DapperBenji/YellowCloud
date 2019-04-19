@@ -1,17 +1,29 @@
 .notice{font-size: 11px;}
 .tabPage{display: none;}
-.collection__followingsSection .sc-checkbox-check{float: right;}
+.badgeList__item .sc-checkbox-check{position: absolute; top: 0; right: 0; margin: 8px;}
 #submit{cursor: pointer;}
 .g-side-items{float: right; margin: 0;}
 .g-side-items li{display: block;}
-#mass-unfollow{margin-bottom: 20px;}
+
+/* unfollower module */
+.collectionSection__top{position: relative; margin-bottom: 50px !important;}
+#mass-unfollow{position: absolute; bottom: -30px; margin: 0; left: 0;}
+ul.userNetworkTabs #mass-unfollow{right: 0; left: unset; bottom: 0; margin-bottom: 5px;}
+
+#quick-switch-divider{border-right: 1px solid #e5e5e5; height: 20px; margin-right: 10px;}
+#stream-controller ul.listDisplayToggle, #stream-controller > div#listDisplayToggle{margin-right: 0 !important;}
+#yellowcloud-moreActions-group a > button {border-bottom: 1px solid #e5e5e5;}
 
 /* Global soundcloud changes */
 .readMoreTile__tile{filter: blur(5px); -webkit-filter: blur(5px);}
 .hidden{display: none !important;}
 .sidebarModule .sidebarContent{min-height: inherit !important;}
 body .l-fluid-fixed .l-main{min-height: 100vh;}
-body {padding-bottom: 49px!important;}
+body {padding-bottom: 49px !important;}
+
+.profileTabs.g-tabs{opacity: 0; transition: opacity .1s ease-in; -moz-transition: opacity .1s ease-in; -webkit-transition: opacity .1s ease-in;}
+.profileTabs.g-tabs.loaded{opacity: 1;}
+
 
 /* YellowCloud Setting menu */
 #yellowcloud .modal__modal{position: unset; margin: 50px auto; width: 550px;}
@@ -78,10 +90,11 @@ body {padding-bottom: 49px!important;}
 #yellowcloud-button:before{content: ""; display: block; position: absolute; background-repeat: no-repeat; background-position: center center; width: 20px; height: 20px; bottom: 0; left: 5px; top: 1px; margin: auto 0; background-size: 20px 20px; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwQAADsEBuJFr7QAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4yMfEgaZUAAAEuSURBVDhPYxgF9AHy8vIckpKSxjIyMmbCwsK8UGGiARPIACDNCKQFpKWle4D4CxD/B2EpKakfQDxDXFxcDKIcBwDazglUWAzEl4EaHwDxESA+AzMIC74JdLUIVDsqMDY2ZgUatAWo6B+aJkJ4PlA7I8QUNCAnJycIVFAFNPgnmiacGKj2LZBOB9I+QkJCfFCjGBiATncDSoQCmYxAr5fBNJCA/wENvQIOAqABQL50NxAvALFBEQKU/ABVSCpeyQDUfAtqwGcgvi4qKsoD5F9AUkQK/gzyMTPQgFogZwqIraKiwg7kv0dTSBQG6nsLMpAByLEA+t8VyGQEsiuQFZGCgQb2gQ0EAZDLgIKgWP6FrpAIDEpu60BpGWocOHZ1gNiOHAz0nQbUnFFAMWBgAACHrMnFuJcZGgAAAABJRU5ErkJggg==');}
 
 .userBadgeListItem__image{pointer-events: none;}
-.userBadgeListItem__checkbox{position: absolute;top: 0;right: 0; left: 0; bottom: 0;z-index: 10;cursor: pointer;}
+.userBadgeListItem__checkbox{position: absolute; top: 0; right: 0; left: 0; padding-top: 100%; z-index: 10; cursor: pointer;}
 .margin-spacing, .listDisplayToggle{margin-right: 10px !important;}
 .listDisplayToggleTitle{margin-right: 14px;}
-.listDisplayToggle.active{opacity: 1 !important; pointer-events: none;}
+.listDisplayToggle.active{pointer-events: none;}
+.setting-display-tile.active {opacity: 1 !important;}
 
 .taggle_list{display: table; margin: 0; padding: 10px 10px 5px;}
 .taggle_list li{display: inline-table; float: initial !important;}
@@ -91,8 +104,10 @@ body {padding-bottom: 49px!important;}
 .setting-display-tile{width: 18px; height: 18px; cursor: pointer; background-repeat: no-repeat; background-size: 18px 18px; display: inline-block; opacity: .5; transition: .25 ease all;}
 .setting-display-tile:hover{opacity: .8;}
 .setting-display-tile.default-icon{background-image: url(https://a-v2.sndcdn.com/assets/images/list-toggle-aff6a2.png);}
-.setting-display-tile.list-icon{background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAACVBMVEUAAAD///+ZmZmoVBq9AAAAAnRSTlMAAHaTzTgAAAAcSURBVHgBY2CCAkZGGIt8IRhgZISxiBMado4AABnxAaXLf66xAAAAAElFTkSuQmCC);}
+.setting-display-tile.list-icon{background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAACVBMVEUAAAD///+ZmZmoVBq9AAAAAnRSTlMAAHaTzTgAAAAcSURBVHgBY2CCAkZGGIt8IRhgZISxiBMado4AABnxAaXLf66xAAAAAElFTkSuQmCC');}
 .setting-display-tile.grid-icon{background-image: url(https://a-v2.sndcdn.com/assets/images/badge-toggle-5e3bdc.png);}
+.setting-display-tile.sidebar-icon{background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuNWRHWFIAAAAqSURBVDhPY5g5c+Z/YjEQMIAwNrlRgyB41CDCeNQgwnjUIMKYDgbN/A8AT7+PAlq4o5YAAAAASUVORK5CYII=');}
+
 .settings-display-list label input[type="radio"]:checked + li{opacity: 1;}
 
 #playTime:focus{box-shadow: none;}
@@ -159,6 +174,8 @@ body[fullwidthmode][settings-button] .playControls__elements{padding-right: 140p
 body[profileimages] .image__rounded {border-radius: 3px;}
 
 /* Dark mode */
+body[darkmode] .userAudibleSearchResults__item.selected {background-color: #2b2b2b;}
+
 body[darkmode] .playControls__castControl>button{--disconnected-color: #777;}
 body[darkmode] #skipTags{border-color: rgb(23, 23, 23); background: none;}
 body[darkmode] .moreActions__button:hover{background-color: rgba(255, 255, 255, 0.05);}
@@ -201,7 +218,6 @@ body[darkmode] .sc-button.sc-button-small:before{-webkit-filter: brightness(3.5)
 body[darkmode].announcement>.announcement__message>a{color: rgb(145, 145, 145) !important;}
 body[darkmode].announcement__dismiss{-webkit-filter: none !important;}
 body[darkmode] .sc-button.sc-button-small.sc-button-selected:before, body[darkmode] .sc-button.sc-button-small.sc-button-active:before{-webkit-filter: brightness(1);}
-body[darkmode] .collection__followingsSection .userBadgeListItem__checkbox{margin: 5px;}
 body[darkmode] .collection__followingsSection .sc-checkbox-check{background-color: #000;}
 body[darkmode] .collection__followingsSection .userBadgeListItem__artwork{background: rgba(117, 117, 117, 0.25); border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; border-top-left-radius: 50%; border-top-right-radius: 5px;}
 body[darkmode] #playTime::-webkit-input-placeholder{color: #585858;}
@@ -227,16 +243,17 @@ body[darkmode] .sc-checkbox-check{background-color: #171717; border-color: #2c2c
 body[darkmode] .emptyNetworkPage.emptyStations .emptyNetworkPage__image {background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTkwcHgiIGhlaWdodD0iMTM2cHgiIHZpZXdCb3g9IjAgMCAxOTAgMTM2IiB2ZXJzaW9uPSIxLjEiPiAgICA8ZGVmcz4gICAgICAgIDxwYXRoIGQ9Ik0wLDE5MCBMMCwwIEw5NSw5NSBMMTkwLDAgTDE5MCwxOTAgTDk1LDk1IEwwLDE5MCBaIiBpZD0iZCIvPiAgICAgICAgPGNpcmNsZSBpZD0iZiIgY3g9Ijk1IiBjeT0iOTUiIHI9Ijk1Ii8+ICAgICAgICA8bWFzayBpZD0iYiIgbWFza0NvbnRlbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIG1hc2tVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTAiIGhlaWdodD0iMTkwIiBmaWxsPSJ3aGl0ZSI+ICAgICAgICAgICAgPHVzZSB4bGluazpocmVmPSIjZiIvPiAgICAgICAgPC9tYXNrPiAgICAgICAgPHBhdGggZD0iTTk1LDE1OC4zMzMzMzMgQzEyOS45NzgwMzQsMTU4LjMzMzMzMyAxNTguMzMzMzMzLDEyOS45NzgwMzQgMTU4LjMzMzMzMyw5NSBDMTU4LjMzMzMzMyw2MC4wMjE5NjU4IDEyOS45NzgwMzQsMzEuNjY2NjY2NyA5NSwzMS42NjY2NjY3IEM2MC4wMjE5NjU4LDMxLjY2NjY2NjcgMzEuNjY2NjY2Nyw2MC4wMjE5NjU4IDMxLjY2NjY2NjcsOTUgQzMxLjY2NjY2NjcsMTI5Ljk3ODAzNCA2MC4wMjE5NjU4LDE1OC4zMzMzMzMgOTUsMTU4LjMzMzMzMyBaIiBpZD0iZSIvPiAgICAgICAgPG1hc2sgaWQ9ImMiIG1hc2tDb250ZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBtYXNrVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiB4PSIwIiB5PSIwIiB3aWR0aD0iMTI2LjY2NjY2NyIgaGVpZ2h0PSIxMjYuNjY2NjY3IiBmaWxsPSJ3aGl0ZSI+ICAgICAgICAgICAgPHVzZSB4bGluazpocmVmPSIjZSIvPiAgICAgICAgPC9tYXNrPiAgICA8L2RlZnM+ICAgIDxnIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPiAgICAgICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTM0OCwgLTQ0KSI+ICAgICAgICAgICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzQ4LCAxNykiPiAgICAgICAgICAgICAgICA8ZWxsaXBzZSBmaWxsPSIjMTgxODE4IiBjeD0iOTUiIGN5PSI5NSIgcng9IjIzLjc1IiByeT0iMjMuNzUiLz4gICAgICAgICAgICAgICAgPGc+ICAgICAgICAgICAgICAgICAgICA8bWFzayBpZD0iYSIgZmlsbD0iI2ZmZiI+ICAgICAgICAgICAgICAgICAgICAgICAgPHVzZSB4bGluazpocmVmPSIjZCIvPiAgICAgICAgICAgICAgICAgICAgPC9tYXNrPiAgICAgICAgICAgICAgICAgICAgPGcgbWFzaz0idXJsKCNhKSIgc3Ryb2tlLXdpZHRoPSIxNiIgc3Ryb2tlPSIjMTgxODE4Ij4gICAgICAgICAgICAgICAgICAgICAgICA8dXNlIG1hc2s9InVybCgjYikiIHhsaW5rOmhyZWY9IiNmIi8+ICAgICAgICAgICAgICAgICAgICA8L2c+ICAgICAgICAgICAgICAgICAgICA8ZyBtYXNrPSJ1cmwoI2EpIiBzdHJva2Utd2lkdGg9IjE2IiBzdHJva2U9IiMxODE4MTgiPiAgICAgICAgICAgICAgICAgICAgICAgIDx1c2UgbWFzaz0idXJsKCNjKSIgeGxpbms6aHJlZj0iI2UiLz4gICAgICAgICAgICAgICAgICAgIDwvZz4gICAgICAgICAgICAgICAgPC9nPiAgICAgICAgICAgIDwvZz4gICAgICAgIDwvZz4gICAgPC9nPjwvc3ZnPg==);}
 body[darkmode] :focus{outline: none !important;}
 body[darkmode]{background: #333; color: #b2aca9;}
+body[darkmode] .sc-button-dropdown.sc-button-dropdown-plain:not(.sc-button-disabled):not(:disabled){color: #b2aca9;}
 body[darkmode] a{transition: .25s ease all; color: #d3d3d3;}
 body[darkmode] .g-circles .g-circle-player > a{border-radius: 100%;}
 body[darkmode] .recipientChooser .tokenInput__wrapper, body[darkmode] textarea, body[darkmode] select, body[darkmode] input {background: #171717; border-color: #313131;}
 body[darkmode] textarea, body[darkmode] select, body[darkmode] button, body[darkmode] input{color: #9a9a9a;}
-body[darkmode] #main-wrapper, body[darkmode] .sc-aux-container, body[darkmode] .g-modal-section, body[darkmode] .localeSelectorContent, body[darkmode] .l-fixed-top-one-column>.l-top, body[darkmode] .modal__modal, body[darkmode] .searchTitle, body[darkmode] #content, body[darkmode] .l-container.l-content, body[darkmode] .trackManager__upsellWrapper, body[darkmode] .soundBadge.hover:not(.compact), body[darkmode] .soundBadge.selected:not(.compact), body[darkmode] .soundBadge.active:not(.compact), body[darkmode] .stats__expand, body[darkmode] .statsDateSelect, body[darkmode] .sessions__formContainer, body[darkmode] .listenLogin{background: #222;}
+body[darkmode] #main-wrapper, body[darkmode] .sc-aux-container, body[darkmode] .g-modal-section, body[darkmode] .localeSelectorContent, body[darkmode] .l-fixed-top-one-column>.l-top, body[darkmode] .modal__modal, body[darkmode] .searchTitle, body[darkmode] #content, body[darkmode] .l-container.l-content, body[darkmode] .trackManager__upsellWrapper, body[darkmode] .soundBadge.hover:not(.compact), body[darkmode] .soundBadge.selected:not(.compact), body[darkmode] .soundBadge.active:not(.compact), body[darkmode] .stats__expand, body[darkmode] .statsDateSelect, body[darkmode] .sessions__formContainer, body[darkmode] .listenLogin, body[darkmode] .userAudibleSearchResults{background: #222;}
 body[darkmode] .conversation__actions{box-shadow: 0 1px 0 #373737; background: #222;}
 body[darkmode] .ui-datepicker.ui-widget-content{background: #121212; padding: 10px;}
 body[darkmode] .inboxItem:hover, body[darkmode] .sc-button.tileGallery__sliderButton, body[darkmode] .inboxItem:focus, body[darkmode] .inboxItem.unread, .inboxItem.active,body[darkmode] .header, body[darkmode] .playControls__inner, body[darkmode] .playControls__bg, body[darkmode] .listenContent__inner, body[darkmode] .activeUpload__shareContainer, body[darkmode] .newItemNotification, body[darkmode] .sc-aux-footer, body[darkmode] .moreActions {background: #181818;}
 body[darkmode] .textfield__clear, body[darkmode] .tabs__tabs, body[darkmode] .tabs__headingContainer, body[darkmode] .sound__soundActions, body[darkmode] .l-footer{background: transparent;}
-body[darkmode] .ownActivity.large .ownActivity__user, body[darkmode] .composeMessage__bottomWrapper, body[darkmode] .sc-border-dark, body[darkmode] .g-modal-title-h1, body[darkmode] .conversation__form, body[darkmode] .g-form-section-head, body[darkmode] .moreActions, body[darkmode] .moreActions__button:not(:last-child), body[darkmode] .moreActions__link,body[darkmode] .searchTitle__text, body[darkmode] .l-listen-wrapper .l-about-rows, body[darkmode] .collection.m-overview .collection__section:not(:last-child), body[darkmode] .g-tabs, body[darkmode] .chartTracksEnd, body[darkmode] .sc-border-light-right, body[darkmode] .sc-border-light-top, body[darkmode] .sc-border-light-bottom, body[darkmode] .sc-border-light-left, body[darkmode] .sc-border-light, body[darkmode] .chartsMain_listHeader, body[darkmode] .moreActions__group.has-separator, body[darkmode] .statsOverview__top:before, body[darkmode] .userStatsLegend__item td, body[darkmode] .l-signin .l-main, body[darkmode] ul.tabs, body[darkmode] .userbadge.context, body[darkmode] .mobileTeaser, body[darkmode] .signupModule, body[darkmode][data-profile="new"] .l-user-sidebar-right .infoStats, body[darkmode] #tab-container, body[darkmode] .premiumContent__planCell, body[darkmode] .l-fluid-fixed .l-user-sidebar-right .infoStats, body[darkmode] .premiumContent__planRow:first-child .premiumContent__planCell, body[darkmode] .premiumContent__planRow:last-child .premiumContent__planCell, body[darkmode] .selectionModule, body[darkmode] .oscpAbout__section:not(:last-child), body[darkmode] .moreActions__group, body[darkmode] .tileGallery__sliderButton:after, body[darkmode] .l-user-sidebar-right .infoStats, body[darkmode] .products__cell, body[darkmode] .premiumProductInfo, body[darkmode] .currentPlan__noActivity, body[darkmode] .subscriptions__noActivity{border-color: #373737;}
+body[darkmode] .ownActivity.large .ownActivity__user, body[darkmode] .composeMessage__bottomWrapper, body[darkmode] .sc-border-dark, body[darkmode] .g-modal-title-h1, body[darkmode] .conversation__form, body[darkmode] .g-form-section-head, body[darkmode] .moreActions, body[darkmode] .moreActions__button:not(:last-child), body[darkmode] .moreActions__link,body[darkmode] .searchTitle__text, body[darkmode] .l-listen-wrapper .l-about-rows, body[darkmode] .collection.m-overview .collection__section:not(:last-child), body[darkmode] .g-tabs, body[darkmode] .chartTracksEnd, body[darkmode] .sc-border-light-right, body[darkmode] .sc-border-light-top, body[darkmode] .sc-border-light-bottom, body[darkmode] .sc-border-light-left, body[darkmode] .sc-border-light, body[darkmode] .chartsMain_listHeader, body[darkmode] .moreActions__group.has-separator, body[darkmode] .statsOverview__top:before, body[darkmode] .userStatsLegend__item td, body[darkmode] .l-signin .l-main, body[darkmode] ul.tabs, body[darkmode] .userbadge.context, body[darkmode] .mobileTeaser, body[darkmode] .signupModule, body[darkmode][data-profile="new"] .l-user-sidebar-right .infoStats, body[darkmode] #tab-container, body[darkmode] .premiumContent__planCell, body[darkmode] .l-fluid-fixed .l-user-sidebar-right .infoStats, body[darkmode] .premiumContent__planRow:first-child .premiumContent__planCell, body[darkmode] .premiumContent__planRow:last-child .premiumContent__planCell, body[darkmode] .selectionModule, body[darkmode] .oscpAbout__section:not(:last-child), body[darkmode] .moreActions__group, body[darkmode] .tileGallery__sliderButton:after, body[darkmode] .l-user-sidebar-right .infoStats, body[darkmode] .products__cell, body[darkmode] .premiumProductInfo, body[darkmode] .currentPlan__noActivity, body[darkmode] .subscriptions__noActivity, body[darkmode] #quick-switch-divider, body[darkmode] #yellowcloud-moreActions-group a > button{border-color: #373737;}
 body[darkmode] hr, body[darkmode] .userStatsLegend:after {background: #373737;}
 body[darkmode] .inbox__item:before{background: #373737; width: inherit;}
 body[darkmode] a.sc-link-dark{color: #ddd;}
@@ -365,6 +382,7 @@ body[displaytype="grid"] .stream ul .soundList__item .sound__soundActions{backgr
 body[displaytype="grid"] .stream ul .soundList__item .waveformWrapper__empty{display: none !important;}
 body[displaytype="grid"] .stream ul.lazyLoadingList__list{display: grid; grid-template-columns: repeat(3,1fr); grid-gap: 25px; height: auto; overflow: hidden;} /*margin: 1%; display: inline-table; width: 31.3333333333%;*/
 body[displaytype="grid"] .stream ul.lazyLoadingList__list:before{display: none;}
+body[displaytype="grid"] .stream ul .soundList__item .soundContext__line .soundContext__usernameLink{max-width: 95px; overflow: hidden; display: inline-block; text-overflow: ellipsis; white-space: nowrap;}
 body[displaytype="grid"] .stream ul .soundList__item{margin-bottom: 0;}
 body[displaytype="grid"] .stream ul .soundList__item .sound__body{display: block;}
 body[displaytype="grid"] .stream ul .soundList__item .sound__header{position: absolute; margin: 0; padding: 0; height: 100%; width: 100%;left: 0; right: 0; bottom: 0; top: 0;}
@@ -415,6 +433,7 @@ body[hiddenoutline][displaytype="grid"] .soundList__item.hidden{display: inline-
 @media screen and (min-width: 1700px) {
    body[fullwidthmode][displaytype="grid"][hidesidebar] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(5,1fr);}
    body[fullwidthmode][displaytype="grid"] .stream ul.lazyLoadingList__list {grid-template-columns: repeat(4,1fr);}
+   body[fullwidthmode][displaytype="grid"] .stream ul .soundList__item .soundContext__line .soundContext__usernameLink{max-width: 130px;}
 }
 
 @media screen and (min-width: 1600px) {
@@ -432,8 +451,12 @@ body[hiddenoutline][displaytype="grid"] .soundList__item.hidden{display: inline-
    body[settings-button] .playControls__queue{bottom: 96px;}
 }
 
+@media screen and (min-width: 1450px) {
+   body[fullwidthmode][displaytype="grid"] .stream ul .soundList__item .soundContext__line .soundContext__usernameLink{max-width: 155px;}
+}
 @media screen and (min-width: 1350px) {
    body[displaytype="grid"][hidesidebar] .stream ul.lazyLoadingList__list{grid-template-columns: repeat(4,1fr);}
+   body[fullwidthmode][displaytype="grid"] .stream ul .soundList__item .soundContext__line .soundContext__usernameLink{max-width: 130px;}
 }
 
 @media screen and (min-width: 1256px) {

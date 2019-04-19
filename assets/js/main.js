@@ -10,33 +10,36 @@
 const _setGlobalSettings = {},
       _getGlobalSettings = ["debug", "darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
 
-// Fetching data from local/online browser storage
-const getLocalStorage = (callback, localSettings = null)=> {
+// Fetching data from local browser storage
+const getLocalStorage = async (callback, localSettings = null)=> {
    const _getSettings = localSettings || _getGlobalSettings;
-   chrome.storage.sync.get(_getSettings, callback);
+   await chrome.storage.local.get(_getSettings, callback);
 };
 
-// Sending data to local/online browser storage
-const setLocalStorage = (callback, localSettings = null)=> {
+// Sending data to local browser storage
+const setLocalStorage = async (callback = null, localSettings = null)=> {
    const _setSettings = localSettings || _setGlobalSettings;
-   chrome.storage.sync.set(_setSettings, callback);
+   const _formattedCallback = ()=> {
+      if (chrome.runtime.lastError) alert('Error settings:\n\n' + chrome.runtime.lastError);
+      else if (callback) callback();
+   };
+   await chrome.storage.local.set(_setSettings, _formattedCallback);
 };
 
-// Factory resets all YellowCloud created local/online browser storage
-const resetLocalStorage = callback => {
-   chrome.storage.sync.remove(_getGlobalSettings, callback);
+// Factory resets all YellowCloud created local browser storage
+const resetLocalStorage = async callback => {
+   await chrome.storage.local.remove(_getGlobalSettings, callback);
 };
 
 // Fetches browser cookie data by cookie name
-const getCookie = cname => {
-   const _name = cname + "=",
-         _ca = document.cookie.split(';'),
-         _calength = _ca.length;
-
-   for (let i = 0; i < _calength; i++) {
-      let c = _ca[i];
-      while (c.charAt(0) == ' ') c = c.substring(1);
-      if (c.indexOf(_name) == 0) return c.substring(_name.length, c.length);
+const getCookie = cookieName => {
+   const _name = cookieName + "=",
+         _cookies = document.cookie.split(';'),
+         _cookiesLength = _cookies.length;
+   for (let i = 0; i < _cookiesLength; i++) {
+      let cookie = _cookies[i];
+      while (cookie.charAt(0) == ' ') cookie = cookie.substring(1);
+      if (cookie.indexOf(_name) == 0) return cookie.substring(_name.length, cookie.length);
    }
    return "";
 };
@@ -44,14 +47,17 @@ const getCookie = cname => {
 // =============================================================
 // Global variables
 // =============================================================
-
-const _manifestData = chrome.runtime.getManifest(),
+const _isRunningOpera = /Opera|OPR\//.test(navigator.userAgent),
+      _manifestData = chrome.runtime.getManifest(),
       _globalConfig = {childList: true},
       _altConfig = {attributes: true, childList: true, subtree: true},
       _body = document.querySelector('body'),
       _app = document.querySelector('#app'),
       _userID = getCookie('i'),
       _userName = getCookie('p'),
+      _profileURLRegex = /https?:\/\/soundcloud\.com\/((?!stream|charts|discover|you|stations|messages|notifications|pages|pro|settings|people|search|tags|popular|imprint|terms-of-use)[a-zA-Z0-9_-]+)\/?(sets|albums|reposts|tracks|)\/?(?!.+)/,
+      _streamURLRegex = /https?:\/\/soundcloud\.com\/stream/,
+      _discoverURLRegex = /https?:\/\/soundcloud\.com\/discover/,
       _defaultFilter = {"artists": [], "tracks": []},
       _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"},
       _authorQuery = ".soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username",
@@ -82,14 +88,14 @@ const match = x => ({
    otherwise: fn => fn(x),
 });
 
-// =============================================================
-// Helper functions
-// =============================================================
-
 // Insert Element node after a reference node
 const insertAfter = (newNode, referenceNode)=> {
    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 };
+
+// =============================================================
+// Helper functions
+// =============================================================
 
 // Converts a timestamp to a relative time output
 const relativeTime = timestamp => {
@@ -102,12 +108,12 @@ const relativeTime = timestamp => {
          _today = Math.floor(Date.now() / 1000),
          _elapsed = _today - timestamp;
 
-   if (_elapsed < _minutes) output = _elapsed + ' sec ago';
-   else if (_elapsed < _hours) output = Math.round(_elapsed / _minutes) + ' mins ago';
-   else if (_elapsed < _days) output = Math.round(_elapsed / _hours) + ' hrs ago';
-   else if (_elapsed < _months) output = Math.round(_elapsed / _days) + ' days ago';
-   else if (_elapsed < _years) output = Math.round(_elapsed / _months) + ' months ago';
-   else output = Math.round(_elapsed / _years) + ' yrs ago';
+   if (_elapsed < _minutes) output = `${_elapsed} sec ago`;
+   else if (_elapsed < _hours) output = `${Math.round(_elapsed / _minutes)} mins ago`;
+   else if (_elapsed < _days) output = `${Math.round(_elapsed / _hours)} hrs ago`;
+   else if (_elapsed < _months) output = `${Math.round(_elapsed / _days)} days ago`;
+   else if (_elapsed < _years) output = `${Math.round(_elapsed / _months)} months ago`;
+   else output = `${Math.round(_elapsed / _years)} yrs ago`;
 
    return output;
 };
@@ -122,6 +128,7 @@ const runObserver = (target, callback, sensitive)=> {
       else {
          const _mutationLength = mutations.length;
          let hasUpdated = false, mutation = null;
+
          for (let i = 0; i < _mutationLength; i++) {
             mutation = mutations[i];
             if (mutation.type === 'childList' && mutation.addedNodes.length) {
@@ -129,7 +136,6 @@ const runObserver = (target, callback, sensitive)=> {
                break;
             }
          }
-
          if (hasUpdated) callback();
       }
    });
@@ -167,11 +173,10 @@ const disassembleSettings = ()=> {
 
 // Generate mass unfollower checkboxes
 const multiFollow = ()=> {
-   const _followingUsers = document.querySelectorAll('.userBadgeListItem'),
-         _followingUserCount = _followingUsers.length;
-
-   for (let i = 0; i < _followingUserCount; i++) {
-      if (_followingUsers[i].querySelector(".userBadgeListItem__checkbox") === null) {
+   const _followingUsers = document.querySelectorAll('.userBadgeListItem');
+   _followingUsers.forEach(user => {
+      const _checkbox = user.querySelector(".userBadgeListItem__checkbox");
+      if (!_checkbox) {
          const _checkboxDiv = document.createElement("label"),
                _checkboxElement = document.createElement("input"),
                _checkboxWrap = document.createElement("div");
@@ -183,9 +188,9 @@ const multiFollow = ()=> {
 
          _checkboxDiv.appendChild(_checkboxElement);
          _checkboxDiv.appendChild(_checkboxWrap);
-         _followingUsers[i].appendChild(_checkboxDiv);
+         user.appendChild(_checkboxDiv);
       }
-   }
+   });
 };
 
 // Return URL contents after "https://soundcloud.com/"
@@ -197,25 +202,22 @@ const stripLinkDomain = url => {
 // Selects and unselects all mass unfollower checkboxes
 const massSelector = bool => {
    const massSelectorLoop = ()=> {
-      const _unfollowLoop = document.querySelectorAll('.badgeList__item'),
-            _unfollowLoopCount = _unfollowLoop.length;
-
-      for (let i = 0; i < _unfollowLoopCount; i++) {
-         const _checkFollowStatus = _unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
+      const _followingSelection = document.querySelectorAll('.badgeList__item');
+      _followingSelection.forEach(selected => {
+         const _checkFollowStatus = selected.querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
          _checkFollowStatus.checked = bool;
-      }
+      });
    };
-   if (bool == true) {
+   if (bool === true) {
       let scrollInterval = setInterval(()=> {
-         const _detectLoadingBlock = document.querySelector('.collectionSection .badgeList.lazyLoadingList .loading');
-         if (_detectLoadingBlock) {
+         const _detectLoadingBlock = document.querySelector('.badgeList.lazyLoadingList .loading');
+         if (_detectLoadingBlock)
             window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
-            if (debugMode) console.log("Page scroll");
-        } else {
+         else {
             clearInterval(scrollInterval);
             window.scrollTo(0, 0);
             massSelectorLoop();
-        }
+         }
       }, 50);
    } else massSelectorLoop();
 };
@@ -223,10 +225,12 @@ const massSelector = bool => {
 // Checks if URL is a playlist URL
 // TODO: find en bedre måde at arbejde med URL
 const isPlaylistURL = url => {
-   const _strip = url.split("/"),
-         _stripLength = _strip.length;
+   const _strips = url.split("/");
    let output = false;
-   for (let i = 0; i < _stripLength; i++) if (_strip[i] === "sets") output = true;
+
+   _strips.forEach(strip => {
+      if (strip === "sets") output = true;
+   });
    return output;
 };
 
@@ -252,20 +256,13 @@ const moreActionMenuContent = trackContainer => {
       _createMoreActionsGroup.className = "moreActions__group";
       _createMoreActionsGroup.id = "yellowcloud-moreActions-group";
 
-      const relatedLink = ()=> {
-         const _url =  _hasTrack.href + "/recommended";
-         //var stateObj = { foo: "bar" };
-         //window.history.replaceState(stateObj, "test", _url);
-         window.location.href = _url;
-         //Backbone.history.navigate(_url, {trigger:true});
-      };
-
       const renderMoreActionButton = (key, element = null)=> {
-         const _hasButton = document.querySelector("#yellowcloud-" + key + "-button");
+         const _buttonID = `yellowcloud-${key}-button`,
+               _hasButton = document.querySelector(_buttonID);
          if (!_hasButton) {
             const _createButton = document.createElement("button");
                   _createButton.type = "button";
-                  _createButton.id = "yellowcloud-" + key + "-button";
+                  _createButton.id = _buttonID;
                   _createButton.className = "moreActions__button sc-button-medium yellowcloud-button-icon yellowcloud-button-"+ key +"";
 
             if (key === "related") {
@@ -280,8 +277,8 @@ const moreActionMenuContent = trackContainer => {
                   _createButton.innerText = "Blacklist track";
                }
             } else {
-               _createButton.title = "Click to blacklist this track's " + key + "";
-               _createButton.innerText = "Blacklist " + key + "";
+               _createButton.title = `Click to blacklist this track's ${key}`;
+               _createButton.innerText = `Blacklist ${key}`;
             }
 
             if (key !== "related") {
@@ -293,6 +290,12 @@ const moreActionMenuContent = trackContainer => {
 
             if (key === "artist") {
                if (stripLinkDomain(_hasArtist.href) !== _userName) _createMoreActionsGroup.appendChild(_createButton);
+            } else if (key === "related") {
+               const _url = `/${stripLinkDomain(_hasTrack.href)}/recommended`,
+                     _createAnchor = document.createElement("a");
+               _createAnchor.href = _url;
+               _createAnchor.appendChild(_createButton);
+               _createMoreActionsGroup.appendChild(_createAnchor);
             } else _createMoreActionsGroup.appendChild(_createButton);
          }
       };
@@ -317,10 +320,6 @@ const moreActionMenuContent = trackContainer => {
             _artistButton = document.querySelector("#yellowcloud-artist-button"),
             _trackButton = document.querySelector("#yellowcloud-track-button");
 
-      if (!disableRelatedMenu && _relatedButton) {
-         _relatedButton.removeEventListener("click", relatedLink);
-         _relatedButton.addEventListener("click", relatedLink);
-      }
       if (!disableTagMenu && _hashtagButton) addTagToFilter(_hashtagButton);
       if (!disableArtistMenu && _artistButton) addItemToFilter(_artistButton, "artists");
       if (!disableTrackMenu && _trackButton) addItemToFilter(_trackButton, "tracks");
@@ -331,7 +330,7 @@ const moreActionMenuContent = trackContainer => {
 const addItemToFilter = (button, key)=> {
    const addItemToFilterCallback = ()=> {
       getLocalStorage(get => {
-         let loopElement;
+         let blacklistedElements;
          const _blacklistItem = button.getAttribute('data-item'),
                _blacklistData = stripLinkDomain(_blacklistItem),
                _filterStructure = get.filter || _defaultFilter,
@@ -340,24 +339,20 @@ const addItemToFilter = (button, key)=> {
 
          if (key === "artists") {
             _filterStructure.artists.push(_filterItem);
-            loopElement = document.querySelectorAll('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username');
+            blacklistedElements = document.querySelectorAll('.soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username');
          } else if (key === "tracks") {
             _filterStructure.tracks.push(_filterItem);
-            loopElement = document.querySelectorAll('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle');
+            blacklistedElements = document.querySelectorAll('.soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle');
          }
 
          setLocalStorage(()=> {
-            if (chrome.runtime.lastError) alert('Error settings:\n\n' + chrome.runtime.lastError);
-            else {
-               document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
-               const _loopElementCount = loopElement.length;
-               for (let i = 0; i < _loopElementCount; i++) {
-                  if (loopElement[i].href === _blacklistItem) {
-                     const _parentClassName = moreActionParentClassName(loopElement[i]);
-                     loopElement[i].closest(_parentClassName).remove();
-                  }
+            document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
+            blacklistedElements.forEach(element => {
+               if (element.href === _blacklistItem) {
+                  const _parentClassName = moreActionParentClassName(element);
+                  element.closest(_parentClassName).remove();
                }
-            }
+            });
          }, {filter : _filterStructure});
       });
    };
@@ -365,7 +360,7 @@ const addItemToFilter = (button, key)=> {
    button.addEventListener("click", addItemToFilterCallback);
 };
 
-// ...
+// Adds a tag to the existing tag filter or creates it if it doesn't exist
 const addTagToFilter = button => {
    const addTagToFilterCallback = ()=> {
       getLocalStorage(get => {
@@ -374,19 +369,15 @@ const addTagToFilter = button => {
 
          _tagArray.push(_bannedTag);
          setLocalStorage(()=> {
-            const _tracksWithTags = document.querySelectorAll('.soundTitle__tagContent'),
-                  _tracksWithTagsLength = _tracksWithTags.length;
+            const _tracksWithTags = document.querySelectorAll('.soundTitle__tagContent');
+            document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
 
-            if (chrome.runtime.lastError) alert('Error settings:\n\n'+chrome.runtime.lastError);
-            else {
-               document.querySelector('.sc-button-more.sc-button.sc-button-active').click();
-               for (let i = 0; i < _tracksWithTagsLength; i++) {
-                  if (_tracksWithTags[i].innerText.toUpperCase() === _bannedTag.toUpperCase()){
-                     const _parentClassName = moreActionParentClassName(_tracksWithTags[i]);
-                     _tracksWithTags[i].closest(_parentClassName).remove();
-                  }
+            _tracksWithTags.forEach(track => {
+               if (track.innerText.toUpperCase() === _bannedTag.toUpperCase()) {
+                  const _parentClassName = moreActionParentClassName(track);
+                  track.closest(_parentClassName).remove();
                }
-            }
+            });
          }, {tagsArray: _tagArray});
       }, ["tagsArray"]);
    };
@@ -398,10 +389,10 @@ const addTagToFilter = button => {
 // TODO: Ersat nogle af let variablerne med const
 const eliminateDuplicates = array => {
    let i, out = [];
-   const _arrayLength = array.length,
-         _obj = {};
+   const _arrayLength = array.length, _obj = {};
 
    for (i = 0; i < _arrayLength; i++) _obj[array[i]] = 0;
+   //array.forEach(entry => _obj[entry] = 0);
    for (i in _obj) out.push(i);
    return out;
 };
@@ -411,7 +402,7 @@ const exportimportInit = get => {
    const _importElement = document.querySelector('#yellowcloud-import input[type="file"]'),
          _exportElement = document.querySelector('#yellowcloud-export a');
 
-   _exportElement.addEventListener("click", ()=>{
+   _exportElement.addEventListener("click", ()=> {
       getLocalStorage(get => {
          const _exportBlob = new Blob([JSON.stringify(get, null, "\t")], {type: 'application/json'}),
                _exportTemp = document.createElement("a"),
@@ -502,10 +493,7 @@ const exportimportInit = get => {
                _importedSettings[_prasedObject[option]] = setting;
          }
       }
-      setLocalStorage(()=> {
-         if (chrome.runtime.lastError) alert('Error settings:\n\n'+chrome.runtime.lastError);
-         else location.reload();
-      }, _importedSettings);
+      setLocalStorage(()=> location.reload(), _importedSettings);
    };
    _importElement.addEventListener("change", importRead, false);
 };
@@ -611,7 +599,6 @@ const settingsInit = ()=> {
          _disableDiscoverToggleInput = document.querySelector('#disableDiscoverToggle'),
          _settingsReset = document.querySelector('#yellowcloud-reset'),
          _settingsClose = document.querySelectorAll('.yellowcloud-close-settings'),
-         _settingsCloseCount = _settingsClose.length,
          _settingsArray = [
             _darkModeInput,
             _listenerModeInput,
@@ -639,7 +626,7 @@ const settingsInit = ()=> {
          ];
 
    // Activates all menu-closing buttons
-   for (let i = 0; i < _settingsCloseCount; i++) _settingsClose[i].addEventListener("click", ()=> disassembleSettings());
+   _settingsClose.forEach(button => button.addEventListener("click", ()=> disassembleSettings()));
 
    // Activates the ability to close the menu by clicking outside of it
    document.addEventListener('mousedown', e => {
@@ -787,7 +774,7 @@ const settingsInit = ()=> {
    });
 };
 
-// Initializing the filter lists in the YellowCloud menu
+// Initializing the filter lists in the YellowCloud settings menu
 const filterInit = ()=> {
    if (debugMode) console.log("callback filterInit: Initializing");
    const _artistBlacklist = document.querySelector('#artist-blacklist'),
@@ -801,22 +788,17 @@ const filterInit = ()=> {
 
       const _target = document.querySelector('.nsg-tags');
       runObserver(_target, ()=> {
-         const _tagElements = document.querySelectorAll('.nsg-tag'),
-               _tagElementCount = _tagElements.length,
-               _tags = [];
+         const _tagList = document.querySelectorAll('.nsg-tag'), _tags = [];
+         _tagList.forEach(tag => _tags.push(tag.innerText));
 
-         for (let i = 0; i < _tagElementCount; i++) _tags.push(_tagElements[i].innerText);
-         setLocalStorage(()=> {
-            if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-            if (debugMode) console.log("Tag array saved: " + _tags);
-         }, {tagsArray: _tags});
+         setLocalStorage(null, {tagsArray: _tags});
       }, true);
    });
 
    const filterNameFormatter = string => {
       const _strip = string.split("/");
       let output = _strip[0];
-      if (_strip[1] == "sets") output = _strip[2];
+      if (_strip[1] === "sets") output = _strip[2];
       else if (_strip[1]) output = _strip[1];
       output = output.replace(/-/g, " ");
       output = output.replace(/_/g, " ");
@@ -895,13 +877,13 @@ const filterInit = ()=> {
                         const _filterContainers = document.querySelectorAll('.filter-container'),
                               _filterContainerCount = _filterContainers.length;
 
-                        for (let j = 0; j < _filterContainerCount; j++) {
-                           if (!_filterContainers[i].hasChildNodes()) {
-                              const _emptyMessage = document.createElement("span");
-                              _emptyMessage.innerHTML = "No " + key + " has been filtered!";
-                              _filterContainers[j].appendChild(_emptyMessage);
-                           }
-                        }
+                           _filterContainers.forEach(element => {
+                              if (!_filterContainers[i].hasChildNodes()) {
+                                 const _emptyMessage = document.createElement("span");
+                                 _emptyMessage.innerHTML = "No " + key + " has been filtered!";
+                                 element.appendChild(_emptyMessage);
+                              }
+                           });
                      }, {filter: _filterObject});
                   }, ["filter"]);
                });
@@ -912,6 +894,16 @@ const filterInit = ()=> {
    renderFilterList(_artistBlacklist, "artists");
    renderFilterList(_trackBlacklist, "tracks");
    renderFilterList(_playlistBlacklist, "playlists");
+};
+
+// Initializing the about page in the YellowCloud settings menu
+const aboutInit = ()=> {
+   if (_isRunningOpera) {
+      const _link = document.querySelector('#webstore-link');
+      _link.innerText = "Opera addons site";
+      _link.href = "#";
+      _link.target = "";
+   }
 };
 
 // Run setup after tab/window reload
@@ -950,7 +942,6 @@ const setAttributes = () => {
       else if (get.displayType === "grid") _body.setAttribute("displaytype", "grid");
       else _body.setAttribute("displaytype", "default");
       if (get.hiddenOutline === "on") _body.setAttribute("hiddenoutline", "");
-
    });
 };
 setAttributes();
@@ -965,7 +956,8 @@ const settingsSetup = ()=> {
          _soundPanelInner = document.querySelector('.playControls__inner'),
          _announcements = document.querySelector('.announcements.g-z-index-fixed-top'),
          _userMenu = document.querySelector('.header__userNavUsernameButton'),
-         _logo = document.querySelector('.header__logo.left');
+         _logo = document.querySelector('.header__logo.left'),
+         _followingURLRegex = new RegExp(`https?://soundcloud.com/(${_userName}|you)/follow(ing|ers)`);
 
    // Force-open sound control panel
    _soundPanel.className = "playControls g-z-index-header m-visible";
@@ -986,74 +978,58 @@ const settingsSetup = ()=> {
       if (typeof get.settingsMenus === "undefined" || get.settingsMenus.hideFooterMenu !== "on") manageFooterEnhancerButton();
       if (typeof get.settingsMenus === "undefined" || get.settingsMenus.hideHeaderMenu !== "on") _userMenu.addEventListener("click", manageHeaderEnhancerButton);
 
-      // Add the "The Upload" playlist to the stream explore tab
-      // TODO: Lav dette til en option, sammen med "weekly playlist"
-      /*
-      if (location.href == "https://soundcloud.com/stream" || location.href == "https://soundcloud.com/charts/top" || location.href == "https://soundcloud.com/discover") {
-         const renderTheUploadShortcut = setInterval(()=> {
-            const _hasExploreTab = document.querySelector('.streamExploreTabs ul.g-tabs');
-            if (_hasExploreTab.querySelectorAll('li').length == 3) {
-               clearInterval(renderTheUploadShortcut);
-               const _hasUploadTab = _hasExploreTab.querySelector('#the-upload-tab');
-               if (!_hasUploadTab) {
-                  const _tabItem = document.createElement("li"),
-                        _tabItemLink = document.createElement("a");
-
-                  _tabItem.className = "g-tabs-item";
-                  _tabItemLink.className = "g-tabs-link";
-                  _tabItemLink.id = "the-upload-tab";
-                  _tabItemLink.href = "/discover/sets/new-for-you:" + _userID;
-                  _tabItemLink.innerText = "The Upload";
-
-                  _tabItem.appendChild(_tabItemLink);
-                  _hasExploreTab.appendChild(_tabItem);
+      // Render profile navigation changes
+      if (location.href.match(_profileURLRegex)) {
+         const profileDectector = setInterval(()=> {
+            const _profileNavTabs = document.querySelector('ul.profileTabs.g-tabs');
+            if (_profileNavTabs) {
+               clearInterval(profileDectector);
+               if (get.listenerMode === "on") {
+                  const _tabs = _profileNavTabs.querySelectorAll('li');
+                  _tabs[1].classList.add("hidden");
+                  _tabs[2].classList.add("hidden");
                }
+
+               // Generate "Likes" link
+               const _hasProfileLikeButton = document.querySelector('#profile-tab-like');
+               if (!_hasProfileLikeButton) {
+                  const _getUserSlug = _profileNavTabs.querySelector('.g-tabs-link:first-child').getAttribute('href'),
+                        _createLikeMenu = document.createElement("li"),
+                        _createLikeLink = document.createElement("a");
+
+                  _createLikeMenu.className = "g-tabs-item";
+                  _createLikeMenu.id = "profile-tab-like";
+                  _createLikeLink.className = "g-tabs-link";
+                  _createLikeLink.href = `${_getUserSlug}/likes`;
+                  _createLikeLink.innerText = "Likes";
+
+                  _createLikeMenu.appendChild(_createLikeLink);
+                  _profileNavTabs.appendChild(_createLikeMenu);
+               }
+
+               // Reveal reworked profile navigation
+               _profileNavTabs.classList.add('loaded');
             }
-         }, 100);
-      }*/
+         }, 10);
+      }
 
-      // Add a "like" menu point to the profiles
-      const renderProfileLikesShortcut = setInterval(()=> {
-         const _hasProfileMenu = document.querySelector('ul.profileTabs.g-tabs');
-         if (_hasProfileMenu) {
-            const _hasProfileLikeButton = document.querySelector('#profile-tab-like');
-            if (!_hasProfileLikeButton) {
-               if (debugMode) console.log("-> Like shortcut rendered");
-               clearInterval(renderProfileLikesShortcut);
-               const _getUserSlug = _hasProfileMenu.querySelector('.g-tabs-link:first-child').getAttribute('href'),
-                     _createLikeMenu = document.createElement("li"),
-                     _createLikeLink = document.createElement("a");
-
-               _createLikeMenu.className = "g-tabs-item";
-               _createLikeMenu.id = "profile-tab-like";
-               _createLikeLink.className = "g-tabs-link";
-               _createLikeLink.href = _getUserSlug + "/likes";
-               _createLikeLink.innerText = "Likes";
-
-               _createLikeMenu.appendChild(_createLikeLink);
-               _hasProfileMenu.appendChild(_createLikeMenu);
-            }
-         }
-      }, 100);
-
-      // Render discover module toogle links
-      if (get.disableDiscoverToggle != "on") {
-         if (location.href == "https://soundcloud.com/discover") {
-            let discoverInterval = setInterval(()=> {
-               const _hasDiscoverContainer = document.querySelector('div.modularHome.lazyLoadingList ul.lazyLoadingList__list');
-               if (_hasDiscoverContainer) {
-                  clearInterval(discoverInterval);
+      // Render discover module toogle buttons
+      if (location.href.match(_discoverURLRegex)) {
+         if (get.disableDiscoverToggle !== "on") {
+            let discoverDetector = setInterval(()=> {
+               const _discoverContainer = document.querySelector('div.modularHome.lazyLoadingList ul.lazyLoadingList__list');
+               if (_discoverContainer) {
+                  clearInterval(discoverDetector);
                   const discoverModuleHider = ()=> {
                      getLocalStorage(get => {
                         if (debugMode) console.log("function discoverModuleHider: Running");
-                        const _discoverModule = _hasDiscoverContainer.querySelectorAll('.selectionModule'),
-                              _discoverModuleCount = _discoverModule.length;
-                        for (let i = 0; i < _discoverModuleCount; i++) {
+                        const _discoverModules = _discoverContainer.querySelectorAll('.selectionModule');
+                        _discoverModules.forEach((module, i) => {
                            const _moduleArray = get.discoverModules || {},
                                  _moduleSectionState = _moduleArray[i] == 1 ? "hidden" : "shown",
-                                 _discoverModuleContainer = _discoverModule[i].querySelector('h2.selectionModule__titleText'),
+                                 _discoverModuleContainer = module.querySelector('h2.selectionModule__titleText'),
                                  _hasModuleSwitch = _discoverModuleContainer.querySelector('a.hide-discover-section');
-                           _discoverModule[i].setAttribute("state", _moduleSectionState);
+                           module.setAttribute("state", _moduleSectionState);
 
                            if (!_hasModuleSwitch) {
                               const _moduleState = _moduleArray[i] == 1 ? 0 : 1,
@@ -1075,45 +1051,44 @@ const settingsSetup = ()=> {
                                           _moduleArray[_sectionID] = _sectionState;
 
                                     setLocalStorage(()=> {
-                                       if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-                                       else {
-                                          const _moduleStateText = _moduleArray[_sectionID] == 1 ? "Show this section" : "Hide this section",
-                                                _moduleSectionState = _moduleArray[i] == 1 ? "hidden" : "shown",
-                                                _moduleState = _moduleArray[_sectionID] == 1 ? 0 : 1,
-                                                _moduleContainer = _moduleSwitch.closest('.selectionModule');
+                                       const _moduleStateText = _moduleArray[_sectionID] == 1 ? "Show this section" : "Hide this section",
+                                             _moduleSectionState = _moduleArray[i] == 1 ? "hidden" : "shown",
+                                             _moduleState = _moduleArray[_sectionID] == 1 ? 0 : 1,
+                                             _moduleContainer = _moduleSwitch.closest('.selectionModule');
 
-                                          _moduleSwitch.innerText = _moduleStateText;
-                                          _moduleSwitch.setAttribute("section-state", _moduleState);
-                                          _moduleContainer.setAttribute("state", _moduleSectionState);
-                                       }
+                                       _moduleSwitch.innerText = _moduleStateText;
+                                       _moduleSwitch.setAttribute("section-state", _moduleState);
+                                       _moduleContainer.setAttribute("state", _moduleSectionState);
                                     }, {discoverModules: _moduleArray});
                                  });
                               });
                            }
-                        }
+                        });
                      });
                   };
                   discoverModuleHider();
-                  runObserver(_hasDiscoverContainer, discoverModuleHider);
+                  runObserver(_discoverContainer, discoverModuleHider);
                }
-            }, 100);
+            }, 10);
          }
       }
 
       // Render quick display switcher
-      if (location.href == "https://soundcloud.com/stream") {
-         let renderStreamDisplaySwitch = setInterval(()=> {
+      if (location.href.match(_streamURLRegex)) {
+         const streamDetector = setInterval(()=> {
             const _streamHeader = document.querySelector('.stream__header');
             if (_streamHeader) {
-               clearInterval(renderStreamDisplaySwitch);
+               clearInterval(streamDetector);
                if (!_hasStreamController) {
                   const _streamController = document.createElement("div"),
                         _textContainer = document.createElement("div"),
                         _textHeader = document.createElement("h3"),
                         _listContainer = document.createElement("ul"),
-                        _defaultList = document.createElement("li"),
-                        _compactList = document.createElement("li"),
-                        _gridList = document.createElement("li");
+                        _defaultToggle = document.createElement("li"),
+                        _compactToggle = document.createElement("li"),
+                        _gridToggle = document.createElement("li"),
+                        _divider = document.createElement("div"),
+                        _sidebarToggle = document.createElement("li");
 
                   _streamController.className = "stream__controls";
                   _streamController.id = "stream-controller";
@@ -1121,87 +1096,156 @@ const settingsSetup = ()=> {
                   _textHeader.className = "listDisplayToggleTitle sc-text-light sc-type-medium";
                   _textHeader.innerText = "View";
                   _listContainer.className = "listDisplayToggle sc-list-nostyle g-flex-row-centered";
-                  _defaultList.className = "listDisplayToggle setting-display-tile default-icon";
-                  _defaultList.title = "Default";
-                  _defaultList.setAttribute('data-id', "default");
-                  _compactList.className = "listDisplayToggle setting-display-tile list-icon";
-                  _compactList.title = "Compact";
-                  _compactList.setAttribute('data-id', "list");
-                  _gridList.className = "listDisplayToggle setting-display-tile grid-icon";
-                  _gridList.title = "Grid";
-                  _gridList.setAttribute('data-id', "grid");
+                  _defaultToggle.className = "listDisplayToggle setting-display-tile default-icon";
+                  _defaultToggle.title = "Default listing mode";
+                  _defaultToggle.setAttribute('data-id', "default");
+                  _compactToggle.className = "listDisplayToggle setting-display-tile list-icon";
+                  _compactToggle.title = "Compact listing mode";
+                  _compactToggle.setAttribute('data-id', "list");
+                  _gridToggle.className = "listDisplayToggle setting-display-tile grid-icon";
+                  _gridToggle.title = "Grid listing mode";
+                  _gridToggle.setAttribute('data-id', "grid");
+                  _divider.id = "quick-switch-divider";
+                  _sidebarToggle.className = "setting-display-tile sidebar-icon";
+                  _sidebarToggle.title = "Toggle sidebar";
 
                   _textContainer.appendChild(_textHeader);
-                  _listContainer.appendChild(_defaultList);
-                  _listContainer.appendChild(_compactList);
-                  _listContainer.appendChild(_gridList);
+                  _listContainer.appendChild(_defaultToggle);
+                  _listContainer.appendChild(_compactToggle);
+                  _listContainer.appendChild(_gridToggle);
+                  _listContainer.appendChild(_divider);
+                  _listContainer.appendChild(_sidebarToggle);
                   _textContainer.appendChild(_listContainer);
                   _streamController.appendChild(_textContainer);
                   _streamHeader.appendChild(_streamController);
 
-                  const _getDefaultList = document.querySelector('.listDisplayToggle.setting-display-tile.default-icon'),
-                        _getCompactList = document.querySelector('.listDisplayToggle.setting-display-tile.list-icon'),
-                        _getGridList = document.querySelector('.listDisplayToggle.setting-display-tile.grid-icon');
+                  const _defaultDisplay = document.querySelector('.listDisplayToggle.setting-display-tile.default-icon'),
+                        _compactDisplay = document.querySelector('.listDisplayToggle.setting-display-tile.list-icon'),
+                        _gridDisplay = document.querySelector('.listDisplayToggle.setting-display-tile.grid-icon');
 
-                  if (get.displayType === "list") _getCompactList.classList.add("active");
-                  else if (get.displayType === "grid") _getGridList.classList.add("active");
-                  else _getDefaultList.classList.add("active");
+                  if (get.displayType === "list") _compactDisplay.classList.add("active");
+                  else if (get.displayType === "grid") _gridDisplay.classList.add("active");
+                  else _defaultDisplay.classList.add("active");
+                  if (get.hideSidebar !== "on") _sidebarToggle.classList.add("active");
 
-                  const _getLists = document.querySelectorAll('.listDisplayToggle.setting-display-tile'),
-                        _getListCount = _getLists.length;
+                  const _displayTypeContainer = document.querySelectorAll('.listDisplayToggle.setting-display-tile');
+                  _displayTypeContainer.forEach(list => {
+                     list.addEventListener('click', ()=> {
+                        _displayTypeContainer.forEach(list => list.classList.remove("active"));
 
-                  for (let i = 0; i < _getListCount; i++) {
-                     _getLists[i].addEventListener('click', ()=> {
-                        const _getData = _getLists[i].getAttribute("data-id");
-                        for (let i = 0; i < _getListCount; i++) _getLists[i].classList.remove("active");
-
-                        if (_getData === "list") {
+                        const _data = list.getAttribute("data-id");
+                        if (_data === "list") {
                            _body.setAttribute("displaytype", "list");
-                           _getCompactList.classList.add("active");
-                        } else if (_getData === "grid") {
+                           _compactDisplay.classList.add("active");
+                        } else if (_data === "grid") {
                            _body.setAttribute("displaytype", "grid");
-                           _getGridList.classList.add("active");
+                           _gridDisplay.classList.add("active");
                         } else {
                            _body.setAttribute("displaytype", "default");
-                           _getDefaultList.classList.add("active");
+                           _defaultDisplay.classList.add("active");
                         }
+
+
+
+/* View in fullscreen */
+async function openFullscreen() {
+   var elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    await elem.requestFullscreen();
+    //document.exitFullscreen();
+  } else if (elem.mozRequestFullScreen) { /* Firefox */
+     await elem.mozRequestFullScreen();
+    //document.mozCancelFullScreen();
+  } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+     await elem.webkitRequestFullscreen();
+    //document.webkitExitFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE/Edge */
+     await elem.msRequestFullscreen();
+    //document.msExitFullscreen();
+  }
+
+  /*const testInter = setInterval(function () {
+    if (document.fullscreenElement ||
+ document.webkitFullscreenElement ||
+ document.mozFullScreenElement) {
+    clearInterval(testInter);
+ closeFullscreen();
+}
+}, 100);*/
+}
+
+document.addEventListener("fullscreenchange", function() {
+  console.log("fullscreenchange event fired!");
+  closeFullscreen();
+});
+
+/* Close fullscreen */
+function closeFullscreen() {
+  if (document.exitFullscreen) {
+     document.exitFullscreen();
+  } else if (document.mozCancelFullScreen) { /* Firefox */
+     document.mozCancelFullScreen();
+  } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+     document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) { /* IE/Edge */
+    document.msExitFullscreen();
+  }
+}
+
+openFullscreen();
+
 
                         setLocalStorage(()=> {
                            if (chrome.runtime.lastError) alert('Error while saving settings:\n\n' + chrome.runtime.lastError);
-                           if (debugMode) console.log("-> Display mode saved: " + _getData);
-                        }, {displayType: _getData});
+                           if (debugMode) console.log(`-> Display mode saved: ${_data}`);
+                        }, {displayType: _data});
                      });
-                  }
+                  });
+
+                  _sidebarToggle.addEventListener('click', ()=> {
+                     getLocalStorage(get => {
+                        let output = "on";
+                        if (get.hideSidebar === "on") output = "off";
+                        setLocalStorage(()=> {
+                           if (output === "off") {
+                              _body.removeAttribute("hideSidebar");
+                              _sidebarToggle.classList.add("active");
+                           } else {
+                              _body.setAttribute("hideSidebar", "");
+                              _sidebarToggle.classList.remove("active");
+                           }
+                        }, {hideSidebar: output});
+                     }, ["hideSidebar"]);
+                  });
                }
             }
-         }, 100);
+         }, 10);
       }
 
       // Render mass unfollower on the "following" page
-      if (location.href == "https://soundcloud.com/you/following") {
+      if (location.href.match(_followingURLRegex)) {
          if (get.disableUnfollower !== "on") {
             let unfollowerInterval = setInterval(()=> {
-               const _hasUnfollowerContainer = document.querySelector('.collectionSection__list .lazyLoadingList.badgeList ul.lazyLoadingList__list');
+               const _hasUnfollowerContainer = document.querySelector('.lazyLoadingList.badgeList ul.lazyLoadingList__list');
                if (_hasUnfollowerContainer) {
                   clearInterval(unfollowerInterval);
                   const _collectionHeader = document.querySelector('.collectionSection__top'),
+                        _networkHeader = document.querySelector('.userNetworkTabs'),
                         _massUnfollowButton = document.querySelector("#mass-unfollow");
 
-                  if (_massUnfollowButton == null) {
+                  if (!_massUnfollowButton) {
                      const _massUnfollowContainer = document.createElement("div"),
                            _textContainer = document.createElement("div"),
                            _textHeader = document.createElement("h3"),
                            _confirmUnfollowButton = document.createElement("button"),
                            _undoUnfollowButton = document.createElement("button"),
-                           _allUnfollowButton = document.createElement("button");
+                           _allUnfollowButton = document.createElement("button"),
+                           _followersRegex = /https?:\/\/soundcloud.com\/[a-zA-Z0-9_-]+\/followers/;
 
                      _massUnfollowContainer.className = "stream__controls";
                      _massUnfollowContainer.id = "mass-unfollow";
 
                      _textContainer.className = "g-flex-row-centered";
-
-                     _textHeader.className = "sc-text-light sc-type-medium margin-spacing";
-                     _textHeader.innerText = "Options:";
 
                      _confirmUnfollowButton.className = "sc-button margin-spacing";
                      _confirmUnfollowButton.id = "confirm-unfollow-button";
@@ -1215,18 +1259,24 @@ const settingsSetup = ()=> {
                      _allUnfollowButton.id = "all-unfollow-button";
                      _allUnfollowButton.innerText = "Select all";
 
-                     _textContainer.appendChild(_textHeader);
+                     if (_collectionHeader) {
+                        _textHeader.className = "sc-text-light sc-type-medium margin-spacing";
+                        _textHeader.innerText = "Options:";
+                        _textContainer.appendChild(_textHeader);
+                     } else if (location.href.match(_followersRegex)) {
+                        _confirmUnfollowButton.innerText = "Mass follow back";
+                     }
                      _textContainer.appendChild(_confirmUnfollowButton);
                      _textContainer.appendChild(_undoUnfollowButton);
                      _textContainer.appendChild(_allUnfollowButton);
                      _massUnfollowContainer.appendChild(_textContainer);
 
-                     insertAfter(_massUnfollowContainer, _collectionHeader);
-                     _collectionHeader.style.margin = "0px";
+                     if (_collectionHeader) _collectionHeader.appendChild(_massUnfollowContainer);
+                     else _networkHeader.appendChild(_massUnfollowContainer);
                   }
 
                   multiFollow();
-                  runObserver(_hasUnfollowerContainer, multiFollow);
+                  runObserver(_hasUnfollowerContainer, multiFollow, true);
 
                   const _confirmSection = document.querySelector('#confirm-unfollow-button'),
                         _undoSection = document.querySelector('#undo-unfollow-button'),
@@ -1234,17 +1284,16 @@ const settingsSetup = ()=> {
 
                   _confirmSection.addEventListener('click', ()=> {
                      let newFollowCount = 0;
-                     const _unfollowLoop = document.querySelectorAll('.badgeList__item'),
-                           _unfollowLoopLength = _unfollowLoop.length;
+                     const _following = document.querySelectorAll('.badgeList__item');
 
-                     for (let i = 0; i < _unfollowLoopLength; i++) {
-                        const _checkFollowStatus = _unfollowLoop[i].querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
+                     _following.forEach(followed => {
+                        const _checkFollowStatus = followed.querySelector('label.userBadgeListItem__checkbox input.sc-checkbox-input');
                         if (_checkFollowStatus.checked == true) {
-                           const _closestUnfollowButton = _unfollowLoop[i].querySelector('.userBadgeListItem .userBadgeListItem__action button.sc-button-follow');
+                           const _closestUnfollowButton = followed.querySelector('.userBadgeListItem .userBadgeListItem__action button.sc-button-follow');
                            _closestUnfollowButton.click();
                            newFollowCount++;
                         }
-                     }
+                     });
                      if (newFollowCount === 1) _confirmSection.innerText = "1 account got unfollowed!";
                      else _confirmSection.innerText = newFollowCount + " accounts got unfollowed!";
                      setTimeout(()=> _confirmSection.innerText = "Mass unfollow", 3000);
@@ -1402,7 +1451,7 @@ const renderSettings = ()=> {
    fetchFile(_modalPageSettings, '/assets/html/settings.html', settingsInit);
    fetchFile(_modalPageFilter, '/assets/html/filter.html', filterInit);
    fetchFile(_modalPageChangelog, '/assets/html/changelog.html');
-   fetchFile(_modalPageAbout, '/assets/html/about.html');
+   fetchFile(_modalPageAbout, '/assets/html/about.html', aboutInit);
 
    // Activates tab logic
    const _tabs = document.querySelectorAll('.tab'),
@@ -1426,13 +1475,11 @@ const renderSettings = ()=> {
 // Assigning YC menus to YC buttons
 const settingsMenu = ()=> {
    if (debugMode) console.log("function settingsMenu: Initializing");
-   const _settingsButtons = document.querySelectorAll('.yellowcloud-settings-button'),
-         _settingsButtonCount = _settingsButtons.length;
-
-   for (let i = 0; i < _settingsButtonCount; i++) {
-      _settingsButtons[i].removeEventListener("click", renderSettings);
-      _settingsButtons[i].addEventListener("click", renderSettings);
-   }
+   const _settingsButtons = document.querySelectorAll('.yellowcloud-settings-button');
+   _settingsButtons.forEach(button => {
+      button.removeEventListener("click", renderSettings);
+      button.addEventListener("click", renderSettings);
+   });
 };
 
 // Filter user inputed tags, artists and tracks
@@ -1489,117 +1536,104 @@ const runFilters = ()=> {
 
 const hidePlaylists = ()=> {
    if (debugMode) console.log("function markPlaylists: Running");
-   const _getPlaylists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext'),
-         _getPlaylistCount = _getPlaylists.length;
-
-   for (let i = 0; i < _getPlaylistCount; i++) {
-      const _getPlaylist = _getPlaylists[i].className;
+   const _playlists = document.querySelectorAll('.soundList__item .activity div.sound.streamContext');
+   _playlists.forEach(playlist => {
+      const _getPlaylist = playlist.className;
       if (_getPlaylist.includes("playlist") == true) {
-         let getTrackCountNum, getTrackCount = _getPlaylists[i].querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
+         let getTrackCountNum, getTrackCount = playlist.querySelectorAll('.compactTrackList__listContainer .compactTrackList__item');
          if (getTrackCount.length < 5) getTrackCountNum = getTrackCount.length;
          else {
-            const _checkMoreLink = _getPlaylists[i].querySelector('.compactTrackList__moreLink');
+            const _checkMoreLink = playlist.querySelector('.compactTrackList__moreLink');
             if (_checkMoreLink) getTrackCountNum = _checkMoreLink.innerText.replace(/\D/g,'');
             else getTrackCountNum = getTrackCount.length;
          }
-         const _playlistClosest = _getPlaylists[i].closest('.soundList__item');
+         const _playlistClosest = playlist.closest('.soundList__item');
          _playlistClosest.setAttribute("data-skip", "true");
          _playlistClosest.setAttribute("data-type", "playlist");
          _playlistClosest.setAttribute("data-count", getTrackCountNum);
          _playlistClosest.classList.add("hidden");
       }
-   }
+   });
 };
 
 const hidePreviews = ()=> {
    if (debugMode) console.log("function hidePreviews: Running");
-   const _previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey'),
-         _previewCount = _previews.length;
-
-   for (let i = 0; i < _previewCount; i++) {
-      if (_previews[i].innerHTML) {
-         const _previewsClosest = _previews[i].closest('.soundList__item');
+   const _previews = document.querySelectorAll('.sc-snippet-badge.sc-snippet-badge-medium.sc-snippet-badge-grey');
+   _previews.forEach(preview => {
+      if (preview.innerHTML) {
+         const _previewsClosest = preview.closest('.soundList__item');
          _previewsClosest.setAttribute("data-skip", "true");
          _previewsClosest.setAttribute("data-type", "preview");
          _previewsClosest.classList.add("hidden");
       }
-   }
+   });
 };
 
 const hideReposts = ()=> {
    if (debugMode) console.log("function hideReposts: Running");
-   const _reposts = document.querySelectorAll('.soundContext__repost'),
-         _repostCount = _reposts.length;
-
-   for (let i = 0; i < _repostCount; i++) {
-      const _repostClosest = _reposts[i].closest('.soundList__item');
+   const _reposts = document.querySelectorAll('.soundContext__repost');
+   _reposts.forEach(repost => {
+      const _repostClosest = repost.closest('.soundList__item');
       _repostClosest.setAttribute("data-skip", "true");
       _repostClosest.setAttribute("data-type", "repost");
       _repostClosest.classList.add("hidden");
-   }
+   });
 };
 
 const checkCanvas = ()=> {
    if (debugMode) console.log("function checkCanvas: Running");
-   const _canvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene'),
-         _canvasLength = _canvas.length;
-
-   for (let i = 0; i < _canvasLength; i++) {
-      const _canvasCount = _canvas[i].querySelectorAll('canvas.g-box-full.sceneLayer'),
-            _canvasCountLength = _canvasCount.length;
-
-      for (let j = 0; j < _canvasCountLength; j++) {
-         const _lastElement = _canvasCount[_canvasCount.length-1],
+   const _soundCanvas = document.querySelectorAll('.sound__waveform .waveform .waveform__layer.waveform__scene');
+   _soundCanvas.forEach(canvas => {
+      const _selectedCanvas = canvas.querySelectorAll('canvas.g-box-full.sceneLayer');
+      _selectedCanvas.forEach(newCanvas => {
+         const _lastElement = _selectedCanvas[_selectedCanvas.length-1],
                _getCanvas = _lastElement.getContext("2d"),
                _lengthCalc = _lastElement.width - 27,
                _pixelData = _getCanvas.getImageData(_lengthCalc, 27, 1, 1).data;
 
          if (_pixelData[0] === 0 && _pixelData[1] === 0 && _pixelData[2] === 0 && _pixelData[3] === 255) {
-            const _canvasClosest = _canvas[i].closest('.soundList__item');
+            const _canvasClosest = canvas.closest('.soundList__item');
             _canvasClosest.setAttribute("data-skip", "true");
             _canvasClosest.setAttribute("data-type", "long");
             _canvasClosest.classList.add("hidden");
          }
-      }
-   }
+      });
+   });
 };
 
 const checkUserActivity = ()=> {
    if (debugMode) console.log("function checkUserActivity: Running");
    const _yourTracks = document.querySelectorAll('.soundContext__usernameLink'),
-         _yourTrackLength = _yourTracks.length,
          _getUsername = document.querySelector('.header__userNavUsernameButton'),
          _getUsernameHref = _getUsername.getAttribute("href");
 
-   for (let i = 0; i < _yourTrackLength; i++) {
-      const _yourTrackHref = _yourTracks[i].getAttribute("href");
-      if (_getUsernameHref == _yourTrackHref) {
-         const _trackClosest = _yourTracks[i].closest('.soundList__item');
+   _yourTracks.forEach(track => {
+      const _yourTrackHref = track.getAttribute("href");
+      if (_getUsernameHref === _yourTrackHref) {
+         const _trackClosest = track.closest('.soundList__item');
          _trackClosest.setAttribute("data-skip", "true");
          _trackClosest.setAttribute("data-type", "yours");
          _trackClosest.classList.add("hidden");
       }
-   }
+   });
 };
 
 const renderMoreActionCallback = e => {
-   const _checkMoreActionMenu = document.querySelector('.moreActions #yellowcloud-moreActions-group');
-   if (!_checkMoreActionMenu) {
+   const _checkMoreActionMenu = document.querySelector('.moreActions #yellowcloud-moreActions-group'),
+         _isButtonActive = e.target.classList.contains("sc-button-active");
+   if (!_checkMoreActionMenu && _isButtonActive) {
       const _parentClassName = moreActionParentClassName(e.target),
             _trackContainer = e.target.closest(_parentClassName);
-
       moreActionMenuContent(_trackContainer);
    }
 };
 
 const renderMoreAction = ()=> {
-   const _moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small'),
-         _moreActionButtonCount = _moreActionButtons.length;
-
-   for (let i = 0; i < _moreActionButtonCount; i++) {
-      _moreActionButtons[i].removeEventListener('click', renderMoreActionCallback);
-      _moreActionButtons[i].addEventListener('click', renderMoreActionCallback);
-   }
+   const _moreActionButtons = document.querySelectorAll('button.sc-button-more.sc-button-small');
+   _moreActionButtons.forEach(button => {
+      button.removeEventListener('click', renderMoreActionCallback);
+      button.addEventListener('click', renderMoreActionCallback);
+   });
 };
 
 const frontEndStreamManipulation = (reset = false)=> {
@@ -1619,7 +1653,6 @@ const frontEndStreamManipulation = (reset = false)=> {
 
       for (let i = 0; i < _steamLength; i++) {
          runObserver(_stream[i], renderMoreAction);
-         //runObserver(_stream[i], markPlaylists);
          runObserver(_stream[i], runFilters);
          if (get.removePreviews === "on") runObserver(_stream[i], hidePreviews);
          if (get.removePlaylists === "on") runObserver(_stream[i], hidePlaylists);
