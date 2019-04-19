@@ -6,9 +6,27 @@
 
 "use strict";
 
-// Browser storage variables
+// =============================================================
+// Global variables
+// =============================================================
 const _setGlobalSettings = {},
-      _getGlobalSettings = ["debug", "darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"];
+      _getGlobalSettings = ["debug", "darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"],
+      _isRunningOpera = /Opera|OPR\//.test(navigator.userAgent),
+      _manifestData = chrome.runtime.getManifest(),
+      _globalConfig = {childList: true},
+      _altConfig = {attributes: true, childList: true, subtree: true},
+      _body = document.querySelector('body'),
+      _app = document.querySelector('#app'),
+      _profileURLRegex = /https?:\/\/soundcloud\.com\/((?!stream|charts|discover|you|stations|messages|notifications|pages|pro|settings|people|search|tags|popular|imprint|terms-of-use)[a-zA-Z0-9_-]+)\/?(sets|albums|reposts|tracks|)\/?(?!.+)/,
+      _streamURLRegex = /https?:\/\/soundcloud\.com\/stream/,
+      _discoverURLRegex = /https?:\/\/soundcloud\.com\/discover/,
+      _defaultFilter = {"artists": [], "tracks": []},
+      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"},
+      _authorQuery = ".soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username",
+      _trackQuery = ".soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle",
+      _tagQuery = ".soundTitle__tagContent";
+
+let skipPrevious = false, oldLocation = location.href, debugMode = null;
 
 // Fetching data from local browser storage
 const getLocalStorage = async (callback, localSettings = null)=> {
@@ -44,28 +62,6 @@ const getCookie = cookieName => {
    return "";
 };
 
-// =============================================================
-// Global variables
-// =============================================================
-const _isRunningOpera = /Opera|OPR\//.test(navigator.userAgent),
-      _manifestData = chrome.runtime.getManifest(),
-      _globalConfig = {childList: true},
-      _altConfig = {attributes: true, childList: true, subtree: true},
-      _body = document.querySelector('body'),
-      _app = document.querySelector('#app'),
-      _userID = getCookie('i'),
-      _userName = getCookie('p'),
-      _profileURLRegex = /https?:\/\/soundcloud\.com\/((?!stream|charts|discover|you|stations|messages|notifications|pages|pro|settings|people|search|tags|popular|imprint|terms-of-use)[a-zA-Z0-9_-]+)\/?(sets|albums|reposts|tracks|)\/?(?!.+)/,
-      _streamURLRegex = /https?:\/\/soundcloud\.com\/stream/,
-      _discoverURLRegex = /https?:\/\/soundcloud\.com\/discover/,
-      _defaultFilter = {"artists": [], "tracks": []},
-      _defaultMenus = {"hideFooterMenu": "off", "hideHeaderMenu": "off"},
-      _authorQuery = ".soundTitle__username, .chartTrack__username a, .playableTile__usernameHeading, .trackItem__username",
-      _trackQuery = ".soundTitle__title, .chartTrack__title a, .playableTile__artworkLink, .trackItem__trackTitle",
-      _tagQuery = ".soundTitle__tagContent";
-
-let skipPrevious = false, oldLocation = location.href, debugMode = null;
-
 // Get developer status
 getLocalStorage(get => {
    if (get.debug === "on") {
@@ -96,6 +92,8 @@ const insertAfter = (newNode, referenceNode)=> {
 // =============================================================
 // Helper functions
 // =============================================================
+
+const _userID = getCookie('i'), _userName = getCookie('p');
 
 // Converts a timestamp to a relative time output
 const relativeTime = timestamp => {
