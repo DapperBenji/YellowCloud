@@ -1,6 +1,7 @@
 {
    "manifest_version": 2,
    "version": "3.7",
+   "default_locale": "en",
    "name": "YellowCloud | Darkmode and more for SoundCloud®",
    "short_name": "YC",
    "description": "YellowCloud offers loads of customizations enhancing the SoundCloud® experience.",
@@ -11,7 +12,7 @@
       "128": "assets/img/icons/icon-128.png"
    },
    "content_scripts": [ {
-      "js": ["assets/js/insignia.min.js", "assets/js/main.js"],
+      "js": ["init.js"],
       "css" : ["assets/css/style.css"],
       "matches": ["https://soundcloud.com/*"],
       "run_at": "document_idle"
@@ -25,5 +26,5 @@
       "default_popup": "assets/html/popup.html"
    },
    "permissions": ["storage", "activeTab", "https://soundcloud.com/"],
-   "web_accessible_resources": ["assets/html/*"]
+   "web_accessible_resources": ["assets/html/*", "assets/js/insignia.min.js", "assets/js/main.js"]
 }
