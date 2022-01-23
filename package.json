@@ -1,0 +1,46 @@
+{
+  "name": "yellowcloud",
+  "version": "4.0.0",
+  "description": "YellowCloud offers loads of customizations enhancing the SoundCloud® experience.",
+  "contributors": [
+    {
+      "name": "Benjamin B. Jensen",
+      "email": "dev@dapperbenji.com",
+      "url": "https://dapperbenji.com"
+    }
+  ],
+  "scripts": {
+    "dev": "cross-env webpack --config webpack.common.ts",
+    "watch": "npm run dev --watch",
+    "production": "cross-env webpack --config webpack.prod.ts",
+    "prod": "npm run production",
+    "export": "cross-env webpack --config webpack.export.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DapperBenji/YellowCloud.git"
+  },
+  "author": "dapperbenji",
+  "license": "ISC",
+  "keywords": [
+    "web",
+    "extension",
+    "SoundCloud",
+    "music"
+  ],
+  "bugs": {
+    "url": "https://github.com/DapperBenji/YellowCloud/issues"
+  },
+  "homepage": "https://github.com/DapperBenji/YellowCloud#readme",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "insignia": "^5.0.0"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.2.6",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.5",
+    "webpack": "^5.67.0",
+    "webpack-cli": "^4.9.1"
+  }
+}

@@ -1,6 +1,6 @@
 {
-   "manifest_version": 2,
-   "version": "3.7",
+   "manifest_version": 3,
+   "version": "4.0",
    "applications": {
       "gecko": {
          "id": "yellowcloud@dapperbenji.com"
@@ -29,6 +29,11 @@
       "default_title": "YellowCloud for SoundCloud®",
       "default_popup": "assets/html/popup.html"
    },
-   "permissions": ["storage", "webNavigation", "activeTab", "https://soundcloud.com/"],
+   "permissions": ["storage", "webNavigation", "activeTab"],
+   "optional_permissions": ["unlimitedStorage"],
+   "host_permissions": [
+      "https://soundcloud.com/",
+      "*://*/*"
+   ],
    "web_accessible_resources": ["assets/html/*", "assets/js/insignia.min.js", "assets/js/main.js"]
 }

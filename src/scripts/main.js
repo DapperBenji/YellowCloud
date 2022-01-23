@@ -12,7 +12,7 @@
 const _setGlobalSettings = {},
       _getGlobalSettings = ["debug", "darkMode", "listenerMode", "settingsMenus", "fullwidthMode", "moreActionMenu", "removeSettingsBtn", "disableDiscoverToggle", "hideSidebar", "hideBranding", "displayType", "removePreviews", "removePlaylists", "removeLongTracks", "removeUserActivity", "removeReposts", "tagsArray", "filter", "hiddenOutline", "profileImages", "disableUnfollower", "discoverModules"],
       _isRunningOpera = /Opera|OPR\//.test(navigator.userAgent),
-      _manifestData = chrome.runtime.getManifest(),
+      _manifestData = {version: '4.0.0'},
       _globalConfig = {childList: true},
       _altConfig = {attributes: true, childList: true, subtree: true},
       _body = document.querySelector('body'),
@@ -28,39 +28,7 @@ const _setGlobalSettings = {},
 
 let skipPrevious = false, oldLocation = location.href, debugMode = null;
 
-// Fetching data from local browser storage
-const getLocalStorage = async (callback, localSettings = null)=> {
-   const _getSettings = localSettings || _getGlobalSettings;
-   await chrome.storage.local.get(_getSettings, callback);
-};
 
-// Sending data to local browser storage
-const setLocalStorage = async (callback = null, localSettings = null)=> {
-   const _setSettings = localSettings || _setGlobalSettings;
-   const _formattedCallback = ()=> {
-      if (chrome.runtime.lastError) alert('Error settings:\n\n' + chrome.runtime.lastError);
-      else if (callback) callback();
-   };
-   await chrome.storage.local.set(_setSettings, _formattedCallback);
-};
-
-// Factory resets all YellowCloud created local browser storage
-const resetLocalStorage = async callback => {
-   await chrome.storage.local.remove(_getGlobalSettings, callback);
-};
-
-// Fetches browser cookie data by cookie name
-const getCookie = cookieName => {
-   const _name = cookieName + "=",
-         _cookies = document.cookie.split(';'),
-         _cookiesLength = _cookies.length;
-   for (let i = 0; i < _cookiesLength; i++) {
-      let cookie = _cookies[i];
-      while (cookie.charAt(0) == ' ') cookie = cookie.substring(1);
-      if (cookie.indexOf(_name) == 0) return cookie.substring(_name.length, cookie.length);
-   }
-   return "";
-};
 
 // Get developer status
 getLocalStorage(get => {
