@@ -1,18 +1,19 @@
 
 import { getGlobalSettings } from './constants'
 import { SettingType, Setting, KeyVal } from './types'
+import { match } from './helpers'
 
 const body = document.getElementById('body')
 const submit = document.getElementById('submit')
 
 const settings: Setting[] = [
-   new Setting("darkMode"),
-   new Setting("fullwidthMode"),
-   new Setting("listenerMode"),
-   new Setting("hideHeaderMenu"),
-   new Setting("hideFooterMenu"),
-   new Setting("hideSidebar"),
-   new Setting('hideTheUpload'),
+   new Setting('darkMode'),
+   new Setting('fullwidthMode'),
+   new Setting('listenerMode'),
+   new Setting('hideHeaderMenu'),
+   new Setting('hideFooterMenu'),
+   new Setting('hideSidebar'),
+   // new Setting('hideTheUpload'),
    new Setting('hideBranding'),
    new Setting('input[name="displayType"]', null, SettingType.Display),
    new Setting('removePreviews'),
@@ -43,8 +44,8 @@ chrome.storage.sync.get(getGlobalSettings, get => {
             }
          })
          .on((x: SettingType) => x === SettingType.Display, () => {
-            if (get.displayType === "list") setting.getElement(1).checked = true
-            else if (get.displayType === "grid") setting.getElement(2).checked = true
+            if (get.displayType === 'list') setting.getElement(1).checked = true
+            else if (get.displayType === 'grid') setting.getElement(2).checked = true
             else setting.getElement(0).checked = true
          })
    })
@@ -53,28 +54,24 @@ chrome.storage.sync.get(getGlobalSettings, get => {
 // Detect dark mode
 chrome.storage.sync.get(['darkMode'], get => {
    
-   if (get.darkMode === "on") body.setAttribute("darkmode", "");
-});
+   if (get.darkMode === 'on') body.setAttribute('darkmode', '')
+})
 
 // Populate settings dialogbox
 
-submit.addEventListener("click", ()=> {
+submit.addEventListener('click', ()=> {
    const setGlobalSettings = {} as KeyVal
    settings.forEach((setting: Setting) => {
 
       match(setting.type)
          .on((x: SettingType) => x === SettingType.Default, () => {
             if (setting.getElement().checked !== true) {
-               setGlobalSettings[setting.selector] = "off"
+               setGlobalSettings[setting.selector] = 'off'
             }
          })
          .on((x: SettingType) => x === SettingType.Display, () => {
-            const elements = [
-               setting.getElement(0),
-               setting.getElement(1),
-               setting.getElement(2)
-            ]
-
+            const elements = setting.getElement() as HTMLInputElement[]
+            console.log(elements)
             elements.forEach(elm => {
                if (elm.checked === true) {
                   setGlobalSettings[setting.selector] = elm.value

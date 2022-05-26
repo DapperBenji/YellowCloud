@@ -1,40 +1,53 @@
 const path = require('path')
+const SizePlugin = require('size-plugin')
+const WebpackBuildNotifierPlugin = require('webpack-build-notifier')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 import { Configuration } from 'webpack'
 
 export const commonConfig: Configuration = {
-   entry: [
+   entry: {
       //'./src/scripts/background.ts',
-      //'./src/scripts/main.ts',
-      './src/scripts/popup.ts'
-   ],
-   devtool: 'inline-source-map',
+      main: './src/scripts/main.js',
+      popup: './src/scripts/popup.ts'
+   },
    module: {
       rules: [
          {
             test: /\.tsx?$/,
             use: 'ts-loader',
-            exclude: /node_modules/,
+            exclude: /node_modules/
          },
-      ],
+      ]
    },
    optimization: {
       splitChunks: {
          cacheGroups: {
+            chunks: 'all',
             vendor: {
                test: /[\\/]node_modules[\\/](insignia)[\\/]/,
                name: 'vendor',
-               chunks: 'all'
             }
          }
       }
    },
    resolve: {
-      extensions: ['.tsx', '.ts', '.js'],
+      extensions: ['.ts', '.js']
    },
+   plugins: [
+      new SizePlugin(),
+      new WebpackBuildNotifierPlugin({
+         title: 'YellowCloud',
+         logo: path.resolve('./src/static/icons/logo-48.png'),
+         suppressSuccess: true,
+         sound: false
+      }),
+      new ForkTsCheckerWebpackPlugin()
+   ],
    output: {
-      filename: 'bundle.js',
-      path: path.resolve(__dirname, 'target'),
+      filename: '[name].js',
+      chunkFilename: '[name].js',
+      sourceMapFilename: '[name].js.map',
+      path: path.resolve(__dirname, 'dist'),
+      clean: true
    }
 }
-
-export default commonConfig

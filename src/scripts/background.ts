@@ -7,10 +7,10 @@
 // Check whether new version is installed
 chrome.runtime.onInstalled.addListener(details => {
    if (details.reason == "install") {
-      console.log("This is a first install!");
+      console.log("This is a first install!")
    } else if (details.reason == "update") {
-      const _thisVersion = chrome.runtime.getManifest().version;
-      if (_thisVersion > 3.3) console.log("XDXXD");
-      console.log("Updated from " + details.previousVersion + " to " + _thisVersion + "!");
+      const thisVersion = parseInt(chrome.runtime.getManifest().version)
+      if (thisVersion > 3.3) console.log("XDXXD")
+      console.log("Updated from " + details.previousVersion + " to " + thisVersion + "!")
    }
 });

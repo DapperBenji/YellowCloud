@@ -1,33 +1,28 @@
 {
    "manifest_version": 3,
    "version": "4.0",
-   "applications": {
-      "gecko": {
-         "id": "yellowcloud@dapperbenji.com"
-      }
-   },
    "name": "YellowCloud | Darkmode and more for SoundCloud®",
    "short_name": "YC",
    "description": "YellowCloud offers loads of customizations enhancing the SoundCloud® experience.",
    "homepage_url": "https://dapperbenji.com/yellowcloud",
    "icons": {
-      "16": "assets/img/icons/icon-16.png",
-      "48": "assets/img/icons/icon-48.png",
-      "128": "assets/img/icons/icon-128.png"
+      "16": "src/static/icons/icon-16.png",
+      "48": "src/static/icons/icon-48.png",
+      "128": "src/static/icons/icon-128.png"
    },
    "content_scripts": [ {
       "js": ["init.js"],
-      "css" : ["assets/css/style.css"],
+      "css" : ["src/css/style.css"],
       "matches": ["*://soundcloud.com/*"],
       "run_at": "document_idle"
    } ],
-   "browser_action": {
+   "action": {
       "default_icon": {
-         "19": "assets/img/browser_action/icon-19.png",
-         "38": "assets/img/browser_action/icon-38.png"
+         "19": "src/static/browser_action/icon-19.png",
+         "38": "src/static/browser_action/icon-38.png"
       },
       "default_title": "YellowCloud for SoundCloud®",
-      "default_popup": "assets/html/popup.html"
+      "default_popup": "src/html/popup.html"
    },
    "permissions": ["storage", "webNavigation", "activeTab"],
    "optional_permissions": ["unlimitedStorage"],
@@ -35,5 +30,16 @@
       "https://soundcloud.com/",
       "*://*/*"
    ],
-   "web_accessible_resources": ["assets/html/*", "assets/js/insignia.min.js", "assets/js/main.js"]
+   "web_accessible_resources": [{
+      "resources": [
+         "src/html/*",
+         "src/scripts/insignia.min.js",
+         "src/scripts/main.js"
+      ],
+      "matches": ["https://soundcloud.com/*"],
+      "extension_ids": [
+         "fbdlmbhemipjmnkikilolfjbdkpfogba",
+         "lcfikpnamgogopoehcodockddjhdifdc"
+      ]
+   }]
 }
